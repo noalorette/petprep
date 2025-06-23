@@ -329,39 +329,15 @@ corresponding :abbr:`BOLD (blood-oxygen level dependent)` time series::
   665.3969  0.0 488.03  1.085204  16.323903999999995  0.0348966 0.010819676200000001  0.0651895837  -0.09556632150000001  -0.033148835  -0.4768871111 0.20641088559999998 0.2818768463  0.4303863764  0.41323714850000004 -0.2115232212 -0.0037154909000000004  0.10636180070000001 0.0 0.0 0.0 0.0457372 0.0 -0.0  0.0
   662.82715 0.0 487.37302 1.01591 15.281561 0.0333937 0.3328022893  -0.2220965269 -0.0912891436 0.2326688125  0.279138129 -0.111878887  0.16901660629999998 0.0550480212  0.1798747037  -0.25383302620000003  0.1646403629  0.3953613889  0.0 0.010164  -0.0103568  0.0424513 0.0 -0.0  0.00019174
 
-**Multi-echo derivatives**.
-For multi-echo datasets, the output ``_bold`` series are "optimally combined" by
-`tedana`_ to better estimate the BOLD signal.
-This process also generates a T2\* map, which is resampled into every requested output
-space.
-
-::
+**Time activity curves**.
+For each PET file, mean uptake values are extracted from the anatomical segmentation.
+The resulting table has ``FrameTimesStart`` and ``FrameTimesEnd`` columns followed
+by one column per region::
 
   sub-<subject_label>/
-    func/
-      sub-<subject_label>_[specifiers]_T2starmap.nii.gz
+    pet/
+      sub-<subject_label>_[specifiers]_desc-preproc_timeseries.tsv
 
-If the ``--me-output-echos`` flag is specified, then the distortion-corrected (STC, HMC, SDC)
-per-echo time series are output. For example, if the inputs are of the form::
-
-  sub-01/
-    func/
-      sub-01_task-rest_echo-1_bold.nii.gz
-      sub-01_task-rest_echo-2_bold.nii.gz
-      sub-01_task-rest_echo-3_bold.nii.gz
-
-Then the output will include::
-
-  sub-01/
-    func/
-      sub-01_task-rest_boldref.nii.gz
-      sub-01_task-rest_desc-brain_mask.nii.gz
-      sub-01_task-rest_echo-1_desc-preproc_bold.nii.gz
-      sub-01_task-rest_echo-2_desc-preproc_bold.nii.gz
-      sub-01_task-rest_echo-3_desc-preproc_bold.nii.gz
-
-These may then be used independently with multi-echo tools, such as `tedana`_,
-to perform more advanced denoising or alternative combination strategies.
 
 Confounds
 ---------
