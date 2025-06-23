@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
@@ -28,6 +29,11 @@ def construct_nu_path(subjects_dir, subject_id):
     return str(Path(subjects_dir) / subject_id / 'mri' / 'nu.mgz')
 
 
+def sanitize_name(name: str) -> str:
+    """Ensure names are Nipype-compatible by replacing invalid characters with underscores."""
+    return re.sub(r'\W+', '_', name.lower())
+
+
 def init_pet_pvc_wf(
     *,
     tool: str = 'PETPVC',
@@ -40,6 +46,7 @@ def init_pet_pvc_wf(
 
     tool_lower = tool.lower()
     method_key = method.upper()
+    safe_method = sanitize_name(method)
 
     if method_key not in config.get(tool_lower, {}):
         raise ValueError(f"Method '{method}' is not valid for tool '{tool}'.")
@@ -80,7 +87,7 @@ def init_pet_pvc_wf(
         pvc_node = pe.MapNode(
             PETPVC(pvc=method_config.pop('pvc'), **method_config),
             iterfield=['in_file'],
-            name=f'{tool_lower}_{method_key.lower()}_pvc_node',
+            name=f'{tool_lower}_{safe_method}_pvc_node'
         )
 
         workflow.connect([
