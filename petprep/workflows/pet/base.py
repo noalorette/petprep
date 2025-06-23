@@ -30,8 +30,11 @@ Orchestrating the PET-preprocessing workflow
 
 """
 
+from pathlib import Path
+
 from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
+from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 from niworkflows.utils.connections import listify
 
 from ... import config
@@ -248,6 +251,7 @@ configured with cubic B-spline interpolation.
     spaces = config.workflow.spaces
     nonstd_spaces = set(spaces.get_nonstandard())
     freesurfer_spaces = spaces.get_fs_spaces()
+    run_pvc = bool(config.workflow.pvc_method)
 
     #
     # Resampling outputs workflow:
@@ -337,7 +341,22 @@ configured with cubic B-spline interpolation.
             config_path=pvc_config,
         )
 
+        petref_t1w = pe.Node(
+            ApplyTransforms(
+                dimension=3,
+                default_value=0,
+                float=True,
+                interpolation='LanczosWindowedSinc',
+            ),
+            name='petref_t1w',
+        )
+
         workflow.connect([
+            (pet_fit_wf, petref_t1w, [
+                ('outputnode.petref', 'input_image'),
+                ('outputnode.petref2anat_xfm', 'transforms'),
+            ]),
+            (inputnode, petref_t1w, [('t1w_preproc', 'reference_image')]),
             (pet_anat_wf, pet_pvc_wf, [('outputnode.pet_file', 'inputnode.pet_file')]),
             (inputnode, pet_pvc_wf, [
                 ('t1w_dseg', 'inputnode.segmentation'),
@@ -345,7 +364,7 @@ configured with cubic B-spline interpolation.
                 ('subjects_dir', 'inputnode.subjects_dir'),
                 ('subject_id', 'inputnode.subject_id'),
             ]),
-            (pet_fit_wf, pet_pvc_wf, [('outputnode.petref', 'inputnode.petref')]),
+            (petref_t1w, pet_pvc_wf, [('output_image', 'inputnode.petref')]),
         ])  # fmt:skip
 
         pet_t1w_src = pet_pvc_wf
