@@ -17,7 +17,7 @@ def init_pet_tacs_wf(*, output_dir: str, metadata: dict, name: str = 'pet_tacs_w
 
     inputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['source_file', 'pet_anat', 'segmentation', 'dseg_tsv', 'metadata']
+            fields=['pet_anat', 'segmentation', 'dseg_tsv', 'metadata']
         ),
         name='inputnode',
     )
@@ -26,18 +26,6 @@ def init_pet_tacs_wf(*, output_dir: str, metadata: dict, name: str = 'pet_tacs_w
     tac = pe.Node(
         ExtractTACs(),
         name='tac',
-        mem_gb=config.DEFAULT_MEMORY_MIN_GB,
-    )
-
-    ds_tac = pe.Node(
-        DerivativesDataSink(
-            base_directory=output_dir,
-            desc='preproc',
-            suffix='timeseries',
-            **timing_parameters,
-        ),
-        name='ds_tac',
-        run_without_submitting=True,
         mem_gb=config.DEFAULT_MEMORY_MIN_GB,
     )
 
@@ -53,8 +41,6 @@ def init_pet_tacs_wf(*, output_dir: str, metadata: dict, name: str = 'pet_tacs_w
                         ('metadata', 'metadata'),
                     ],
                 ),
-                (inputnode, ds_tac, [('source_file', 'source_file')]),
-                (tac, ds_tac, [('out_file', 'in_file')]),
                 (tac, outputnode, [('out_file', 'timeseries')]),
             ]
         )
