@@ -684,6 +684,10 @@ def parse_args(args=None, namespace=None):
             'Options --pvc-tool, --pvc-method and --pvc-psf must be used together.'
         )
 
+    if opts.pvc_tool is not None:
+        config.workflow.pvc_tool = opts.pvc_tool
+    if opts.pvc_method is not None:
+        config.workflow.pvc_method = opts.pvc_method
     if opts.pvc_psf is not None:
         config.workflow.pvc_psf = tuple(opts.pvc_psf)
 

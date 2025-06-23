@@ -256,5 +256,7 @@ def test_pvc_argument_handling(tmp_path, minimal_bids):
             '2',
         ]
     )
+    assert config.workflow.pvc_tool == 'petsurfer'
+    assert config.workflow.pvc_method == 'GTM'
     assert config.workflow.pvc_psf == (2.0, 2.0, 2.0)
     _reset_config()
