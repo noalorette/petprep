@@ -60,7 +60,7 @@ def gtm_to_dsegtsv(subjects_dir: str, subject_id: str) -> str:
 
     import pandas as pd  # noqa: F401
 
-    from petprep.utils.gtmseg import _read_stats_table
+    from .segmentation import _read_stats_table
 
     gtm_stats = Path(subjects_dir) / subject_id / 'stats' / 'gtmseg.stats'
     df = _read_stats_table(gtm_stats)
@@ -91,7 +91,7 @@ def gtm_stats_to_stats(subjects_dir: str, subject_id: str) -> str:
 
     import pandas as pd  # noqa: F401
 
-    from petprep.utils.gtmseg import _read_stats_table
+    from .segmentation import _read_stats_table
 
     gtm_stats = Path(subjects_dir) / subject_id / 'stats' / 'gtmseg.stats'
     df = _read_stats_table(gtm_stats)
@@ -125,7 +125,7 @@ def summary_to_stats(summary_file: str) -> str:
     """Convert a ``summary.stats`` file from ``mri_segstats`` to TSV."""
     from pathlib import Path
 
-    from petprep.utils.gtmseg import _read_stats_table
+    from .segmentation import _read_stats_table
 
     summary_file = Path(summary_file)
     df = _read_stats_table(summary_file)
