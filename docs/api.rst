@@ -36,3 +36,6 @@ Workflows
 .. automodule:: petprep.workflows.base
 .. automodule:: petprep.workflows.pet
 .. automodule:: petprep.workflows.pet.fit
+.. automodule:: petprep.workflows.pet.segmentation
+.. automodule:: petprep.interfaces.segmentation
+.. automodule:: petprep.utils.segmentation
