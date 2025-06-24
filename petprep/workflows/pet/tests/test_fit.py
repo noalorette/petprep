@@ -8,6 +8,7 @@ from niworkflows.utils.testing import generate_bids_skeleton
 
 from ...tests import mock_config
 from ...tests.test_base import BASE_LAYOUT
+from ....utils import bids
 from ..fit import init_pet_fit_wf, init_pet_native_wf
 
 
@@ -96,6 +97,15 @@ def test_pet_fit_precomputes(
         precomputed['transforms']['petref2anat'] = dummy_affine
 
     with mock_config(bids_dir=bids_root):
+        if have_petref != have_hmc_xfms:
+            with pytest.raises(ValueError):
+                init_pet_fit_wf(
+                    pet_series=pet_series,
+                    precomputed=precomputed,
+                    omp_nthreads=1,
+                )
+            return
+
         wf = init_pet_fit_wf(
             pet_series=pet_series,
             precomputed=precomputed,
@@ -185,3 +195,85 @@ def test_petref_report_connections(bids_root: Path, tmp_path: Path):
     petref_buffer = wf.get_node('petref_buffer')
     edge = wf._graph.get_edge_data(petref_buffer, wf.get_node('func_fit_reports_wf'))
     assert ('petref', 'inputnode.petref') in edge['connect']
+
+
+def test_pet_fit_stage1_inclusion(bids_root: Path, tmp_path: Path):
+    """Stage 1 should run only when HMC derivatives are missing."""
+    pet_series = [str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')]
+    img = nb.Nifti1Image(np.zeros((2, 2, 2, 1)), np.eye(4))
+    for path in pet_series:
+        img.to_filename(path)
+
+    with mock_config(bids_dir=bids_root):
+        wf = init_pet_fit_wf(pet_series=pet_series, precomputed={}, omp_nthreads=1)
+
+    assert any(name.startswith('pet_hmc_wf') for name in wf.list_node_names())
+
+    dummy_affine = tmp_path / 'xfm.txt'
+    np.savetxt(dummy_affine, np.eye(4))
+    ref_file = tmp_path / 'ref.nii'
+    img.to_filename(ref_file)
+    precomputed = {'petref': str(ref_file), 'transforms': {'hmc': str(dummy_affine)}}
+
+    with mock_config(bids_dir=bids_root):
+        wf2 = init_pet_fit_wf(pet_series=pet_series, precomputed=precomputed, omp_nthreads=1)
+
+    assert not any(name.startswith('pet_hmc_wf') for name in wf2.list_node_names())
+
+
+def test_pet_fit_requires_both_derivatives(bids_root: Path, tmp_path: Path):
+    """Supplying only one of petref or HMC transforms should raise an error."""
+    pet_series = [str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')]
+    img = nb.Nifti1Image(np.zeros((2, 2, 2, 1)), np.eye(4))
+    for path in pet_series:
+        img.to_filename(path)
+
+    ref_file = tmp_path / 'ref.nii'
+    hmc_xfm = tmp_path / 'xfm.txt'
+    img.to_filename(ref_file)
+    np.savetxt(hmc_xfm, np.eye(4))
+
+    # Only petref provided
+    with mock_config(bids_dir=bids_root):
+        with pytest.raises(ValueError):
+            init_pet_fit_wf(
+                pet_series=pet_series,
+                precomputed={'petref': str(ref_file)},
+                omp_nthreads=1,
+            )
+
+    # Only hmc transforms provided
+    with mock_config(bids_dir=bids_root):
+        with pytest.raises(ValueError):
+            init_pet_fit_wf(
+                pet_series=pet_series,
+                precomputed={'transforms': {'hmc': str(hmc_xfm)}},
+                omp_nthreads=1,
+            )
+
+
+def test_pet_fit_stage1_with_cached_baseline(bids_root: Path, tmp_path: Path):
+    """Providing only HMC-named derivatives should skip Stage 1."""
+    pet_series = [str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')]
+    img = nb.Nifti1Image(np.zeros((2, 2, 2, 1)), np.eye(4))
+    for path in pet_series:
+        img.to_filename(path)
+
+    deriv_root = tmp_path / 'derivs'
+    petref = deriv_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_desc-hmc_petref.nii.gz'
+    xfm = deriv_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_from-orig_to-petref_mode-image_xfm.txt'
+    petref.parent.mkdir(parents=True)
+    img.to_filename(petref)
+    np.savetxt(xfm, np.eye(4))
+
+    # ensure required metadata is present
+    sidecar = Path(pet_series[0]).with_suffix('').with_suffix('.json')
+    sidecar.write_text('{"FrameTimesStart": [0], "FrameDuration": [1]}')
+
+    entities = bids.extract_entities(pet_series)
+    precomputed = bids.collect_derivatives(derivatives_dir=deriv_root, entities=entities)
+
+    with mock_config(bids_dir=bids_root):
+        wf = init_pet_fit_wf(pet_series=pet_series, precomputed=precomputed, omp_nthreads=1)
+
+    assert not any(name.startswith('pet_hmc_wf') for name in wf.list_node_names())
