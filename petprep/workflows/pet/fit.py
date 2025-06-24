@@ -333,6 +333,7 @@ def init_pet_fit_wf(
         outputnode.inputs.petref2anat_xfm = petref2anat_xform
 
     # Stage 3: Estimate PET brain mask
+    config.loggers.workflow.info('Stage 3: Adding estimation of PET brain mask')
     from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
     from .confounds import _binary_union, _smooth_binarize
@@ -375,11 +376,9 @@ def init_pet_fit_wf(
     workflow.connect([(merge_mask, ds_petmask_wf, [('out', 'inputnode.petmask')])])
 
 
-    # Stage 5: Segmentation
-    config.loggers.workflow.info('Adding segmentation workflow using the segmentation: %s', config.workflow.seg)
+    # Stage 4: Segmentation
+    config.loggers.workflow.info('Stage 4: Adding segmentation workflow using the segmentation: %s', config.workflow.seg)
     segmentation_wf = init_segmentation_wf(
-        omp_nthreads=omp_nthreads,
-        mem_gb=mem_gb['segmentation'],
         seg=config.workflow.seg,
         name=f'pet_{config.workflow.seg}_seg_wf',
     )

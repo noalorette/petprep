@@ -555,6 +555,9 @@ tasks and sessions), the following preprocessing was performed.
                         entities=entities,
                     )
                 )
+            # If baseline references are found, map them to the generic key
+            if 'petref' not in pet_cache:
+                pet_cache['petref'] = pet_cache.get('hmc_petref')
 
         pet_wf = init_pet_wf(
             pet_series=pet_series,
