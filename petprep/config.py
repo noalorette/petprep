@@ -600,6 +600,11 @@ class workflow(_Config):
     """Segmentation approach ('gtm', 'brainstem', 'thalamicNuclei',
     'hippocampusAmygdala', 'wm', 'raphe', 'limbic')."""
 
+    pvc_method: str | None = None
+    """Algorithm used for partial volume correction."""
+    pvc_psf: tuple | None = None
+    """Point spread function (PSF) FWHM in mm for PVC."""
+
 class loggers:
     """Keep loggers easily accessible (see :py:func:`init`)."""
 

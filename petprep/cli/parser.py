@@ -554,6 +554,16 @@ https://petprep.readthedocs.io/en/%s/spaces.html"""
         help='Segmentation method to use.',
     )
 
+    g_pvc = parser.add_argument_group('Options for partial volume correction')
+    parser.add_argument('--pvc-tool', choices=['petpvc', 'petsurfer'], help='Tool to use for partial volume correction')
+    g_pvc.add_argument('--pvc-method', action='store', help='PVC method identifier')
+    g_pvc.add_argument(
+        '--pvc-psf',
+        nargs='+',
+        type=float,
+        help='Point spread function FWHM (one value or three values)',
+    )
+
     g_carbon = parser.add_argument_group('Options for carbon usage tracking')
     g_carbon.add_argument(
         '--track-carbon',
@@ -676,6 +686,19 @@ def parse_args(args=None, namespace=None):
 
     config.execution.log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
     config.from_dict(vars(opts), init=['nipype'])
+
+    pvc_vals = (opts.pvc_tool, opts.pvc_method, opts.pvc_psf)
+    if any(val is not None for val in pvc_vals) and not all(val is not None for val in pvc_vals):
+        parser.error(
+            'Options --pvc-tool, --pvc-method and --pvc-psf must be used together.'
+        )
+
+    if opts.pvc_tool is not None:
+        config.workflow.pvc_tool = opts.pvc_tool
+    if opts.pvc_method is not None:
+        config.workflow.pvc_method = opts.pvc_method
+    if opts.pvc_psf is not None:
+        config.workflow.pvc_psf = tuple(opts.pvc_psf)
 
     if not config.execution.notrack:
         import importlib.util
