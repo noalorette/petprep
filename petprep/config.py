@@ -596,7 +596,9 @@ class workflow(_Config):
     """FWHM for Gaussian smoothing prior to head-motion estimation."""
     hmc_start_time: float = 120.0
     """Time point (in seconds) at which head-motion estimation starts."""
-
+    seg: 'gtm'
+    """Segmentation approach ('gtm', 'brainstem', 'thalamicNuclei',
+    'hippocampusAmygdala', 'wm', 'raphe', 'limbic')."""
 
 class loggers:
     """Keep loggers easily accessible (see :py:func:`init`)."""

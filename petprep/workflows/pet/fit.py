@@ -42,6 +42,7 @@ from .outputs import (
     prepare_timing_parameters,
 )
 from .registration import init_pet_reg_wf
+from .segmentation import init_segmentation_wf
 
 
 def init_pet_fit_wf(
@@ -171,6 +172,8 @@ def init_pet_fit_wf(
                 'pet_mask',
                 'motion_xfm',
                 'petref2anat_xfm',
+                'segmentation',
+                'dseg_tsv',
             ],
         ),
         name='outputnode',
@@ -370,6 +373,28 @@ def init_pet_fit_wf(
     )
     ds_petmask_wf.inputs.inputnode.source_files = [pet_file]
     workflow.connect([(merge_mask, ds_petmask_wf, [('out', 'inputnode.petmask')])])
+
+
+    # Stage 5: Segmentation
+    config.loggers.workflow.info('Adding segmentation workflow using the segmentation: %s', config.workflow.seg)
+    segmentation_wf = init_segmentation_wf(
+        omp_nthreads=omp_nthreads,
+        mem_gb=mem_gb['segmentation'],
+        seg=config.workflow.seg,
+        name=f'pet_{config.workflow.seg}_seg_wf',
+    )
+
+    workflow.connect([
+        (inputnode, segmentation_wf, [
+            ('t1w_preproc', 'inputnode.t1w_preproc'),
+            ('subject_id', 'inputnode.subject_id'),
+            ('subjects_dir', 'inputnode.subjects_dir'),
+        ]),
+        (segmentation_wf, outputnode, [
+            ('outputnode.segmentation', 'segmentation'),
+            ('outputnode.dseg_tsv', 'dseg_tsv'),
+        ]),
+    ])
 
     return workflow
 
