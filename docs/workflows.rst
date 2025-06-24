@@ -289,8 +289,7 @@ from the ``aseg.mgz`` file as described in
 PET preprocessing
 ------------------
 *PETPrep* performs a series of steps to preprocess :abbr:`PET (positron emission tomography)`
-data. Broadly, these are split into fit and transform stages. Stage 1 simultaneously
-estimates head motion and the reference image.
+data. Broadly, these are split into fit and transform stages.
 
 The following figures show the overall workflow graph and the ``pet_fit_wf``
 subgraph:
@@ -332,14 +331,14 @@ split into multiple sub-workflows described below.
 
 PET reference image estimation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:py:func:`~petprep.workflows.pet.reference.init_raw_petref_wf`
+:py:func:`~petprep.workflows.pet.reference.init_raw_boldref_wf`
 
 .. workflow::
     :graph2use: orig
     :simple_form: yes
 
-    from petprep.workflows.pet.reference import init_raw_petref_wf
-    wf = init_raw_petref_wf()
+    from petprep.workflows.pet.reference import init_raw_boldref_wf
+    wf = init_raw_boldref_wf()
 
 This workflow estimates a reference image for a
 :abbr:`PET (positron emission tomography)` series as follows:
@@ -380,19 +379,13 @@ Head-motion estimation
         omp_nthreads=1)
 
 Using the previously :ref:`estimated reference scan <pet_ref>`,
-a robust-template approach estimates head motion.
-All frames are aligned to one another with FreeSurfer's
-``mri_robust_template`` and ``mri_robust_register`` to create a
-within-run template and compute rigid-body transforms for every
-:abbr:`PET (positron emission tomography)` volume.
-The resulting transforms and the six rotation and translation
-parameters for each time-step are passed on to the
+FSL ``mcflirt`` is used to estimate head-motion.
+As a result, one rigid-body transform with respect to
+the reference image is written for each :abbr:`PET (positron emission tomography)`
+time-step.
+Additionally, a list of 6-parameters (three rotations,
+three translations) per time-step is written and fed to the
 :ref:`confounds workflow <pet_confounds>`.
-
-The smoothing kernel width and onset of motion estimation can be
-customized via the :option:`--hmc-fwhm` and :option:`--hmc-start-time`
-command line options.  By default a 10 mm FWHM Gaussian is applied and
-estimation begins at 120 s.
 
 Susceptibility Distortion Correction (SDC)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -583,7 +576,7 @@ Confounds estimation
         regressors_fd_th=0.5,
     )
 
-Given a motion-corrected PET, a brain mask, estimated motion parameters and a
+Given a motion-corrected fMRI, a brain mask, ``mcflirt`` movement parameters and a
 segmentation, the `discover_wf` sub-workflow calculates potential
 confounds per volume.
 
