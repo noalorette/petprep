@@ -32,30 +32,37 @@ class ExtractTACs(SimpleInterface):
                 pet_img.get_fdata()[..., np.newaxis], pet_img.affine, pet_img.header
             )
 
-        seginfo = pd.read_csv(self.inputs.dseg_tsv, sep='\t')
-        labels = seginfo.iloc[:, 1].tolist()
+        seginfo = pd.read_csv(self.inputs.dseg_tsv, sep='\t', dtype={0: str, 1: str})
+        label_mapping = dict(zip(seginfo.iloc[:, 0], seginfo.iloc[:, 1]))
 
         with open(self.inputs.metadata) as f:
             metadata = json.load(f)
+
         frame_times = metadata.get('FrameTimesStart', [])
         frame_durations = metadata.get('FrameDuration', [])
 
         if len(frame_times) != len(frame_durations):
-            raise ValueError(
-                'FrameTimesStart and FrameDuration must have equal length'
-            )
+            raise ValueError('FrameTimesStart and FrameDuration must have equal length')
 
-        data, segments = _nifti_timeseries(
-            pet_img, self.inputs.segmentation, labels=labels, remap_rois=False
-        )
+        segmentation_data = nb.load(self.inputs.segmentation).get_fdata().astype(int)
+        pet_data = pet_img.get_fdata()
 
-        n_tp = data.shape[1]
+        unique_labels = np.unique(segmentation_data)
+        n_tp = pet_data.shape[-1]
+
         curves = {}
-        for label in labels:
-            if segments and label in segments:
-                curves[label] = data[segments[label]].mean(axis=0)
+
+        for label_num in unique_labels:
+            if label_num == 0:
+                continue  # Skip background
+            label_key = str(label_num)
+            label_name = label_mapping.get(label_key, f'label_{label_num}')
+            mask = segmentation_data == label_num
+            if mask.any():
+                region_timeseries = pet_data[mask, :].mean(axis=0)
+                curves[label_name] = region_timeseries
             else:
-                curves[label] = np.full(n_tp, np.nan, dtype=float)
+                curves[label_name] = np.full(n_tp, np.nan)
 
         frame_times_end = np.add(frame_times, frame_durations).tolist()
         df = pd.DataFrame(curves)

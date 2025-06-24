@@ -6,6 +6,18 @@ from nipype.pipeline import engine as pe
 from ... import config
 from ...interfaces import DerivativesDataSink, ExtractTACs
 from .outputs import prepare_timing_parameters
+from nilearn.image import resample_to_img
+from nipype.interfaces.utility import Function
+
+
+def resample_pet_to_segmentation(pet_file, segmentation_file):
+    from nilearn.image import resample_to_img
+    import os
+
+    resampled_pet = resample_to_img(pet_file, segmentation_file, interpolation='continuous')
+    out_file = os.path.abspath('pet_resampled.nii.gz')
+    resampled_pet.to_filename(out_file)
+    return out_file
 
 
 def init_pet_tacs_wf(*, output_dir: str, metadata: dict, name: str = 'pet_tacs_wf') -> pe.Workflow:
@@ -21,19 +33,30 @@ def init_pet_tacs_wf(*, output_dir: str, metadata: dict, name: str = 'pet_tacs_w
     )
     outputnode = pe.Node(niu.IdentityInterface(fields=['timeseries']), name='outputnode')
 
+    # Resample PET to segmentation space
+    resample_pet = pe.Node(
+        Function(
+            input_names=['pet_file', 'segmentation_file'],
+            output_names=['resampled_pet'],
+            function=resample_pet_to_segmentation,
+        ),
+        name='resample_pet',
+    )
+
     tac = pe.Node(
         ExtractTACs(),
         name='tac',
-        mem_gb=config.DEFAULT_MEMORY_MIN_GB,
     )
 
     workflow.connect(
             [
+                (inputnode, resample_pet, [('pet_anat', 'in_file'),
+                                           ('segmentation', 'reference')]),
+                (resample_pet, tac, [('out_file', 'in_file')]),
                 (
                     inputnode,
                     tac,
                     [
-                        ('pet_anat', 'in_file'),
                         ('segmentation', 'segmentation'),
                         ('dseg_tsv', 'dseg_tsv'),
                         ('metadata', 'metadata'),
