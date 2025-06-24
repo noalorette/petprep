@@ -191,9 +191,6 @@ class SegmentHA_T1OutputSpec(TraitedSpec):
     lh_amygNucVolumes = File(
         exists=True, desc="Left hemisphere amygdala nuclei volumes"
     )
-    rh_hippoAmygLabels = File(
-        exists=True, desc="Right hemisphere hippocampus and amygdala labels"
-    )
     rh_hippoSfVolumes = File(
         exists=True, desc="Right hemisphere hippocampal subfield volumes"
     )
