@@ -18,7 +18,9 @@ def _not_number(token: str) -> bool:
 
 def _read_stats_table(stats_file: str | Path) -> pd.DataFrame:
     from pathlib import Path
+
     import pandas as pd
+
     """Parse a FreeSurfer ``*.stats`` file into a :class:`~pandas.DataFrame`."""
     stats_file = Path(stats_file)
     headers: list[str] | None = None
@@ -112,9 +114,7 @@ def gtm_stats_to_stats(subjects_dir: str, subject_id: str) -> str:
     name_col = 'name' if 'name' in df.columns else 'structname'
     vol_col = 'volume_mm3' if 'volume_mm3' in df.columns else 'volume'
 
-    df = df[['index', name_col, vol_col]].rename(
-        columns={name_col: 'name', vol_col: 'volume-mm3'}
-    )
+    df = df[['index', name_col, vol_col]].rename(columns={name_col: 'name', vol_col: 'volume-mm3'})
 
     out_file = gtm_stats.with_name('gtmseg_morph.tsv')
     df.to_csv(out_file, sep='\t', index=False)
@@ -152,10 +152,13 @@ def summary_to_stats(summary_file: str) -> str:
 def ctab_to_dsegtsv(ctab_file: str) -> str:
     """Convert a FreeSurfer ``ctab`` file to a TSV label table."""
     from pathlib import Path
+
     import pandas as pd
 
     ctab_file = Path(ctab_file)
-    df = pd.read_csv(ctab_file, header=None, delim_whitespace=True, usecols=[0, 1], names=['index', 'name'])
+    df = pd.read_csv(
+        ctab_file, header=None, delim_whitespace=True, usecols=[0, 1], names=['index', 'name']
+    )
     out_file = ctab_file.with_suffix('.tsv')
     df.to_csv(out_file, sep='\t', index=False)
     return str(out_file)
