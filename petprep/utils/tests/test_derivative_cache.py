@@ -24,7 +24,11 @@ def test_baseline_found_as_str(tmp_path: Path, desc: str):
 
     derivs = bids.collect_derivatives(derivatives_dir=tmp_path, entities=entities)
 
-    assert dict(derivs) == {f'{desc}_petref': str(to_find), 'transforms': {}}
+    assert dict(derivs) == {
+        'petref': str(to_find),
+        f'{desc}_petref': str(to_find),
+        'transforms': {},
+    }
 
 
 @pytest.mark.parametrize('xfm', ['petref2anat', 'hmc'])
