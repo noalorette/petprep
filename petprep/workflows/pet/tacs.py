@@ -50,9 +50,8 @@ def init_pet_tacs_wf(*, output_dir: str, metadata: dict, name: str = 'pet_tacs_w
 
     workflow.connect(
             [
-                (inputnode, resample_pet, [('pet_anat', 'in_file'),
-                                           ('segmentation', 'reference')]),
-                (resample_pet, tac, [('out_file', 'in_file')]),
+                (inputnode, resample_pet, [('pet_anat', 'pet_file'),
+                                   ('segmentation', 'segmentation_file')]),
                 (
                     inputnode,
                     tac,
