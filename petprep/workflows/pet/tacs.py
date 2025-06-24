@@ -11,8 +11,6 @@ from .outputs import prepare_timing_parameters
 def init_pet_tacs_wf(*, output_dir: str, metadata: dict, name: str = 'pet_tacs_wf') -> pe.Workflow:
     """Extract time activity curves from a segmentation."""
 
-    timing_parameters = prepare_timing_parameters(metadata)
-
     workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(
