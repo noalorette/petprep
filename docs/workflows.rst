@@ -560,6 +560,29 @@ These workflows make use of various `Connectome Workbench`_ functions.
 These surfaces are then combined with corresponding volumetric timeseries to create a
 CIFTI-2 file.
 
+Segmentation workflows
+~~~~~~~~~~~~~~~~~~~~~~
+:py:func:`~petprep.workflows.pet.segmentation.init_segmentation_wf`
+
+*PETPrep* ships with optional segmentation routines that can be selected via
+the ``--seg`` command-line argument. Supported values are ``gtm`` (the default),
+``brainstem``, ``thalamicNuclei``, ``hippocampusAmygdala``, ``wm``, ``raphe`` and
+``limbic``.
+
+These workflows rely on pretrained segmentation models distributed with
+``petprep.data.segmentation``. The first time a particular model is requested it
+will be automatically downloaded to the *PETPrep* cache directory, so ensure
+sufficient disk space is available. Each segmentation produces a labeled NIfTI
+image ``desc-<seg>_dseg.nii.gz`` and a TSV table of region volumes
+``desc-<seg>_morph.tsv`` saved under the ``anat/`` derivatives folder.
+
+For example, the raphe segmentation can be enabled with::
+
+   petprep run /data/bids /data/out --seg raphe
+
+Resulting outputs will appear in ``sub-*/anat/`` alongside the anatomical
+derivatives and can be used in downstream analyses.
+
 .. _pet_confounds:
 
 Confounds estimation
