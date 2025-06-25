@@ -88,6 +88,12 @@ def init_pet_pvc_wf(
             iterfield=['in_file'],
             name=f'{tool_lower}_{method_key.lower()}_pvc_node',
         )
+        
+        discard_outliers = pe.MapNode(
+            DiscardOutliers(),
+            iterfield=['in_file'],
+            name='discard_outliers'
+        )
 
         workflow.connect([
             (inputnode, split_frames, [('pet_file', 'in_file')]),
