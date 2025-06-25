@@ -390,9 +390,14 @@ configured with cubic B-spline interpolation.
 
         pet_t1w_src = pet_pvc_wf
         pet_t1w_field = 'outputnode.pet_pvc_file'
+        # use PVC-corrected series for downstream resampling
+        pet_std_src = pet_pvc_wf
+        pet_std_field = 'outputnode.pet_pvc_file'
     else:
         pet_t1w_src = pet_anat_wf
         pet_t1w_field = 'outputnode.pet_file'
+        pet_std_src = pet_native_wf
+        pet_std_field = 'outputnode.pet_minimal'
 
     # Full derivatives, including resampled PET series
     if nonstd_spaces.intersection(('anat', 'T1w')):
@@ -436,7 +441,7 @@ configured with cubic B-spline interpolation.
             metadata=all_metadata[0],
             pvc_method=pvc_method if run_pvc else None,
             name='ds_pet_std_wf',
-        )
+        )  # downstream datasink gets PVC method
         ds_pet_std_wf.inputs.inputnode.source_files = pet_series
 
         workflow.connect([
@@ -450,10 +455,10 @@ configured with cubic B-spline interpolation.
                 ('outputnode.petref', 'inputnode.pet_ref_file'),
                 ('outputnode.petref2anat_xfm', 'inputnode.petref2anat_xfm'),
             ]),
-            (pet_native_wf, pet_std_wf, [
-                ('outputnode.pet_minimal', 'inputnode.pet_file'),
-                ('outputnode.motion_xfm', 'inputnode.motion_xfm'),
-            ]),
+            # Use PVC-corrected PET when available so that standard-space
+            # derivatives originate from the PVC data
+            (pet_std_src, pet_std_wf, [(pet_std_field, 'inputnode.pet_file')]),
+            (pet_native_wf, pet_std_wf, [('outputnode.motion_xfm', 'inputnode.motion_xfm')]),
             (inputnode, ds_pet_std_wf, [
                 ('anat2std_xfm', 'inputnode.anat2std_xfm'),
                 ('std_t1w', 'inputnode.template'),
