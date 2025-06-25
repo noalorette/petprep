@@ -146,6 +146,19 @@ class StackTissueProbabilityMaps(BaseInterface):
         affine = nb.load(self.inputs.t1w_tpms[0]).affine
 
         stacked_img = np.stack(imgs, axis=-1)
+        
+        # Ensure the array sums to 1 across the last dimension
+        stacked_img_sum = np.sum(stacked_img, axis=-1, keepdims=True)
+        stacked_img = np.divide(stacked_img, stacked_img_sum, 
+                                out=np.zeros_like(stacked_img), 
+                                where=stacked_img_sum != 0)
+
+        # add background to the stacked image
+        background_mask = np.ones_like(stacked_img[..., 0], dtype=np.float32, order='F')
+        background_mask[stacked_img.sum(axis=-1) > 0] = 0
+        stacked_img = np.concatenate(
+                      (stacked_img, background_mask[..., np.newaxis]),
+                      axis=-1)
 
         new_img = nb.Nifti1Image(stacked_img, affine=affine)
         nb.save(new_img, os.path.abspath(self.inputs.out_file))
