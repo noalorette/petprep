@@ -400,6 +400,7 @@ configured with cubic B-spline interpolation.
             bids_root=str(config.execution.bids_dir),
             output_dir=petprep_dir,
             metadata=all_metadata[0],
+            pvc_method=pvc_method if run_pvc else None,
             name='ds_pet_t1_wf',
         )
         ds_pet_t1_wf.inputs.inputnode.source_files = pet_file
@@ -433,6 +434,7 @@ configured with cubic B-spline interpolation.
             bids_root=str(config.execution.bids_dir),
             output_dir=petprep_dir,
             metadata=all_metadata[0],
+            pvc_method=pvc_method if run_pvc else None,
             name='ds_pet_std_wf',
         )
         ds_pet_std_wf.inputs.inputnode.source_files = pet_series
@@ -483,6 +485,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             medial_surface_nan=config.workflow.medial_surface_nan,
             metadata=all_metadata[0],
             output_dir=petprep_dir,
+            pvc_method=pvc_method if run_pvc else None,
             name='pet_surf_wf',
         )
         pet_surf_wf.inputs.inputnode.source_file = pet_file
@@ -552,6 +555,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             run_without_submitting=True,
         )
         ds_pet_cifti.inputs.source_file = pet_file
+        if run_pvc:
+            ds_pet_cifti.inputs.pvc = pvc_method
 
         workflow.connect([
             # Resample PET to MNI152NLin6Asym, may duplicate pet_std_wf above
