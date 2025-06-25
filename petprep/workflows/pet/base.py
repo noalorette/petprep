@@ -393,11 +393,16 @@ configured with cubic B-spline interpolation.
         # use PVC-corrected series for downstream resampling
         pet_std_src = pet_pvc_wf
         pet_std_field = 'outputnode.pet_pvc_file'
+        # reference already aligned to T1w
+        pet_std_ref_src = petref_t1w
+        pet_std_ref_field = 'output_image'
     else:
         pet_t1w_src = pet_anat_wf
         pet_t1w_field = 'outputnode.pet_file'
         pet_std_src = pet_native_wf
         pet_std_field = 'outputnode.pet_minimal'
+        pet_std_ref_src = pet_fit_wf
+        pet_std_ref_field = 'outputnode.petref'
 
     # Full derivatives, including resampled PET series
     if nonstd_spaces.intersection(('anat', 'T1w')):
@@ -451,14 +456,10 @@ configured with cubic B-spline interpolation.
                 ('anat2std_xfm', 'inputnode.anat2std_xfm'),
                 ('std_resolution', 'inputnode.resolution'),
             ]),
-            (pet_fit_wf, pet_std_wf, [
-                ('outputnode.petref', 'inputnode.pet_ref_file'),
-                ('outputnode.petref2anat_xfm', 'inputnode.petref2anat_xfm'),
-            ]),
+            (pet_std_ref_src, pet_std_wf, [(pet_std_ref_field, 'inputnode.pet_ref_file')]),
             # Use PVC-corrected PET when available so that standard-space
             # derivatives originate from the PVC data
             (pet_std_src, pet_std_wf, [(pet_std_field, 'inputnode.pet_file')]),
-            (pet_native_wf, pet_std_wf, [('outputnode.motion_xfm', 'inputnode.motion_xfm')]),
             (inputnode, ds_pet_std_wf, [
                 ('anat2std_xfm', 'inputnode.anat2std_xfm'),
                 ('std_t1w', 'inputnode.template'),
@@ -477,6 +478,16 @@ configured with cubic B-spline interpolation.
                 ('outputnode.resampling_reference', 'inputnode.ref_file'),
             ]),
         ])  # fmt:skip
+
+        if not run_pvc:
+            workflow.connect([
+                (pet_fit_wf, pet_std_wf, [
+                    ('outputnode.petref2anat_xfm', 'inputnode.petref2anat_xfm'),
+                ]),
+                (pet_native_wf, pet_std_wf, [
+                    ('outputnode.motion_xfm', 'inputnode.motion_xfm'),
+                ]),
+            ])  # fmt:skip
 
     if config.workflow.run_reconall and freesurfer_spaces:
         workflow.__postdesc__ += """\
