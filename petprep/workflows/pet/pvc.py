@@ -76,7 +76,13 @@ def init_pet_pvc_wf(
             iterfield=['source_file'],
             name='resample_pet_to_anat'
         )
-
+        
+        clip_values = pe.MapNode(
+            ClipValues(),
+            iterfield=['in_file'],
+            name='clip_values'
+        )
+        
         pvc_node = pe.MapNode(
             PETPVC(pvc=method_config.pop('pvc'), **method_config),
             iterfield=['in_file'],
