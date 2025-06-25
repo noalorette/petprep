@@ -324,7 +324,11 @@ configured with cubic B-spline interpolation.
     pvc_tool = getattr(config.workflow, 'pvc_tool', None)
     pvc_method = getattr(config.workflow, 'pvc_method', None)
     pvc_psf = getattr(config.workflow, 'pvc_psf', None)
-    run_pvc = pvc_tool is not None and pvc_method is not None and pvc_psf is not None
+    run_pvc = (
+        pvc_tool is not None
+        and pvc_method is not None
+        and pvc_psf is not None
+    )
 
     if run_pvc:
         try:
@@ -334,10 +338,27 @@ configured with cubic B-spline interpolation.
 
         pvc_config = ir_files('petprep.data.pvc') / 'config.json'
 
+        if pvc_tool.lower() == 'petpvc':
+            psf_vals = pvc_psf
+            if len(psf_vals) == 1:
+                psf_vals = psf_vals * 3
+            if len(psf_vals) != 3:
+                raise ValueError(
+                    'PETPVC requires one or three PSF values (FWHM x/y/z).'
+                )
+            pvc_kwargs = {
+                'fwhm_x': psf_vals[0],
+                'fwhm_y': psf_vals[1],
+                'fwhm_z': psf_vals[2],
+            }
+        else:
+            # PETSurfer only accepts an isotropic PSF
+            pvc_kwargs = {'psf': float(pvc_psf[0])}
+
         pet_pvc_wf = init_pet_pvc_wf(
             tool=pvc_tool,
             method=pvc_method,
-            pvc_params={'psf': pvc_psf},
+            pvc_params=pvc_kwargs,
             config_path=pvc_config,
         )
 

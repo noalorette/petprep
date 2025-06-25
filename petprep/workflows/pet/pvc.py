@@ -184,7 +184,7 @@ def init_pet_pvc_wf(
                 ('subjects_dir', 'subjects_dir'),
                 ('subject_id', 'subject_id'),
             ]),
-            (inputnode, tkregister_node, [('petref', 'moving_image')]),
+            (inputnode, tkregister_node, [('pet_file', 'moving_image')]),
             (nu_path_node, tkregister_node, [('nu_path', 'target_image')]),
             (inputnode, tkregister_node, [('subjects_dir', 'subjects_dir'), ('subject_id', 'subject_id')]),
             (tkregister_node, pvc_node, [('lta_file', 'reg_file')]),
