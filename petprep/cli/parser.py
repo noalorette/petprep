@@ -554,6 +554,13 @@ https://petprep.readthedocs.io/en/%s/spaces.html"""
         help='Segmentation method to use.',
     )
 
+    g_refmask = parser.add_argument_group('Options for reference mask generation')
+    g_refmask.add_argument(
+        '--ref-mask-name',
+        choices=['cerebellum'],
+        help='Predefined reference regions',
+    )
+
     g_pvc = parser.add_argument_group('Options for partial volume correction')
     parser.add_argument('--pvc-tool', choices=['petpvc', 'petsurfer'], help='Tool to use for partial volume correction')
     g_pvc.add_argument('--pvc-method', action='store', help='PVC method identifier')
