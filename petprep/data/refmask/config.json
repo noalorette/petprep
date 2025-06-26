@@ -1,8 +1,20 @@
 {
-  "GTM": {
-    "region": "cerebellum",
-    "erode_cerebellum_by_voxels": 1,
-    "dialate_vermis_by_voxels": 4,
-    "dialate_cortex_by_voxels": 4
+  "gtm": {
+    "cerebellum": 
+    {
+    "refmask_indices": [3, 42], 
+    "erode_by_voxels": 1,
+    "exclude_indices": 2, 
+    "dilate_by_voxels": 4
+    }
+  },
+  "wm": {
+    "semiovale":
+    {
+      "refmask_indices": [3, 42], 
+      "erode_by_voxels": 1,
+      "exclude_indices": 2, 
+      "dilate_by_voxels": 4
+    }
   }
 }
