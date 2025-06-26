@@ -187,7 +187,10 @@ The ``--pvc-tool`` flag selects the tool to use (``petpvc`` or ``petsurfer``),
 while ``--pvc-method`` chooses the specific algorithm provided by that tool.
 Use ``--pvc-psf`` to specify the point spread function FWHM, either as a single
 value or three values. When PVC is enabled, the corrected image automatically
-feeds into the remainder of the workflow.
+feeds into the remainder of the workflow, and standard-space outputs are derived
+from this PVC-corrected series. The corrected data are first aligned to the
+T1-weighted anatomy, and only the anatomical-to-template transforms are applied
+for further resampling.
 
 For example, to run PVC using the ``petpvc`` implementation and the ``GTM``
 method with a 5 mm PSF::
