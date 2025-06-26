@@ -1,0 +1,8 @@
+{
+  "GTM": {
+    "region": "cerebellum",
+    "erode_cerebellum_by_voxels": 1,
+    "dialate_vermis_by_voxels": 4,
+    "dialate_cortex_by_voxels": 4
+  }
+}
