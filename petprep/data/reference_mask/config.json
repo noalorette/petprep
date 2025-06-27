@@ -2,9 +2,9 @@
   "gtm": {
     "cerebellum": 
     {
-    "refmask_indices": [3, 42], 
+    "refmask_indices": [47, 8], 
     "erode_by_voxels": 1,
-    "exclude_indices": 2, 
+    "exclude_indices": [7, 46, 172], 
     "dilate_by_voxels": 4
     }
   },

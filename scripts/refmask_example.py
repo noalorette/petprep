@@ -21,7 +21,7 @@ from petprep.workflows.reference_mask import init_pet_refmask_wf
 
 # Test input paths
 seg_file = '/Users/martinnorgaard/Dropbox/Mac/Desktop/ses-baseline/test_pvc/sub-010_ses-baseline_desc-gtm_dseg.nii.gz'      # <-- update this path
-config_file = "/path/to/config.json"            # <-- update this path
+config_file = "/Users/martinnorgaard/Dropbox/Mac/Documents/GitHub/petprep/petprep/data/reference_mask/config.json"            # <-- update this path
 output_dir = Path("test_refmask_output")        # output directory
 output_dir.mkdir(exist_ok=True)
 
