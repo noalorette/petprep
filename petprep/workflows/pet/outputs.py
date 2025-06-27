@@ -356,10 +356,11 @@ def init_ds_petmask_wf(
 def init_ds_refmask_wf(
     *,
     output_dir,
-    desc: str,
+    ref_name: str,
     name='ds_refmask_wf',
 ) -> pe.Workflow:
-    """Write out a reference mask."""
+    """Write out a reference region mask."""
+
     workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(
@@ -380,10 +381,10 @@ def init_ds_refmask_wf(
     ds_refmask = pe.Node(
         DerivativesDataSink(
             base_directory=output_dir,
-            desc='ref',
             datatype='pet',
             suffix='mask',
             compress=True,
+            extra_entities={'ref': ref_name},
         ),
         name='ds_refmask',
         run_without_submitting=True,

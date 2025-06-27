@@ -10,6 +10,7 @@ from ..outputs import (
     init_ds_pet_native_wf,
     init_ds_petmask_wf,
     init_ds_petref_wf,
+    init_ds_refmask_wf,
     init_ds_volumes_wf,
 )
 
@@ -31,6 +32,8 @@ def test_datasink_datatype(tmp_path: Path):
         assert wf.get_node('ds_petref').inputs.datatype == 'pet'
         wf = init_ds_petmask_wf(output_dir=out_dir, desc='brain')
         assert wf.get_node('ds_petmask').inputs.datatype == 'pet'
+        wf = init_ds_refmask_wf(output_dir=out_dir, ref_name='test')
+        assert wf.get_node('ds_refmask').inputs.datatype == 'pet'
         wf = init_ds_pet_native_wf(
             bids_root=bids_dir,
             output_dir=out_dir,
