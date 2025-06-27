@@ -1,5 +1,5 @@
 import numpy as np
-import nibabel as nib
+import nibabel as nb
 
 from petprep.utils.reference_mask import generate_reference_region
 
@@ -7,7 +7,7 @@ from petprep.utils.reference_mask import generate_reference_region
 def test_generate_reference_region_target_volume():
     seg = np.zeros((10, 10, 10), dtype=np.int16)
     seg[3:7, 3:7, 3:7] = 1
-    img = nib.Nifti1Image(seg, np.eye(4))
+    img = nb.Nifti1Image(seg, np.eye(4))
 
     config = {
         "refmask_indices": [1],
@@ -46,3 +46,19 @@ def test_generate_reference_region_exclude_dilate(tmp_path):
     }
     out = generate_reference_region(seg, config).get_fdata()
     assert out.sum() == 0
+
+
+def test_generate_reference_region_large_target_volume():
+    seg = np.zeros((5, 5, 5), dtype=np.int16)
+    seg[1:4, 1:4, 1:4] = 1
+    img = nb.Nifti1Image(seg, np.eye(4))
+
+    config = {
+        "refmask_indices": [1],
+        "smooth_fwhm_mm": 2.3548,
+        "target_volume_ml": 10.0,
+    }
+
+    out_img = generate_reference_region(img, config)
+    mask = out_img.get_fdata()
+    assert mask.sum() == seg.sum()
