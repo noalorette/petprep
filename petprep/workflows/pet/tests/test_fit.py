@@ -10,6 +10,9 @@ from ....utils import bids
 from ...tests import mock_config
 from ...tests.test_base import BASE_LAYOUT
 from ..fit import init_pet_fit_wf, init_pet_native_wf
+from ..outputs import init_refmask_report_wf
+from .... import data
+import yaml
 
 
 @pytest.fixture(scope='module', autouse=True)
@@ -297,3 +300,22 @@ def test_pet_fit_stage1_with_cached_baseline(bids_root: Path, tmp_path: Path):
         wf = init_pet_fit_wf(pet_series=pet_series, precomputed=precomputed, omp_nthreads=1)
 
     assert not any(name.startswith('pet_hmc_wf') for name in wf.list_node_names())
+
+
+def test_init_refmask_report_wf(tmp_path: Path):
+    """Ensure the refmask report workflow initializes without errors."""
+    wf = init_refmask_report_wf(output_dir=str(tmp_path))
+    assert 'mask_report' in wf.list_node_names()
+
+
+def test_reports_spec_contains_refmask():
+    """Check that the report specification includes the refmask reportlet."""
+    for fname in ('reports-spec.yml', 'reports-spec-pet.yml'):
+        spec = yaml.safe_load(
+            (data.load.readable(fname)).read_text()
+        )
+        pet_section = next(s for s in spec['sections'] if s['name'] == 'PET')
+        assert any(
+            r.get('bids', {}).get('desc') == 'refmask'
+            for r in pet_section['reportlets']
+        )
