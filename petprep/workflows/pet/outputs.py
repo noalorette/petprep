@@ -255,6 +255,20 @@ def init_func_fit_reports_wf(
     return workflow
 
 
+__all__ = (
+    'prepare_timing_parameters',
+    'init_func_fit_reports_wf',
+    'init_ds_petref_wf',
+    'init_ds_petmask_wf',
+    'init_ds_refmask_wf',
+    'init_ds_registration_wf',
+    'init_ds_hmc_wf',
+    'init_ds_pet_native_wf',
+    'init_ds_volumes_wf',
+    'init_pet_preproc_report_wf',
+)
+
+
 def init_ds_petref_wf(
     *,
     bids_root,
