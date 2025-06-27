@@ -67,7 +67,7 @@ def init_pet_pvc_wf(
     method_config = config[tool_lower][method_key].copy()
     method_config.update(pvc_params)
 
-    resample_pet_to_petref = pe.MapNode(
+    resample_pet_to_petref = pe.Node(
             ApplyVolTransform(interp='nearest', reg_header=True),
             iterfield=['source_file'],
             name='resample_pet_to_petref'
