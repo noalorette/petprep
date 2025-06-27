@@ -139,7 +139,7 @@ sections:
     static: false
     subtitle: Additional PET Visualizations
   - bids: {datatype: figures, desc: refmask, suffix: pet}
-    caption: Reference region mask overlaid on the PET reference.
+    caption: Reference region mask overlaid on the PET reference and anatomical.
     static: false
     subtitle: Reference mask check
 - name: About

@@ -3,16 +3,16 @@ from pathlib import Path
 import nibabel as nb
 import numpy as np
 import pytest
+import yaml
 from nipype.pipeline.engine.utils import generate_expanded_graph
 from niworkflows.utils.testing import generate_bids_skeleton
 
+from .... import config, data
 from ....utils import bids
 from ...tests import mock_config
 from ...tests.test_base import BASE_LAYOUT
 from ..fit import init_pet_fit_wf, init_pet_native_wf
 from ..outputs import init_refmask_report_wf
-from .... import data
-import yaml
 
 
 @pytest.fixture(scope='module', autouse=True)
@@ -207,17 +207,31 @@ def test_refmask_report_connections(bids_root: Path, tmp_path: Path):
     for path in pet_series:
         img.to_filename(path)
 
+    sidecar = Path(pet_series[0]).with_suffix('').with_suffix('.json')
+    sidecar.write_text('{"FrameTimesStart": [0], "FrameDuration": [1]}')
+
+    dummy_ref = str(tmp_path / 'dummy.nii')
+    dummy_xfm = str(tmp_path / 'dummy.txt')
+    img.to_filename(dummy_ref)
+    np.savetxt(dummy_xfm, np.eye(4))
+    precomputed = {
+        'petref': dummy_ref,
+        'transforms': {'hmc': dummy_xfm, 'petref2anat': dummy_xfm},
+    }
+
     with mock_config(bids_dir=bids_root):
+        config.workflow.ref_mask_name = 'cerebellum'
         wf = init_pet_fit_wf(
             pet_series=pet_series,
-            precomputed={},
+            precomputed=precomputed,
             omp_nthreads=1,
         )
 
-    assert 'refmask_report_wf' in wf.list_node_names()
-    node = wf.get_node('refmask_report_wf')
-    edge = wf._graph.get_edge_data(node, wf.get_node('func_fit_reports_wf'))
-    assert ('outputnode.refmask_report', 'inputnode.refmask_report') in edge['connect']
+    assert 'ds_refmask_wf.ds_refmask' in wf.list_node_names()
+    assert 'func_fit_reports_wf.pet_t1_refmask_report' in wf.list_node_names()
+    reports_node = wf.get_node('func_fit_reports_wf')
+    edge = wf._graph.get_edge_data(wf.get_node('outputnode'), reports_node)
+    assert ('refmask', 'inputnode.refmask') in edge['connect']
 
 
 def test_pet_fit_stage1_inclusion(bids_root: Path, tmp_path: Path):
@@ -317,5 +331,9 @@ def test_reports_spec_contains_refmask():
         pet_section = next(s for s in spec['sections'] if s['name'] == 'PET')
         assert any(
             r.get('bids', {}).get('desc') == 'refmask'
+            for r in pet_section['reportlets']
+        )
+        assert any(
+            r.get('bids', {}).get('desc') == 'refmaskcoreg'
             for r in pet_section['reportlets']
         )

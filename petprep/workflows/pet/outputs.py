@@ -139,6 +139,7 @@ def init_func_fit_reports_wf(
         't1w_preproc',
         't1w_mask',
         't1w_dseg',
+        'refmask',
         # May be missing
         'subject_id',
         'subjects_dir',
@@ -213,6 +214,17 @@ def init_func_fit_reports_wf(
         mem_gb=1,
     )
 
+    petref_refmask = pe.Node(
+        ApplyTransforms(
+            dimension=3,
+            default_value=0,
+            invert_transform_flags=[True],
+            interpolation='NearestNeighbor',
+        ),
+        name='petref_refmask',
+        mem_gb=1,
+    )
+
     # fmt:off
     workflow.connect([
         (inputnode, ds_summary, [
@@ -238,6 +250,11 @@ def init_func_fit_reports_wf(
             ('petref2anat_xfm', 'transforms'),
         ]),
         (t1w_wm, petref_wm, [('out', 'input_image')]),
+        (inputnode, petref_refmask, [
+            ('refmask', 'input_image'),
+            ('petref', 'reference_image'),
+            ('petref2anat_xfm', 'transforms'),
+        ]),
     ])
     # fmt:on
 
@@ -264,6 +281,26 @@ def init_func_fit_reports_wf(
         name='ds_pet_t1_report',
     )
 
+    pet_t1_refmask_report = pe.Node(
+        SimpleBeforeAfter(
+            before_label='T1w',
+            after_label='PET',
+            dismiss_affine=True,
+        ),
+        name='pet_t1_refmask_report',
+        mem_gb=0.1,
+    )
+
+    ds_pet_t1_refmask_report = pe.Node(
+        DerivativesDataSink(
+            base_directory=output_dir,
+            desc='refmask',
+            suffix='pet',
+            datatype='figures',
+        ),
+        name='ds_pet_t1_refmask_report',
+    )
+
     # fmt:off
     workflow.connect([
         (inputnode, pet_t1_report, [('petref', 'after')]),
@@ -271,6 +308,11 @@ def init_func_fit_reports_wf(
         (petref_wm, pet_t1_report, [('output_image', 'wm_seg')]),
         (inputnode, ds_pet_t1_report, [('source_file', 'source_file')]),
         (pet_t1_report, ds_pet_t1_report, [('out_report', 'in_file')]),
+        (inputnode, pet_t1_refmask_report, [('petref', 'after')]),
+        (t1w_petref, pet_t1_refmask_report, [('output_image', 'before')]),
+        (petref_refmask, pet_t1_refmask_report, [('output_image', 'wm_seg')]),
+        (inputnode, ds_pet_t1_refmask_report, [('source_file', 'source_file')]),
+        (pet_t1_refmask_report, ds_pet_t1_refmask_report, [('out_report', 'in_file')]),
     ])
     # fmt:on
 

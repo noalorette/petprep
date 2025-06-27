@@ -489,6 +489,13 @@ def init_pet_fit_wf(
                         ('outputnode.refmask_report', 'inputnode.refmask_report'),
                     ],
                 ),
+                (
+                    outputnode,
+                    func_fit_reports_wf,
+                    [
+                        ('refmask', 'inputnode.refmask'),
+                    ],
+                ),
             ]
         )
     else:
