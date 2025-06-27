@@ -433,7 +433,7 @@ def init_pet_fit_wf(
 
         ds_refmask_wf = init_ds_refmask_wf(
             output_dir=config.execution.petprep_dir,
-            desc=config.workflow.ref_mask_name,
+            ref_name=config.workflow.ref_mask_name,
             name='ds_refmask_wf',
         )
         ds_refmask_wf.inputs.inputnode.source_files = [pet_file]

@@ -47,7 +47,7 @@ class ExtractRefRegion(SimpleInterface):
                     f"and region='{self.inputs.region_name}'"
                 )
 
-        #from petprep.utils.reference_mask import generate_reference_region
+        from petprep.utils.reference_mask import generate_reference_region
 
         refmask_img = generate_reference_region(seg_img=seg_img, config=cfg)
 
