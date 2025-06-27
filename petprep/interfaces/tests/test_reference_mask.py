@@ -85,7 +85,30 @@ def test_extract_refregion_override_ignores_config(tmp_path):
             region_name="region",
             override_indices=[2],
         ),
-        name="er3", base_dir=str(tmp_path)
+        name='er3',
+        base_dir=str(tmp_path),
+    )
+    res = node.run()
+    out = nb.load(res.outputs.refmask_file).get_fdata()
+    assert out[2, 2, 2] == 1
+    assert out.sum() == 1
+
+
+def test_extract_refregion_override_missing_config(tmp_path):
+    seg = _create_seg(tmp_path)
+    cfg_file = tmp_path / 'config.json'
+    cfg_file.write_text(json.dumps({'testseg': {}}))
+
+    node = pe.Node(
+        ExtractRefRegion(
+            seg_file=str(seg),
+            config_file=str(cfg_file),
+            segmentation_type='testseg',
+            region_name='missing',
+            override_indices=[2],
+        ),
+        name='er4',
+        base_dir=str(tmp_path),
     )
     res = node.run()
     out = nb.load(res.outputs.refmask_file).get_fdata()

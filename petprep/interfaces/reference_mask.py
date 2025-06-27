@@ -15,8 +15,10 @@ class ExtractRefRegionInputSpec(BaseInterfaceInputSpec):
     seg_file = File(exists=True, mandatory=True, desc="Segmentation NIfTI file")
     config_file = File(exists=True, mandatory=True, desc="Path to the config.json file")
     segmentation_type = traits.Str(mandatory=True, desc="Type of segmentation (e.g. 'gtm', 'wm')")
-    region_name = traits.Str(mandatory=True, desc="Name of the reference region (e.g. 'cerebellum')")
-    override_indices = traits.List(traits.Int, desc="Use these indices instead of configuration")
+    region_name = traits.Str(
+        mandatory=True, desc="Name of the reference region (e.g. 'cerebellum')"
+    )
+    override_indices = traits.List(traits.Int, desc='Use these indices instead of configuration')
 
 
 class ExtractRefRegionOutputSpec(TraitedSpec):
@@ -30,22 +32,22 @@ class ExtractRefRegion(SimpleInterface):
     def _run_interface(self, runtime):
         seg_img = nib.load(self.inputs.seg_file)
 
-        # Load the config
-        with open(self.inputs.config_file, "r") as f:
-            config = json.load(f)
-
-        try:
-            cfg = config[self.inputs.segmentation_type][self.inputs.region_name]
-        except KeyError:
-            raise ValueError(
-                f"Configuration not found for segmentation='{self.inputs.segmentation_type}' "
-                f"and region='{self.inputs.region_name}'"
-            )
-
         if isdefined(self.inputs.override_indices):
-            cfg = {"refmask_indices": list(self.inputs.override_indices)}
+            cfg = {'refmask_indices': list(self.inputs.override_indices)}
+        else:
+            # Load the config
+            with open(self.inputs.config_file, 'r') as f:
+                config = json.load(f)
 
-        from petprep.utils.reference_mask import generate_reference_region
+            try:
+                cfg = config[self.inputs.segmentation_type][self.inputs.region_name]
+            except KeyError:
+                raise ValueError(
+                    f"Configuration not found for segmentation='{self.inputs.segmentation_type}' "
+                    f"and region='{self.inputs.region_name}'"
+                )
+
+        #from petprep.utils.reference_mask import generate_reference_region
 
         refmask_img = generate_reference_region(seg_img=seg_img, config=cfg)
 

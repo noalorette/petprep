@@ -558,7 +558,7 @@ https://petprep.readthedocs.io/en/%s/spaces.html"""
     g_refmask.add_argument(
         '--ref-mask-name',
         choices=['cerebellum', 'semiovale'],
-        help='Predefined reference regions',
+        help='Predefined reference regions. Pair with --ref-mask-index to define custom labels.',
     )
     g_refmask.add_argument(
         '--ref-mask-index',
