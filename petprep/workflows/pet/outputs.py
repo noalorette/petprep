@@ -117,6 +117,12 @@ def init_func_fit_reports_wf(
         Brain (binary) mask estimated by brain extraction.
     template
         Template space and specifications
+    summary_report
+        Summary of preprocessing steps
+    validation_report
+        Reportlet from input data validation
+    refmask_report
+        Reportlet showing the reference region mask
 
     """
     from nireports.interfaces.reporting.base import (
@@ -139,6 +145,7 @@ def init_func_fit_reports_wf(
         # Report snippets
         'summary_report',
         'validation_report',
+        'refmask_report',
     ]
     inputnode = pe.Node(niu.IdentityInterface(fields=inputfields), name='inputnode')
 
@@ -160,6 +167,17 @@ def init_func_fit_reports_wf(
             datatype='figures',
         ),
         name='ds_report_validation',
+        run_without_submitting=True,
+        mem_gb=config.DEFAULT_MEMORY_MIN_GB,
+    )
+
+    ds_refmask_report = pe.Node(
+        DerivativesDataSink(
+            base_directory=output_dir,
+            desc='refmask',
+            datatype='figures',
+        ),
+        name='ds_report_refmask',
         run_without_submitting=True,
         mem_gb=config.DEFAULT_MEMORY_MIN_GB,
     )
@@ -204,6 +222,10 @@ def init_func_fit_reports_wf(
         (inputnode, ds_validation, [
             ('source_file', 'source_file'),
             ('validation_report', 'in_file'),
+        ]),
+        (inputnode, ds_refmask_report, [
+            ('source_file', 'source_file'),
+            ('refmask_report', 'in_file'),
         ]),
         (inputnode, t1w_petref, [
             ('t1w_preproc', 'input_image'),
@@ -266,6 +288,7 @@ __all__ = (
     'init_ds_pet_native_wf',
     'init_ds_volumes_wf',
     'init_pet_preproc_report_wf',
+    'init_refmask_report_wf',
 )
 
 
@@ -806,5 +829,41 @@ def init_pet_preproc_report_wf(
         (pet_rpt, ds_report_pet, [('out_report', 'in_file')]),
     ])
     # fmt:on
+
+    return workflow
+
+
+def init_refmask_report_wf(*, output_dir: str, name: str = 'refmask_report_wf') -> pe.Workflow:
+    """Generate a reportlet for the reference mask."""
+
+    from nireports.interfaces.reportlets.masks import SimpleShowMaskRPT
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+
+    workflow = Workflow(name=name)
+
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=['source_file', 'petref', 'refmask']),
+        name='inputnode',
+    )
+    outputnode = pe.Node(niu.IdentityInterface(fields=['refmask_report']), name='outputnode')
+
+    mask_report = pe.Node(SimpleShowMaskRPT(), name='mask_report')
+    ds_mask_report = pe.Node(
+        DerivativesDataSink(
+            base_directory=output_dir,
+            desc='refmask',
+            datatype='figures',
+        ),
+        name='ds_report_refmask',
+        run_without_submitting=True,
+        mem_gb=config.DEFAULT_MEMORY_MIN_GB,
+    )
+
+    workflow.connect([
+        (inputnode, mask_report, [('petref', 'background_file'), ('refmask', 'mask_file')]),
+        (inputnode, ds_mask_report, [('source_file', 'source_file')]),
+        (mask_report, ds_mask_report, [('out_report', 'in_file')]),
+        (mask_report, outputnode, [('out_report', 'refmask_report')]),
+    ])
 
     return workflow

@@ -6,9 +6,9 @@ import pytest
 from nipype.pipeline.engine.utils import generate_expanded_graph
 from niworkflows.utils.testing import generate_bids_skeleton
 
+from ....utils import bids
 from ...tests import mock_config
 from ...tests.test_base import BASE_LAYOUT
-from ....utils import bids
 from ..fit import init_pet_fit_wf, init_pet_native_wf
 
 
@@ -195,6 +195,26 @@ def test_petref_report_connections(bids_root: Path, tmp_path: Path):
     petref_buffer = wf.get_node('petref_buffer')
     edge = wf._graph.get_edge_data(petref_buffer, wf.get_node('func_fit_reports_wf'))
     assert ('petref', 'inputnode.petref') in edge['connect']
+
+
+def test_refmask_report_connections(bids_root: Path, tmp_path: Path):
+    """Ensure the reference mask report is passed to the reports workflow."""
+    pet_series = [str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')]
+    img = nb.Nifti1Image(np.zeros((2, 2, 2, 1)), np.eye(4))
+    for path in pet_series:
+        img.to_filename(path)
+
+    with mock_config(bids_dir=bids_root):
+        wf = init_pet_fit_wf(
+            pet_series=pet_series,
+            precomputed={},
+            omp_nthreads=1,
+        )
+
+    assert 'refmask_report_wf' in wf.list_node_names()
+    node = wf.get_node('refmask_report_wf')
+    edge = wf._graph.get_edge_data(node, wf.get_node('func_fit_reports_wf'))
+    assert ('outputnode.refmask_report', 'inputnode.refmask_report') in edge['connect']
 
 
 def test_pet_fit_stage1_inclusion(bids_root: Path, tmp_path: Path):

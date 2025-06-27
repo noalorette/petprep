@@ -41,6 +41,7 @@ from .outputs import (
     init_ds_refmask_wf,
     init_ds_registration_wf,
     init_func_fit_reports_wf,
+    init_refmask_report_wf,
     prepare_timing_parameters,
 )
 from .reference_mask import init_pet_refmask_wf
@@ -438,6 +439,11 @@ def init_pet_fit_wf(
         )
         ds_refmask_wf.inputs.inputnode.source_files = [pet_file]
 
+        refmask_report_wf = init_refmask_report_wf(
+            output_dir=config.execution.petprep_dir,
+            name='refmask_report_wf',
+        )
+        
         workflow.connect(
             [
                 (
@@ -459,6 +465,28 @@ def init_pet_fit_wf(
                     ds_refmask_wf,
                     [
                         ('outputnode.refmask_file', 'inputnode.refmask'),
+                    ],
+                ),
+                (
+                    petref_buffer,
+                    refmask_report_wf,
+                    [
+                        ('pet_file', 'inputnode.source_file'),
+                        ('petref', 'inputnode.petref'),
+                    ],
+                ),
+                (
+                    refmask_wf,
+                    refmask_report_wf,
+                    [
+                        ('outputnode.refmask_file', 'inputnode.refmask'),
+                    ],
+                ),
+                (
+                    refmask_report_wf,
+                    func_fit_reports_wf,
+                    [
+                        ('outputnode.refmask_report', 'inputnode.refmask_report'),
                     ],
                 ),
             ]
