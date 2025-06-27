@@ -41,11 +41,10 @@ def generate_reference_region(
 
     # Step 3: Optional exclusion
     if "exclude_indices" in config and config["exclude_indices"]:
-        exclude = np.isin(data, config["exclude_indices"]).astype(np.uint8)
+        exclude = np.isin(data, config["exclude_indices"])  # bool mask
         if "dilate_by_voxels" in config and config["dilate_by_voxels"] > 0:
-            exclude = binary_dilation(exclude, ball(config["dilate_by_voxels"])).astype(np.uint8)
-        mask = mask - exclude
-        mask = _clip(mask)
+            exclude = binary_dilation(exclude, ball(config["dilate_by_voxels"]))
+        mask[exclude] = 0
 
     # Step 4: Optional smoothing + volume constraint
     if "smooth_fwhm_mm" in config and "target_volume_ml" in config:

@@ -4,8 +4,8 @@
     {
     "refmask_indices": [47, 8], 
     "erode_by_voxels": 1,
-    "exclude_indices": [7, 46, 172], 
-    "dilate_by_voxels": 4
+    "exclude_indices": [7, 46, 172, 1007, 2007, 1009, 2009, 1011, 2011, 1013, 2013, 16], 
+    "dilate_by_voxels": 3
     }
   },
   "wm": {
