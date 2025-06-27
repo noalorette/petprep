@@ -28,7 +28,7 @@ output_dir.mkdir(exist_ok=True)
 # Workflow configuration
 segmentation = "gtm"                             # matches top-level key in config.json
 ref_mask_name = "cerebellum"                     # matches inner key under segmentation
-ref_mask_index = None                            # OR: ref_mask_index = [3, 42]
+ref_mask_index = [8, 47]                            # OR: ref_mask_index = [3, 42]
 
 # Initialize workflow
 wf = init_pet_refmask_wf(

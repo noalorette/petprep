@@ -9,7 +9,7 @@ from ..reference_mask import ExtractRefRegion
 
 
 def _create_seg(tmp_path: Path) -> Path:
-    data = np.zeros((5, 5, 5), dtype=int)
+    data = np.zeros((5, 5, 5), dtype=np.uint8)
     data[1, 1, 1] = 1
     data[2, 2, 2] = 2
     img = nb.Nifti1Image(data, np.eye(4))
@@ -18,8 +18,10 @@ def _create_seg(tmp_path: Path) -> Path:
     return seg_file
 
 
-def _create_config(tmp_path: Path, indices):
+def _create_config(tmp_path: Path, indices, extra=None):
     cfg = {"testseg": {"region": {"refmask_indices": indices}}}
+    if extra:
+        cfg["testseg"]["region"].update(extra)
     cfg_file = tmp_path / "config.json"
     cfg_file.write_text(json.dumps(cfg))
     return cfg_file
@@ -36,7 +38,7 @@ def test_extract_refregion(tmp_path):
             segmentation_type="testseg",
             region_name="region",
         ),
-        base_dir=str(tmp_path),
+        name="er", base_dir=str(tmp_path)
     )
     res = node.run()
     out = nb.load(res.outputs.refmask_file).get_fdata()
@@ -56,7 +58,34 @@ def test_extract_refregion_override(tmp_path):
             region_name="region",
             override_indices=[2],
         ),
-        base_dir=str(tmp_path),
+        name="er2", base_dir=str(tmp_path)
+    )
+    res = node.run()
+    out = nb.load(res.outputs.refmask_file).get_fdata()
+    assert out[2, 2, 2] == 1
+    assert out.sum() == 1
+
+
+def test_extract_refregion_override_ignores_config(tmp_path):
+    seg = _create_seg(tmp_path)
+    cfg = _create_config(
+        tmp_path,
+        [1],
+        {
+            "exclude_indices": [2],
+            "erode_by_voxels": 1,
+        },
+    )
+
+    node = pe.Node(
+        ExtractRefRegion(
+            seg_file=str(seg),
+            config_file=str(cfg),
+            segmentation_type="testseg",
+            region_name="region",
+            override_indices=[2],
+        ),
+        name="er3", base_dir=str(tmp_path)
     )
     res = node.run()
     out = nb.load(res.outputs.refmask_file).get_fdata()

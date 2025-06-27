@@ -43,8 +43,7 @@ class ExtractRefRegion(SimpleInterface):
             )
 
         if isdefined(self.inputs.override_indices):
-            cfg = cfg.copy()
-            cfg["refmask_indices"] = list(self.inputs.override_indices)
+            cfg = {"refmask_indices": list(self.inputs.override_indices)}
 
         from petprep.utils.reference_mask import generate_reference_region
 
