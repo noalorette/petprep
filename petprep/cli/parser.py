@@ -706,6 +706,14 @@ def parse_args(args=None, namespace=None):
             'Options --pvc-tool, --pvc-method and --pvc-psf must be used together.'
         )
 
+    if opts.ref_mask_index is not None and opts.ref_mask_name is None:
+        parser.error('Option --ref-mask-index requires --ref-mask-name.')
+
+    if opts.ref_mask_name is not None:
+        config.workflow.ref_mask_name = opts.ref_mask_name
+    if opts.ref_mask_index is not None:
+        config.workflow.ref_mask_index = tuple(opts.ref_mask_index)
+
     if opts.pvc_tool is not None:
         config.workflow.pvc_tool = opts.pvc_tool
     if opts.pvc_method is not None:

@@ -1,10 +1,13 @@
 from nipype.interfaces.base import (
-    SimpleInterface, BaseInterfaceInputSpec, TraitedSpec,
-    File, traits
+    SimpleInterface,
+    BaseInterfaceInputSpec,
+    TraitedSpec,
+    File,
+    traits,
+    isdefined,
 )
 import os
 import nibabel as nib
-import numpy as np
 import json
 
 
@@ -13,6 +16,7 @@ class ExtractRefRegionInputSpec(BaseInterfaceInputSpec):
     config_file = File(exists=True, mandatory=True, desc="Path to the config.json file")
     segmentation_type = traits.Str(mandatory=True, desc="Type of segmentation (e.g. 'gtm', 'wm')")
     region_name = traits.Str(mandatory=True, desc="Name of the reference region (e.g. 'cerebellum')")
+    override_indices = traits.List(traits.Int, desc="Use these indices instead of configuration")
 
 
 class ExtractRefRegionOutputSpec(TraitedSpec):
@@ -33,24 +37,18 @@ class ExtractRefRegion(SimpleInterface):
         try:
             cfg = config[self.inputs.segmentation_type][self.inputs.region_name]
         except KeyError:
-            raise ValueError(f"Configuration not found for segmentation='{self.inputs.segmentation_type}' "
-                             f"and region='{self.inputs.region_name}'")
+            raise ValueError(
+                f"Configuration not found for segmentation='{self.inputs.segmentation_type}' "
+                f"and region='{self.inputs.region_name}'"
+            )
 
-        # Extract configuration parameters
-        target_labels = cfg.get("refmask_indices", [])
-        surrounding_labels = cfg.get("exclude_indices", [])
-        erode = cfg.get("erode_by_voxels", 0)
-        dilate = cfg.get("dilate_by_voxels", 0)
+        if isdefined(self.inputs.override_indices):
+            cfg = cfg.copy()
+            cfg["refmask_indices"] = list(self.inputs.override_indices)
 
-        from .your_module import extract_refregion_from_segmentation  # adjust this import
+        from ..utils.reference_mask import generate_reference_region
 
-        refmask_img = extract_refregion_from_segmentation(
-            seg_img=seg_img,
-            target_labels=target_labels,
-            surrounding_labels=surrounding_labels,
-            erode_by_voxels=erode,
-            dilate_surrounding_by_voxels=dilate
-        )
+        refmask_img = generate_reference_region(seg_img=seg_img, config=cfg)
 
         out_file = os.path.abspath("refmask.nii.gz")
         nib.save(refmask_img, out_file)

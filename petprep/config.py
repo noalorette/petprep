@@ -605,6 +605,12 @@ class workflow(_Config):
     pvc_psf: tuple | None = None
     """Point spread function (PSF) FWHM in mm for PVC."""
 
+    ref_mask_name: str | None = None
+    """Name of the reference region mask to generate."""
+
+    ref_mask_index: tuple | None = None
+    """Tuple of label indices used to build the reference mask."""
+
 class loggers:
     """Keep loggers easily accessible (see :py:func:`init`)."""
 
