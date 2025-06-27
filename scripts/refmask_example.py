@@ -15,30 +15,33 @@ Created on Tue Jun 24 09:45:55 2025
 """
 
 import os
-from nipype import Workflow, Node
-from nipype.interfaces.utility import IdentityInterface
+from pathlib import Path
+from nipype import Node
+from petprep.workflows.reference_mask import init_pet_refmask_wf
 
-def main():
-    # Define paths to your input files
-    segmentation = 'sub-010_ses-baseline_desc-gtm_dseg.nii.gz'
-    
-    output_dir = 'test_data/'
-    
-    # Ensure the output directory exists
-    os.makedirs(output_dir, exist_ok=True)
+# Test input paths
+seg_file = '/Users/martinnorgaard/Dropbox/Mac/Desktop/ses-baseline/test_pvc/sub-010_ses-baseline_desc-gtm_dseg.nii.gz'      # <-- update this path
+config_file = "/path/to/config.json"            # <-- update this path
+output_dir = Path("test_refmask_output")        # output directory
+output_dir.mkdir(exist_ok=True)
 
-    # Initialize the workflow
-    workflow = init_refmask_wf(output_dir=output_dir, metadata={}, name='test_refmask_wf')
+# Workflow configuration
+segmentation = "gtm"                             # matches top-level key in config.json
+ref_mask_name = "cerebellum"                     # matches inner key under segmentation
+ref_mask_index = None                            # OR: ref_mask_index = [3, 42]
 
-    # Set inputs to the workflow
-    workflow.inputs.inputnode.segmentation = segmentation
+# Initialize workflow
+wf = init_pet_refmask_wf(
+    segmentation=segmentation,
+    ref_mask_name=ref_mask_name,
+    ref_mask_index=ref_mask_index,
+    config_path=config_file,
+    name="test_refmask_wf"
+)
 
+# Provide the segmentation file as input
+wf.inputs.inputnode.seg_file = seg_file
+wf.base_dir = str(output_dir)
 
-    # Run the workflow
-    workflow.base_dir = os.path.join(output_dir, 'work')
-    workflow.run()
-
-    print("Workflow execution completed.")
-
-if __name__ == '__main__':
-    main()
+# Run the workflow
+wf.run()
