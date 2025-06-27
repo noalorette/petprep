@@ -23,7 +23,10 @@ class Binarise4DSegmentationInputSpec(BaseInterfaceInputSpec):
 
 class Binarise4DSegmentationOutputSpec(TraitedSpec):
     out_file = File(exists=True, desc="Output 4D binary segmentation file")
-    label_list = traits.List(traits.Int, desc="List of labels corresponding to the segmentation regions")
+    label_list = traits.List(
+        traits.Int,
+        desc="List of labels corresponding to the segmentation regions, including background as the first label",
+    )
 
 
 class Binarise4DSegmentation(BaseInterface):
@@ -35,7 +38,6 @@ class Binarise4DSegmentation(BaseInterface):
         dseg_data = dseg_img.get_fdata().astype(np.int32)
 
         region_labels = np.unique(dseg_data)
-        region_labels = region_labels[region_labels != 0]  # exclude background
 
         binarised_4d = np.zeros(dseg_data.shape + (len(region_labels),), dtype=np.uint8)
 
@@ -87,7 +89,11 @@ class StackTissueProbabilityMaps(BaseInterface):
 class CSVtoNiftiInputSpec(BaseInterfaceInputSpec):
     csv_file = File(exists=True, mandatory=True, desc="Input CSV file with region means")
     reference_nifti = File(exists=True, mandatory=True, desc="Reference NIfTI file for spatial information")
-    label_list = traits.List(traits.Int, mandatory=True, desc="List of labels corresponding to regions")
+    label_list = traits.List(
+        traits.Int,
+        mandatory=True,
+        desc="List of labels corresponding to regions, including background as the first label",
+    )
     out_file = File("output_from_csv.nii.gz", usedefault=True, desc="Output NIfTI file")
 
 
@@ -108,8 +114,9 @@ class CSVtoNifti(BaseInterface):
 
         output_data = np.zeros(reference_data.shape, dtype=np.float32)
 
-        for idx, label in enumerate(self.inputs.label_list):
-            mean_value = csv_data.iloc[idx]['MEAN']
+        labels = self.inputs.label_list[1:]
+        for idx, label in enumerate(labels):
+            mean_value = csv_data.iloc[idx + 1]['MEAN']  # skip background
             output_data[reference_data == label] = mean_value
 
         output_img = nb.Nifti1Image(output_data, affine=reference_img.affine, header=reference_img.header)
