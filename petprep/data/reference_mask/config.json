@@ -12,9 +12,8 @@
     "semiovale":
     {
       "refmask_indices": [3, 42], 
-      "erode_by_voxels": 1,
-      "exclude_indices": 2, 
-      "dilate_by_voxels": 4
+      "smooth_fwhm_mm": 10,
+      "target_volume_ml": 45
     }
   }
 }
