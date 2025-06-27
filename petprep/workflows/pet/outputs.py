@@ -353,6 +353,55 @@ def init_ds_petmask_wf(
     return workflow
 
 
+def init_ds_refmask_wf(
+    *,
+    output_dir,
+    desc: str,
+    name='ds_refmask_wf',
+) -> pe.Workflow:
+    """Write out a reference mask."""
+    workflow = pe.Workflow(name=name)
+
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=['source_files', 'refmask']),
+        name='inputnode',
+    )
+    outputnode = pe.Node(niu.IdentityInterface(fields=['refmask']), name='outputnode')
+
+    sources = pe.Node(
+        BIDSURI(
+            numinputs=1,
+            dataset_links=config.execution.dataset_links,
+            out_dir=str(output_dir),
+        ),
+        name='sources',
+    )
+
+    ds_refmask = pe.Node(
+        DerivativesDataSink(
+            base_directory=output_dir,
+            desc='ref',
+            datatype='pet',
+            suffix='mask',
+            compress=True,
+        ),
+        name='ds_refmask',
+        run_without_submitting=True,
+    )
+
+    workflow.connect([
+        (inputnode, sources, [('source_files', 'in1')]),
+        (inputnode, ds_refmask, [
+            ('refmask', 'in_file'),
+            ('source_files', 'source_file'),
+        ]),
+        (sources, ds_refmask, [('out', 'Sources')]),
+        (ds_refmask, outputnode, [('out_file', 'refmask')]),
+    ])  # fmt:skip
+
+    return workflow
+
+
 def init_ds_registration_wf(
     *,
     bids_root: str,
