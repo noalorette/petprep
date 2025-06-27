@@ -4,10 +4,6 @@ from scipy.ndimage import gaussian_filter
 from skimage.morphology import binary_dilation, binary_erosion, ball
 
 
-def _clip(mask: np.ndarray, between=(0, 1)) -> np.ndarray:
-    return np.clip(mask, *between)
-
-
 def generate_reference_region(
     seg_img: nib.Nifti1Image,
     config: dict
