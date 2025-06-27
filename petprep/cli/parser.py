@@ -557,8 +557,14 @@ https://petprep.readthedocs.io/en/%s/spaces.html"""
     g_refmask = parser.add_argument_group('Options for reference mask generation')
     g_refmask.add_argument(
         '--ref-mask-name',
-        choices=['cerebellum'],
+        choices=['cerebellum', 'semiovale'],
         help='Predefined reference regions',
+    )
+    g_refmask.add_argument(
+        '--ref-mask-index',
+        nargs='+',
+        type=int,
+        help='List of segmentation indices to use for the reference mask.',
     )
 
     g_pvc = parser.add_argument_group('Options for partial volume correction')
