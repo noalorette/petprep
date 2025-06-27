@@ -836,10 +836,7 @@ def init_pet_preproc_report_wf(
 def init_refmask_report_wf(*, output_dir: str, name: str = 'refmask_report_wf') -> pe.Workflow:
     """Generate a reportlet for the reference mask."""
 
-    try:
-        from nireports.reportlets.masks import SimpleShowMaskRPT
-    except ModuleNotFoundError:  # fallback for older versions
-        from nireports.interfaces.reportlets.masks import SimpleShowMaskRPT
+    from niworkflows.interfaces.reportlets.masks import SimpleShowMaskRPT
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 
     workflow = Workflow(name=name)
