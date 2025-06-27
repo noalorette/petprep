@@ -11,7 +11,7 @@
   "wm": {
     "semiovale":
     {
-      "refmask_indices": [3, 42], 
+      "refmask_indices": [5001, 5002], 
       "smooth_fwhm_mm": 10,
       "target_volume_ml": 45
     }

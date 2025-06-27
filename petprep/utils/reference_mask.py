@@ -53,7 +53,7 @@ def generate_reference_region(
         smoothed = gaussian_filter(mask.astype(np.float32), sigma=sigma)
 
         target_voxels = int((config["target_volume_ml"] * 1000) / voxel_vol_mm3)
-        threshold = np.sort(smoothed.flatten())[-target_voxels]
+        threshold = np.sort(smoothed[mask > 0].flatten())[-target_voxels]
         mask = ((smoothed >= threshold) & (mask > 0)).astype(np.uint8)
 
     return nib.Nifti1Image(mask, affine, header)
