@@ -15,6 +15,7 @@ from ...interfaces.bids import BIDSURI
 from ...interfaces.segmentation import (
     MRISclimbicSeg,
     SegmentBS,
+    SegmentGTM,
     SegmentHA_T1,
     SegmentThalamicNuclei,
     SegmentWM,
@@ -61,7 +62,7 @@ def _merge_ha_labels(lh_file: str, rh_file: str) -> str:
 
 SEGMENTATIONS = {
     'gtm': {
-        'interface': GTMSeg,
+        'interface': SegmentGTM,
         'interface_kwargs': {'args': '--xcerseg'},
         'desc': 'gtm',
         'inputs': [('subjects_dir', 'subjects_dir'), ('subject_id', 'subject_id')],

@@ -23,6 +23,7 @@ from nipype.interfaces.base import (
     traits,
 )
 from nipype.interfaces.freesurfer.base import FSCommand, FSTraitedSpec
+from nipype.interfaces.freesurfer.petsurfer import GTMSeg
 from nipype.utils.filemanip import fname_presuffix
 
 
@@ -311,6 +312,20 @@ class SegmentWM(SimpleInterface):
     def _run_command(self, cmd):
         proc = subprocess.run(cmd, capture_output=True, text=True)
         return proc.stdout, proc.stderr
+
+
+class SegmentGTM(GTMSeg):
+    """Run ``gtmseg`` unless outputs already exist."""
+
+    def _run_interface(self, runtime):
+        subj_dir = Path(self.inputs.subjects_dir) / self.inputs.subject_id
+        seg_file = subj_dir / 'mri' / self.inputs.out_file
+        stats_file = subj_dir / 'stats' / Path(self.inputs.out_file).with_suffix('.stats').name
+
+        if seg_file.exists() and stats_file.exists():
+            return runtime
+
+        return super()._run_interface(runtime)
 
 
 __docformat__ = 'restructuredtext'
