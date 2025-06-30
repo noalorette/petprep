@@ -56,8 +56,18 @@ def _read_stats_table(stats_file: str | Path) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=headers)
 
 
-def gtm_to_dsegtsv(subjects_dir: str, subject_id: str) -> str:
-    """Generate a TSV table describing GTM segmentation labels."""
+def gtm_to_dsegtsv(
+    subjects_dir: str, subject_id: str, seg_file: str | None = None
+) -> str:
+    """Generate a TSV table describing GTM segmentation labels.
+
+    Parameters
+    ----------
+    subjects_dir, subject_id
+        FreeSurfer subject directory and ID.
+    seg_file
+        Unused. Present for interface compatibility.
+    """
     from pathlib import Path
 
     import pandas as pd  # noqa: F401
@@ -87,8 +97,18 @@ def gtm_to_dsegtsv(subjects_dir: str, subject_id: str) -> str:
     return str(out_file)
 
 
-def gtm_stats_to_stats(subjects_dir: str, subject_id: str) -> str:
-    """Generate a TSV table of morphological statistics from ``gtmseg.stats``."""
+def gtm_stats_to_stats(
+    subjects_dir: str, subject_id: str, seg_file: str | None = None
+) -> str:
+    """Generate a TSV table of morphological statistics from ``gtmseg.stats``.
+
+    Parameters
+    ----------
+    subjects_dir, subject_id
+        FreeSurfer subject directory and ID.
+    seg_file
+        Unused. Present for interface compatibility.
+    """
     from pathlib import Path
 
     import pandas as pd  # noqa: F401

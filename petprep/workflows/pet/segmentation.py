@@ -62,7 +62,7 @@ def _merge_ha_labels(lh_file: str, rh_file: str) -> str:
 SEGMENTATIONS = {
     'gtm': {
         'interface': GTMSeg,
-        'interface_kwargs': {'args': '--no-xcerseg'},
+        'interface_kwargs': {'args': '--xcerseg'},
         'desc': 'gtm',
         'inputs': [('subjects_dir', 'subjects_dir'), ('subject_id', 'subject_id')],
         'segstats': False,
@@ -200,7 +200,7 @@ def _build_nodes(
         nodes['make_dseg'] = pe.Node(
             niu.Function(
                 function=dseg_func,
-                input_names=['subjects_dir', 'subject_id'],
+                input_names=['subjects_dir', 'subject_id', 'seg_file'],
                 output_names=['out_file'],
             ),
             name=f'make_{seg}dsegtsv',
@@ -208,7 +208,7 @@ def _build_nodes(
         nodes['make_morph'] = pe.Node(
             niu.Function(
                 function=morph_func,
-                input_names=['subjects_dir', 'subject_id'],
+                input_names=['subjects_dir', 'subject_id', 'seg_file'],
                 output_names=['out_file'],
             ),
             name=f'make_{seg}morphtsv',
@@ -325,13 +325,21 @@ def init_segmentation_wf(seg: str = 'gtm', name: str | None = None) -> Workflow:
                 (
                     inputnode,
                     nodes['make_dseg'],
-                    [('subjects_dir', 'subjects_dir'), ('subject_id', 'subject_id')],
+                    [
+                        ('subjects_dir', 'subjects_dir'),
+                        ('subject_id', 'subject_id'),
+                    ],
                 ),
                 (
                     inputnode,
                     nodes['make_morph'],
-                    [('subjects_dir', 'subjects_dir'), ('subject_id', 'subject_id')],
+                    [
+                        ('subjects_dir', 'subjects_dir'),
+                        ('subject_id', 'subject_id'),
+                    ],
                 ),
+                (seg_node, nodes['make_dseg'], [('out_file', 'seg_file')]),
+                (seg_node, nodes['make_morph'], [('out_file', 'seg_file')]),
                 (nodes['make_dseg'], nodes['ds_dseg_tsv'], [('out_file', 'in_file')]),
                 (nodes['make_morph'], nodes['ds_morph_tsv'], [('out_file', 'in_file')]),
             ]
