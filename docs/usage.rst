@@ -185,6 +185,11 @@ Partial volume correction
 *PETPrep* can optionally correct PET images for partial volume effects.
 The ``--pvc-tool`` flag selects the tool to use (``petpvc`` or ``petsurfer``),
 while ``--pvc-method`` chooses the specific algorithm provided by that tool.
+Available ``petpvc`` methods are ``GTM``, ``LABBE``, ``RL``, ``VC``, ``RBV``,
+``LABBE+RBV``, ``RBV+VC``, ``RBV+RL``, ``LABBE+RBV+VC``, ``LABBE+RBV+RL``,
+``STC``, ``MTC``, ``LABBE+MTC``, ``MTC+VC``, ``MTC+RL``, ``LABBE+MTC+VC``,
+``LABBE+MTC+RL``, ``IY``, ``IY+VC``, ``IY+RL``, ``MG``, ``MG+VC`` and ``MG+RL``.
+``petsurfer`` provides ``GTM``, ``MG``, ``RBV`` and ``AGTM``.
 Use ``--pvc-psf`` to specify the point spread function FWHM, either as a single
 value or three values. When PVC is enabled, the corrected image automatically
 feeds into the remainder of the workflow, and standard-space outputs are derived

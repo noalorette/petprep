@@ -260,3 +260,26 @@ def test_pvc_argument_handling(tmp_path, minimal_bids):
     assert config.workflow.pvc_method == 'GTM'
     assert config.workflow.pvc_psf == (2.0, 2.0, 2.0)
     _reset_config()
+
+
+def test_pvc_invalid_method(tmp_path, minimal_bids):
+    out_dir = tmp_path / 'out'
+    work_dir = tmp_path / 'work'
+    args = [
+        str(minimal_bids),
+        str(out_dir),
+        'participant',
+        '-w',
+        str(work_dir),
+        '--skip-bids-validation',
+        '--pvc-tool',
+        'petpvc',
+        '--pvc-method',
+        'BAD',
+        '--pvc-psf',
+        '5',
+    ]
+
+    with pytest.raises(SystemExit):
+        parse_args(args=args)
+    _reset_config()
