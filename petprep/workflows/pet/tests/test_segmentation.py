@@ -50,3 +50,18 @@ def test_merge_ha_labels_misaligned(tmp_path):
 
     with pytest.raises(ValueError):
         _merge_ha_labels(str(lh_file), str(rh_file))
+
+
+def test_gtm_connections():
+    """GTM-specific outputs should depend on segmentation output."""
+    with mock_config():
+        wf = init_segmentation_wf('gtm')
+        seg_node = wf.get_node('run_gtm')
+        make_dseg = wf.get_node('make_gtmdsegtsv')
+        make_morph = wf.get_node('make_gtmmorphtsv')
+
+        edge_dseg = wf._graph.get_edge_data(seg_node, make_dseg)
+        edge_morph = wf._graph.get_edge_data(seg_node, make_morph)
+
+        assert ('out_file', 'seg_file') in edge_dseg['connect']
+        assert ('out_file', 'seg_file') in edge_morph['connect']
