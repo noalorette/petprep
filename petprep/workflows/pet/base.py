@@ -380,7 +380,6 @@ configured with cubic B-spline interpolation.
             (inputnode, petref_t1w, [('t1w_preproc', 'reference_image')]),
             (pet_anat_wf, pet_pvc_wf, [('outputnode.pet_file', 'inputnode.pet_file')]),
             (inputnode, pet_pvc_wf, [
-                ('t1w_dseg', 'inputnode.segmentation'),
                 ('t1w_tpms', 'inputnode.t1w_tpms'),
                 ('subjects_dir', 'inputnode.subjects_dir'),
                 ('subject_id', 'inputnode.subject_id'),
