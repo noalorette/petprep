@@ -23,6 +23,7 @@ from nipype.interfaces.base import (
     traits,
 )
 from nipype.interfaces.freesurfer.base import FSCommand, FSTraitedSpec
+from nipype.interfaces.freesurfer.petsurfer import GTMSeg
 from nipype.utils.filemanip import fname_presuffix
 
 
@@ -35,7 +36,8 @@ class SegmentBSOutputSpec(TraitedSpec):
     out_file = File(exists=True, desc='Brainstem segmentation in anatomical space')
     out_fsvox_file = File(exists=True, desc='Brainstem segmentation in FS voxel space')
     volumes_file = File(exists=True, desc='Brainstem volumes table')
-    stderr = File(desc='Standard error output file', exists=True)
+    stdout = traits.Str(desc='Standard output')
+    stderr = traits.Str(desc='Standard error output')
 
 
 class SegmentBS(SimpleInterface):
@@ -281,6 +283,8 @@ class SegmentWMInputSpec(BaseInterfaceInputSpec):
 
 class SegmentWMOutputSpec(TraitedSpec):
     out_file = File(exists=True, desc='White-matter parcellation')
+    stdout = traits.Str(desc='Standard output')
+    stderr = traits.Str(desc='Standard error output')
 
 
 class SegmentWM(SimpleInterface):
@@ -311,6 +315,20 @@ class SegmentWM(SimpleInterface):
     def _run_command(self, cmd):
         proc = subprocess.run(cmd, capture_output=True, text=True)
         return proc.stdout, proc.stderr
+
+
+class SegmentGTM(GTMSeg):
+    """Run ``gtmseg`` unless outputs already exist."""
+
+    def _run_interface(self, runtime):
+        subj_dir = Path(self.inputs.subjects_dir) / self.inputs.subject_id
+        seg_file = subj_dir / 'mri' / self.inputs.out_file
+        stats_file = subj_dir / 'stats' / Path(self.inputs.out_file).with_suffix('.stats').name
+
+        if seg_file.exists() and stats_file.exists():
+            return runtime
+
+        return super()._run_interface(runtime)
 
 
 __docformat__ = 'restructuredtext'
