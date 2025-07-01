@@ -36,7 +36,8 @@ class SegmentBSOutputSpec(TraitedSpec):
     out_file = File(exists=True, desc='Brainstem segmentation in anatomical space')
     out_fsvox_file = File(exists=True, desc='Brainstem segmentation in FS voxel space')
     volumes_file = File(exists=True, desc='Brainstem volumes table')
-    stderr = File(desc='Standard error output file', exists=True)
+    stdout = traits.Str(desc='Standard output')
+    stderr = traits.Str(desc='Standard error output')
 
 
 class SegmentBS(SimpleInterface):
@@ -282,6 +283,8 @@ class SegmentWMInputSpec(BaseInterfaceInputSpec):
 
 class SegmentWMOutputSpec(TraitedSpec):
     out_file = File(exists=True, desc='White-matter parcellation')
+    stdout = traits.Str(desc='Standard output')
+    stderr = traits.Str(desc='Standard error output')
 
 
 class SegmentWM(SimpleInterface):
