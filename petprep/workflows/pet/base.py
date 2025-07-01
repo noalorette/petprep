@@ -385,6 +385,9 @@ configured with cubic B-spline interpolation.
                 ('subjects_dir', 'inputnode.subjects_dir'),
                 ('subject_id', 'inputnode.subject_id'),
             ]),
+            (pet_fit_wf, pet_pvc_wf, [
+                ('outputnode.segmentation', 'inputnode.segmentation'),
+            ]),
             (petref_t1w, pet_pvc_wf, [('output_image', 'inputnode.petref')]),
         ])  # fmt:skip
 

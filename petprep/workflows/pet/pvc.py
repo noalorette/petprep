@@ -19,7 +19,7 @@ def load_pvc_config(config_path: Path) -> dict:
 
 
 # Add a function to dynamically construct the path
-def construct_gtmseg_path(subjects_dir, subject_id):
+def construct_gtmseg_path(subjects_dir, subject_id, seg_ready=None):
     from pathlib import Path
     return str(Path(subjects_dir) / subject_id / 'mri' / 'gtmseg.mgz')
 
@@ -152,7 +152,7 @@ def init_pet_pvc_wf(
 
         gtmseg_path_node = pe.Node(
             niu.Function(
-                input_names=['subjects_dir', 'subject_id'],
+                input_names=['subjects_dir', 'subject_id', 'seg_ready'],
                 output_names=['gtmseg_path'],
                 function=construct_gtmseg_path
             ),
@@ -191,6 +191,7 @@ def init_pet_pvc_wf(
             (inputnode, gtmseg_path_node, [
                 ('subjects_dir', 'subjects_dir'),
                 ('subject_id', 'subject_id'),
+                ('segmentation', 'seg_ready'),
             ]),
             (inputnode, pvc_node, [
                 ('pet_file', 'in_file'),

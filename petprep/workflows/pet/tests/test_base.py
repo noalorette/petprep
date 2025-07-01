@@ -166,3 +166,18 @@ def test_std_space_connections_without_pvc(bids_root: Path):
 
     edge_fit = wf._graph.get_edge_data(wf.get_node('pet_fit_wf'), wf.get_node('pet_std_wf'))
     assert ('outputnode.petref2anat_xfm', 'inputnode.petref2anat_xfm') in edge_fit['connect']
+
+
+def test_pvc_receives_segmentation(bids_root: Path):
+    """PVC workflow should receive segmentation from the fit workflow."""
+    pet_series = _prep_pet_series(bids_root)
+
+    with mock_config(bids_dir=bids_root):
+        config.workflow.pvc_tool = 'PETPVC'
+        config.workflow.pvc_method = 'GTM'
+        config.workflow.pvc_psf = (1.0, 1.0, 1.0)
+
+        wf = init_pet_wf(pet_series=pet_series, precomputed={})
+
+    edge = wf._graph.get_edge_data(wf.get_node('pet_fit_wf'), wf.get_node('pet_pvc_wf'))
+    assert ('outputnode.segmentation', 'inputnode.segmentation') in edge['connect']
