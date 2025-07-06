@@ -438,7 +438,6 @@ def init_pet_fit_wf(
             ref_name=config.workflow.ref_mask_name,
             name='ds_refmask_wf',
         )
-        ds_refmask_wf.inputs.inputnode.source_files = [pet_file]
 
         refmask_report_wf = init_refmask_report_wf(
             output_dir=config.execution.petprep_dir,
@@ -467,6 +466,13 @@ def init_pet_fit_wf(
                     ds_refmask_wf,
                     [
                         ('outputnode.refmask_file', 'inputnode.refmask'),
+                    ],
+                ),
+                (
+                    segmentation_wf,
+                    ds_refmask_wf,
+                    [
+                        ('outputnode.segmentation', 'inputnode.source_files'),
                     ],
                 ),
                 (

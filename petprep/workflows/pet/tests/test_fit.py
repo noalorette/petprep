@@ -245,6 +245,14 @@ def test_refmask_report_connections(bids_root: Path, tmp_path: Path):
     edge = wf._graph.get_edge_data(wf.get_node('outputnode'), reports_node)
     assert ('refmask', 'inputnode.refmask') in edge['connect']
 
+    seg_node = wf.get_node(f'pet_{config.workflow.seg}_seg_wf')
+    ds_refmask = wf.get_node('ds_refmask_wf')
+    seg_edge = wf._graph.get_edge_data(seg_node, ds_refmask)
+    assert (
+        'outputnode.segmentation',
+        'inputnode.source_files',
+    ) in seg_edge['connect']
+
 
 def test_pet_fit_stage1_inclusion(bids_root: Path, tmp_path: Path):
     """Stage 1 should run only when HMC derivatives are missing."""
