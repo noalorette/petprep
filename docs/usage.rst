@@ -180,6 +180,36 @@ This feature has several intended use-cases:
 See also the ``--level`` flag, which can be used to control which derivatives are
 generated.
 
+Partial volume correction
+-------------------------
+*PETPrep* can optionally correct PET images for partial volume effects.
+The ``--pvc-tool`` flag selects the tool to use (``petpvc`` or ``petsurfer``),
+while ``--pvc-method`` chooses the specific algorithm provided by that tool.
+Available ``petpvc`` methods are ``GTM``, ``LABBE``, ``RL``, ``VC``, ``RBV``,
+``LABBE+RBV``, ``RBV+VC``, ``RBV+RL``, ``LABBE+RBV+VC``, ``LABBE+RBV+RL``,
+``STC``, ``MTC``, ``LABBE+MTC``, ``MTC+VC``, ``MTC+RL``, ``LABBE+MTC+VC``,
+``LABBE+MTC+RL``, ``IY``, ``IY+VC``, ``IY+RL``, ``MG``, ``MG+VC`` and ``MG+RL``.
+``petsurfer`` provides ``GTM``, ``MG``, ``RBV`` and ``AGTM``.
+Use ``--pvc-psf`` to specify the point spread function FWHM, either as a single
+value or three values. When PVC is enabled, the corrected image automatically
+feeds into the remainder of the workflow, and standard-space outputs are derived
+from this PVC-corrected series. The corrected data are first aligned to the
+T1-weighted anatomy, and only the anatomical-to-template transforms are applied
+for further resampling.
+
+For example, to run PVC using the ``petpvc`` implementation and the ``GTM``
+method with a 5 mm PSF::
+
+    $ petprep /data/bids_root /out participant \
+        --pvc-tool petpvc --pvc-method GTM --pvc-psf 5
+
+Reference region masks
+----------------------
+*PETPrep* can build masks for reference regions used in quantification.
+Use ``--ref-mask-name`` to select a predefined region and
+``--ref-mask-index`` to override the label indices.
+The presets are defined in ``petprep/data/reference_mask/config.json``.
+
 Troubleshooting
 ---------------
 Logs and crashfiles are output into the

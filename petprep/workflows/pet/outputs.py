@@ -79,6 +79,7 @@ def init_func_fit_reports_wf(
     *,
     freesurfer: bool,
     output_dir: str,
+    ref_name: str,
     name='func_fit_reports_wf',
 ) -> pe.Workflow:
     """
@@ -117,6 +118,14 @@ def init_func_fit_reports_wf(
         Brain (binary) mask estimated by brain extraction.
     template
         Template space and specifications
+    summary_report
+        Summary of preprocessing steps
+    validation_report
+        Reportlet from input data validation
+    ref_name
+        Name of the reference region mask
+    refmask_report
+        Reportlet showing the reference region mask
 
     """
     from nireports.interfaces.reporting.base import (
@@ -133,12 +142,14 @@ def init_func_fit_reports_wf(
         't1w_preproc',
         't1w_mask',
         't1w_dseg',
+        'refmask',
         # May be missing
         'subject_id',
         'subjects_dir',
         # Report snippets
         'summary_report',
         'validation_report',
+        'refmask_report',
     ]
     inputnode = pe.Node(niu.IdentityInterface(fields=inputfields), name='inputnode')
 
@@ -160,6 +171,19 @@ def init_func_fit_reports_wf(
             datatype='figures',
         ),
         name='ds_report_validation',
+        run_without_submitting=True,
+        mem_gb=config.DEFAULT_MEMORY_MIN_GB,
+    )
+
+    ds_refmask_report = pe.Node(
+        DerivativesDataSink(
+            base_directory=output_dir,
+            desc='refmask',
+            ref=ref_name,
+            datatype='figures',
+            allowed_entities=('ref',),
+        ),
+        name='ds_report_refmask',
         run_without_submitting=True,
         mem_gb=config.DEFAULT_MEMORY_MIN_GB,
     )
@@ -195,6 +219,17 @@ def init_func_fit_reports_wf(
         mem_gb=1,
     )
 
+    petref_refmask = pe.Node(
+        ApplyTransforms(
+            dimension=3,
+            default_value=0,
+            invert_transform_flags=[True],
+            interpolation='NearestNeighbor',
+        ),
+        name='petref_refmask',
+        mem_gb=1,
+    )
+
     # fmt:off
     workflow.connect([
         (inputnode, ds_summary, [
@@ -204,6 +239,10 @@ def init_func_fit_reports_wf(
         (inputnode, ds_validation, [
             ('source_file', 'source_file'),
             ('validation_report', 'in_file'),
+        ]),
+        (inputnode, ds_refmask_report, [
+            ('source_file', 'source_file'),
+            ('refmask_report', 'in_file'),
         ]),
         (inputnode, t1w_petref, [
             ('t1w_preproc', 'input_image'),
@@ -216,6 +255,11 @@ def init_func_fit_reports_wf(
             ('petref2anat_xfm', 'transforms'),
         ]),
         (t1w_wm, petref_wm, [('out', 'input_image')]),
+        (inputnode, petref_refmask, [
+            ('refmask', 'input_image'),
+            ('petref', 'reference_image'),
+            ('petref2anat_xfm', 'transforms'),
+        ]),
     ])
     # fmt:on
 
@@ -242,6 +286,28 @@ def init_func_fit_reports_wf(
         name='ds_pet_t1_report',
     )
 
+    pet_t1_refmask_report = pe.Node(
+        SimpleBeforeAfter(
+            before_label='T1w',
+            after_label='PET',
+            dismiss_affine=True,
+        ),
+        name='pet_t1_refmask_report',
+        mem_gb=0.1,
+    )
+
+    ds_pet_t1_refmask_report = pe.Node(
+        DerivativesDataSink(
+            base_directory=output_dir,
+            desc='refmask',
+            ref=ref_name,
+            suffix='pet',
+            datatype='figures',
+            allowed_entities=('ref',),
+        ),
+        name='ds_pet_t1_refmask_report',
+    )
+
     # fmt:off
     workflow.connect([
         (inputnode, pet_t1_report, [('petref', 'after')]),
@@ -249,10 +315,30 @@ def init_func_fit_reports_wf(
         (petref_wm, pet_t1_report, [('output_image', 'wm_seg')]),
         (inputnode, ds_pet_t1_report, [('source_file', 'source_file')]),
         (pet_t1_report, ds_pet_t1_report, [('out_report', 'in_file')]),
+        (inputnode, pet_t1_refmask_report, [('petref', 'after')]),
+        (t1w_petref, pet_t1_refmask_report, [('output_image', 'before')]),
+        (petref_refmask, pet_t1_refmask_report, [('output_image', 'wm_seg')]),
+        (inputnode, ds_pet_t1_refmask_report, [('source_file', 'source_file')]),
+        (pet_t1_refmask_report, ds_pet_t1_refmask_report, [('out_report', 'in_file')]),
     ])
     # fmt:on
 
     return workflow
+
+
+__all__ = (
+    'prepare_timing_parameters',
+    'init_func_fit_reports_wf',
+    'init_ds_petref_wf',
+    'init_ds_petmask_wf',
+    'init_ds_refmask_wf',
+    'init_ds_registration_wf',
+    'init_ds_hmc_wf',
+    'init_ds_pet_native_wf',
+    'init_ds_volumes_wf',
+    'init_pet_preproc_report_wf',
+    'init_refmask_report_wf',
+)
 
 
 def init_ds_petref_wf(
@@ -348,6 +434,68 @@ def init_ds_petmask_wf(
         ]),
         (sources, ds_petmask, [('out', 'Sources')]),
         (ds_petmask, outputnode, [('out_file', 'petmask')]),
+    ])  # fmt:skip
+
+    return workflow
+
+
+def init_ds_refmask_wf(
+    *,
+    output_dir,
+    ref_name: str,
+    name='ds_refmask_wf',
+) -> pe.Workflow:
+    """Write out a reference region mask.
+
+    Parameters
+    ----------
+    output_dir : :obj:`str`
+        Directory in which to save derivatives
+    ref_name : :obj:`str`
+        Name of the reference region mask
+    name : :obj:`str`, optional
+        Workflow name (default: ``ds_refmask_wf``)
+    """
+
+    workflow = pe.Workflow(name=name)
+
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=['source_files', 'refmask']),
+        name='inputnode',
+    )
+    outputnode = pe.Node(niu.IdentityInterface(fields=['refmask']), name='outputnode')
+
+    sources = pe.Node(
+        BIDSURI(
+            numinputs=1,
+            dataset_links=config.execution.dataset_links,
+            out_dir=str(output_dir),
+        ),
+        name='sources',
+    )
+
+    ds_refmask = pe.Node(
+        DerivativesDataSink(
+            base_directory=output_dir,
+            datatype='pet',
+            suffix='mask',
+            desc='refmask',
+            ref=ref_name,
+            allowed_entities=('ref',),
+            compress=True,
+        ),
+        name='ds_refmask',
+        run_without_submitting=True,
+    )
+
+    workflow.connect([
+        (inputnode, sources, [('source_files', 'in1')]),
+        (inputnode, ds_refmask, [
+            ('refmask', 'in_file'),
+            ('source_files', 'source_file'),
+        ]),
+        (sources, ds_refmask, [('out', 'Sources')]),
+        (ds_refmask, outputnode, [('out_file', 'refmask')]),
     ])  # fmt:skip
 
     return workflow
@@ -521,6 +669,7 @@ def init_ds_volumes_wf(
     bids_root: str,
     output_dir: str,
     metadata: list[dict],
+    pvc_method: str | None = None,
     name='ds_volumes_wf',
 ) -> pe.Workflow:
     timing_parameters = prepare_timing_parameters(metadata)
@@ -574,6 +723,8 @@ def init_ds_volumes_wf(
         name='ds_pet',
         mem_gb=DEFAULT_MEMORY_MIN_GB,
     )
+    if pvc_method is not None:
+        ds_pet.inputs.pvc = pvc_method
     workflow.connect([
         (inputnode, sources, [
             ('source_files', 'in1'),
@@ -742,5 +893,55 @@ def init_pet_preproc_report_wf(
         (pet_rpt, ds_report_pet, [('out_report', 'in_file')]),
     ])
     # fmt:on
+
+    return workflow
+
+
+def init_refmask_report_wf(
+    *, output_dir: str, ref_name: str, name: str = 'refmask_report_wf'
+) -> pe.Workflow:
+    """Generate a reportlet for the reference mask.
+
+    Parameters
+    ----------
+    output_dir : :obj:`str`
+        Directory in which to save derivatives
+    ref_name : :obj:`str`
+        Name of the reference region mask
+    name : :obj:`str`, optional
+        Workflow name (default: ``refmask_report_wf``)
+    """
+
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    from niworkflows.interfaces.reportlets.masks import SimpleShowMaskRPT
+
+    workflow = Workflow(name=name)
+
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=['source_file', 'petref', 'refmask']),
+        name='inputnode',
+    )
+    outputnode = pe.Node(niu.IdentityInterface(fields=['refmask_report']), name='outputnode')
+
+    mask_report = pe.Node(SimpleShowMaskRPT(), name='mask_report')
+    ds_mask_report = pe.Node(
+        DerivativesDataSink(
+            base_directory=output_dir,
+            desc='refmask',
+            ref=ref_name,
+            datatype='figures',
+            allowed_entities=('ref',),
+        ),
+        name='ds_report_refmask',
+        run_without_submitting=True,
+        mem_gb=config.DEFAULT_MEMORY_MIN_GB,
+    )
+
+    workflow.connect([
+        (inputnode, mask_report, [('petref', 'background_file'), ('refmask', 'mask_file')]),
+        (inputnode, ds_mask_report, [('source_file', 'source_file')]),
+        (mask_report, ds_mask_report, [('out_report', 'in_file')]),
+        (mask_report, outputnode, [('out_report', 'refmask_report')]),
+    ])
 
     return workflow

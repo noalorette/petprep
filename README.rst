@@ -58,6 +58,8 @@ or volume-based statistics.
    unwarping, normalization, bias field correction, and brain extraction.
    See the `workflows section of our documentation
    <https://petprep.readthedocs.io/en/latest/workflows.html>`__ for more details.
+   The documentation also describes available *segmentation workflows*
+   and how to enable them with the ``--seg`` command-line option.
 
 The *PETPrep* pipeline uses a combination of tools from well-known software
 packages, including FSL_, ANTs_, FreeSurfer_ and AFNI_.

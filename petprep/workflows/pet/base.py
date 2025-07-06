@@ -30,8 +30,11 @@ Orchestrating the PET-preprocessing workflow
 
 """
 
+from pathlib import Path
+
 from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
+from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 from niworkflows.utils.connections import listify
 
 from ... import config
@@ -47,6 +50,7 @@ from .outputs import (
     init_ds_volumes_wf,
     prepare_timing_parameters,
 )
+from .pvc import init_pet_pvc_wf
 from .resampling import init_pet_surf_wf
 
 
@@ -247,6 +251,7 @@ configured with cubic B-spline interpolation.
     spaces = config.workflow.spaces
     nonstd_spaces = set(spaces.get_nonstandard())
     freesurfer_spaces = spaces.get_fs_spaces()
+    run_pvc = bool(config.workflow.pvc_method)
 
     #
     # Resampling outputs workflow:
@@ -316,12 +321,98 @@ configured with cubic B-spline interpolation.
         ]),
     ])  # fmt:skip
 
+    pvc_tool = getattr(config.workflow, 'pvc_tool', None)
+    pvc_method = getattr(config.workflow, 'pvc_method', None)
+    pvc_psf = getattr(config.workflow, 'pvc_psf', None)
+    run_pvc = (
+        pvc_tool is not None
+        and pvc_method is not None
+        and pvc_psf is not None
+    )
+
+    if run_pvc:
+        try:
+            from importlib.resources import files as ir_files
+        except ImportError:  # PY<3.9
+            from importlib_resources import files as ir_files
+
+        pvc_config = ir_files('petprep.data.pvc') / 'config.json'
+
+        if pvc_tool.lower() == 'petpvc':
+            psf_vals = pvc_psf
+            if len(psf_vals) == 1:
+                psf_vals = psf_vals * 3
+            if len(psf_vals) != 3:
+                raise ValueError(
+                    'PETPVC requires one or three PSF values (FWHM x/y/z).'
+                )
+            pvc_kwargs = {
+                'fwhm_x': psf_vals[0],
+                'fwhm_y': psf_vals[1],
+                'fwhm_z': psf_vals[2],
+            }
+        else:
+            # PETSurfer only accepts an isotropic PSF
+            pvc_kwargs = {'psf': float(pvc_psf[0])}
+
+        pet_pvc_wf = init_pet_pvc_wf(
+            tool=pvc_tool,
+            method=pvc_method,
+            pvc_params=pvc_kwargs,
+            config_path=pvc_config,
+        )
+
+        petref_t1w = pe.Node(
+            ApplyTransforms(
+                dimension=3,
+                default_value=0,
+                float=True,
+                interpolation='LanczosWindowedSinc',
+            ),
+            name='petref_t1w',
+        )
+
+        workflow.connect([
+            (pet_fit_wf, petref_t1w, [
+                ('outputnode.petref', 'input_image'),
+                ('outputnode.petref2anat_xfm', 'transforms'),
+            ]),
+            (inputnode, petref_t1w, [('t1w_preproc', 'reference_image')]),
+            (pet_anat_wf, pet_pvc_wf, [('outputnode.pet_file', 'inputnode.pet_file')]),
+            (inputnode, pet_pvc_wf, [
+                ('t1w_tpms', 'inputnode.t1w_tpms'),
+                ('subjects_dir', 'inputnode.subjects_dir'),
+                ('subject_id', 'inputnode.subject_id'),
+            ]),
+            (pet_fit_wf, pet_pvc_wf, [
+                ('outputnode.segmentation', 'inputnode.segmentation'),
+            ]),
+            (petref_t1w, pet_pvc_wf, [('output_image', 'inputnode.petref')]),
+        ])  # fmt:skip
+
+        pet_t1w_src = pet_pvc_wf
+        pet_t1w_field = 'outputnode.pet_pvc_file'
+        # use PVC-corrected series for downstream resampling
+        pet_std_src = pet_pvc_wf
+        pet_std_field = 'outputnode.pet_pvc_file'
+        # reference already aligned to T1w
+        pet_std_ref_src = petref_t1w
+        pet_std_ref_field = 'output_image'
+    else:
+        pet_t1w_src = pet_anat_wf
+        pet_t1w_field = 'outputnode.pet_file'
+        pet_std_src = pet_native_wf
+        pet_std_field = 'outputnode.pet_minimal'
+        pet_std_ref_src = pet_fit_wf
+        pet_std_ref_field = 'outputnode.petref'
+
     # Full derivatives, including resampled PET series
     if nonstd_spaces.intersection(('anat', 'T1w')):
         ds_pet_t1_wf = init_ds_volumes_wf(
             bids_root=str(config.execution.bids_dir),
             output_dir=petprep_dir,
             metadata=all_metadata[0],
+            pvc_method=pvc_method if run_pvc else None,
             name='ds_pet_t1_wf',
         )
         ds_pet_t1_wf.inputs.inputnode.source_files = pet_file
@@ -334,10 +425,12 @@ configured with cubic B-spline interpolation.
                 ('outputnode.petref2anat_xfm', 'inputnode.petref2anat_xfm'),
                 ('outputnode.motion_xfm', 'inputnode.motion_xfm'),
             ]),
-            (pet_anat_wf, ds_pet_t1_wf, [
-                ('outputnode.pet_file', 'inputnode.pet'),
-                ('outputnode.resampling_reference', 'inputnode.ref_file'),
-            ]),
+            (pet_t1w_src, ds_pet_t1_wf, [(pet_t1w_field, 'inputnode.pet')]),
+            (
+                pet_anat_wf,
+                ds_pet_t1_wf,
+                [('outputnode.resampling_reference', 'inputnode.ref_file')],
+            ),
         ])  # fmt:skip
 
     if spaces.cached.get_spaces(nonstandard=False, dim=(3,)):
@@ -353,8 +446,9 @@ configured with cubic B-spline interpolation.
             bids_root=str(config.execution.bids_dir),
             output_dir=petprep_dir,
             metadata=all_metadata[0],
+            pvc_method=pvc_method if run_pvc else None,
             name='ds_pet_std_wf',
-        )
+        )  # downstream datasink gets PVC method
         ds_pet_std_wf.inputs.inputnode.source_files = pet_series
 
         workflow.connect([
@@ -364,14 +458,10 @@ configured with cubic B-spline interpolation.
                 ('anat2std_xfm', 'inputnode.anat2std_xfm'),
                 ('std_resolution', 'inputnode.resolution'),
             ]),
-            (pet_fit_wf, pet_std_wf, [
-                ('outputnode.petref', 'inputnode.pet_ref_file'),
-                ('outputnode.petref2anat_xfm', 'inputnode.petref2anat_xfm'),
-            ]),
-            (pet_native_wf, pet_std_wf, [
-                ('outputnode.pet_minimal', 'inputnode.pet_file'),
-                ('outputnode.motion_xfm', 'inputnode.motion_xfm'),
-            ]),
+            (pet_std_ref_src, pet_std_wf, [(pet_std_ref_field, 'inputnode.pet_ref_file')]),
+            # Use PVC-corrected PET when available so that standard-space
+            # derivatives originate from the PVC data
+            (pet_std_src, pet_std_wf, [(pet_std_field, 'inputnode.pet_file')]),
             (inputnode, ds_pet_std_wf, [
                 ('anat2std_xfm', 'inputnode.anat2std_xfm'),
                 ('std_t1w', 'inputnode.template'),
@@ -391,6 +481,16 @@ configured with cubic B-spline interpolation.
             ]),
         ])  # fmt:skip
 
+        if not run_pvc:
+            workflow.connect([
+                (pet_fit_wf, pet_std_wf, [
+                    ('outputnode.petref2anat_xfm', 'inputnode.petref2anat_xfm'),
+                ]),
+                (pet_native_wf, pet_std_wf, [
+                    ('outputnode.motion_xfm', 'inputnode.motion_xfm'),
+                ]),
+            ])  # fmt:skip
+
     if config.workflow.run_reconall and freesurfer_spaces:
         workflow.__postdesc__ += """\
 Non-gridded (surface) resamplings were performed using `mri_vol2surf`
@@ -403,6 +503,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             medial_surface_nan=config.workflow.medial_surface_nan,
             metadata=all_metadata[0],
             output_dir=petprep_dir,
+            pvc_method=pvc_method if run_pvc else None,
             name='pet_surf_wf',
         )
         pet_surf_wf.inputs.inputnode.source_file = pet_file
@@ -412,7 +513,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('subject_id', 'inputnode.subject_id'),
                 ('fsnative2t1w_xfm', 'inputnode.fsnative2t1w_xfm'),
             ]),
-            (pet_anat_wf, pet_surf_wf, [('outputnode.pet_file', 'inputnode.pet_t1w')]),
+            (pet_t1w_src, pet_surf_wf, [(pet_t1w_field, 'inputnode.pet_t1w')]),
         ])  # fmt:skip
 
         # sources are pet_file, motion_xfm, petref2anat_xfm, fsnative2t1w_xfm
@@ -472,6 +573,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             run_without_submitting=True,
         )
         ds_pet_cifti.inputs.source_file = pet_file
+        if run_pvc:
+            ds_pet_cifti.inputs.pvc = pvc_method
 
         workflow.connect([
             # Resample PET to MNI152NLin6Asym, may duplicate pet_std_wf above
@@ -497,9 +600,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('sphere_reg_fsLR', 'inputnode.sphere_reg_fsLR'),
                 ('cortex_mask', 'inputnode.cortex_mask'),
             ]),
-            (pet_anat_wf, pet_fsLR_resampling_wf, [
-                ('outputnode.pet_file', 'inputnode.pet_file'),
-            ]),
+            (pet_t1w_src, pet_fsLR_resampling_wf, [(pet_t1w_field, 'inputnode.pet_file')]),
             (pet_MNI6_wf, pet_grayords_wf, [
                 ('outputnode.pet_file', 'inputnode.pet_std'),
             ]),

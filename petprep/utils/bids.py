@@ -74,6 +74,9 @@ def collect_derivatives(
         if not item:
             continue
         derivs_cache[f'{k}_petref'] = item[0] if len(item) == 1 else item
+        # also store under generic key to simplify downstream checks
+        if 'petref' not in derivs_cache:
+            derivs_cache['petref'] = derivs_cache[f'{k}_petref']
 
     transforms_cache = {}
     for xfm, q in spec['transforms'].items():

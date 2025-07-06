@@ -592,10 +592,26 @@ class workflow(_Config):
     spaces = None
     """Keeps the :py:class:`~niworkflows.utils.spaces.SpatialReferences`
     instance keeping standard and nonstandard spaces."""
-    reference_frame: int | str | None = None
-    """Selected frame index for PET reference generation.
+    hmc_fwhm: float = 10.0
+    """FWHM for Gaussian smoothing prior to head-motion estimation."""
+    hmc_start_time: float = 120.0
+    """Time point (in seconds) at which head-motion estimation starts."""
+    seg = 'gtm'
+    """Segmentation approach ('gtm', 'brainstem', 'thalamicNuclei',
+    'hippocampusAmygdala', 'wm', 'raphe', 'limbic')."""
 
-    ``None`` or ``'average'`` retains the current averaging behavior."""
+    pvc_tool: str | None = None
+    """Tool used for partial volume correction."""
+    pvc_method: str | None = None
+    """Algorithm used for partial volume correction."""
+    pvc_psf: tuple | None = None
+    """Point spread function (PSF) FWHM in mm for PVC."""
+
+    ref_mask_name: str | None = None
+    """Name of the reference region mask to generate."""
+
+    ref_mask_index: tuple | None = None
+    """Tuple of label indices used to build the reference mask."""
 
 class loggers:
     """Keep loggers easily accessible (see :py:func:`init`)."""

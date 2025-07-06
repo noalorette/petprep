@@ -130,16 +130,6 @@ def _build_parser(**kwargs):
             else:
                 raise parser.error(f'Path does not exist: <{value}>.')
 
-    def _reference_frame(value, parser):
-        if value == 'average':
-            return 'average'
-        try:
-            return int(value)
-        except ValueError:
-            raise parser.error(
-                "Reference frame must be an integer index or 'average'."
-            ) from None
-
     verstr = f'PETPrep v{config.environment.version}'
     currentv = Version(config.environment.version)
     is_release = not any((currentv.is_devrelease, currentv.is_prerelease, currentv.is_postrelease))
@@ -153,7 +143,6 @@ def _build_parser(**kwargs):
     IsFile = partial(_is_file, parser=parser)
     PositiveInt = partial(_min_one, parser=parser)
     BIDSFilter = partial(_bids_filter, parser=parser)
-    ReferenceFrame = partial(_reference_frame, parser=parser)
 
     # Arguments as specified by BIDS-Apps
     # required, positional arguments
@@ -373,15 +362,18 @@ https://petprep.readthedocs.io/en/%s/spaces.html"""
         help='Deprecated - use `--force no-bbr` instead.',
     )
     g_conf.add_argument(
-        '--reference-frame',
+        '--hmc-fwhm',
         action='store',
-        dest='reference_frame',
-        type=ReferenceFrame,
-        default='average',
-        help=(
-            "Reference frame index (0-based) for PET preprocessing. "
-            "Use 'average' to compute the standard averaged reference."
-        ),
+        default=10,
+        type=float,
+        help='FWHM for Gaussian smoothing applied during head-motion estimation.',
+    )
+    g_conf.add_argument(
+        '--hmc-start-time',
+        action='store',
+        default=120,
+        type=float,
+        help='Time (in seconds) after which head-motion estimation is performed.',
     )
     g_conf.add_argument(
         '--random-seed',
@@ -545,6 +537,73 @@ https://petprep.readthedocs.io/en/%s/spaces.html"""
         'The user is responsible for ensuring that all necessary files are present.',
     )
 
+    g_seg = parser.add_argument_group('Segmentation options')
+    g_seg.add_argument(
+        '--seg',
+        action='store',
+        default='gtm',
+        choices=[
+            'gtm',
+            'brainstem',
+            'thalamicNuclei',
+            'hippocampusAmygdala',
+            'wm',
+            'raphe',
+            'limbic',
+        ],
+        help='Segmentation method to use.',
+    )
+
+    g_refmask = parser.add_argument_group('Options for reference mask generation')
+    g_refmask.add_argument(
+        '--ref-mask-name',
+        help='Predefined reference regions. Pair with --ref-mask-index to define custom labels.',
+    )
+    g_refmask.add_argument(
+        '--ref-mask-index',
+        nargs='+',
+        type=int,
+        help='List of segmentation indices to use for the reference mask.',
+    )
+
+    g_pvc = parser.add_argument_group('Options for partial volume correction')
+
+    try:
+        from importlib.resources import files as ir_files
+    except ImportError:  # PY<3.9
+        from importlib_resources import files as ir_files
+    from json import load
+
+    with open(ir_files('petprep.data.pvc') / 'config.json') as f:
+        pvc_config = load(f)
+    petpvc_methods = sorted(pvc_config.get('petpvc', {}).keys())
+    petsurfer_methods = sorted(pvc_config.get('petsurfer', {}).keys())
+    all_pvc_methods = sorted(set(petpvc_methods + petsurfer_methods))
+
+    parser.add_argument(
+        '--pvc-tool',
+        choices=['petpvc', 'petsurfer'],
+        help='Tool to use for partial volume correction',
+    )
+    g_pvc.add_argument(
+        '--pvc-method',
+        action='store',
+        choices=all_pvc_methods,
+        help=(
+            'PVC method identifier. PETPVC: '
+            + ', '.join(petpvc_methods)
+            + '. PETSurfer: '
+            + ', '.join(petsurfer_methods)
+            + '.'
+        ),
+    )
+    g_pvc.add_argument(
+        '--pvc-psf',
+        nargs='+',
+        type=float,
+        help='Point spread function FWHM (one value or three values)',
+    )
+
     g_carbon = parser.add_argument_group('Options for carbon usage tracking')
     g_carbon.add_argument(
         '--track-carbon',
@@ -668,6 +727,27 @@ def parse_args(args=None, namespace=None):
     config.execution.log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
     config.from_dict(vars(opts), init=['nipype'])
 
+    pvc_vals = (opts.pvc_tool, opts.pvc_method, opts.pvc_psf)
+    if any(val is not None for val in pvc_vals) and not all(val is not None for val in pvc_vals):
+        parser.error(
+            'Options --pvc-tool, --pvc-method and --pvc-psf must be used together.'
+        )
+
+    if opts.ref_mask_index is not None and opts.ref_mask_name is None:
+        parser.error('Option --ref-mask-index requires --ref-mask-name.')
+
+    if opts.ref_mask_name is not None:
+        config.workflow.ref_mask_name = opts.ref_mask_name
+    if opts.ref_mask_index is not None:
+        config.workflow.ref_mask_index = tuple(opts.ref_mask_index)
+
+    if opts.pvc_tool is not None:
+        config.workflow.pvc_tool = opts.pvc_tool
+    if opts.pvc_method is not None:
+        config.workflow.pvc_method = opts.pvc_method
+    if opts.pvc_psf is not None:
+        config.workflow.pvc_psf = tuple(opts.pvc_psf)
+
     if not config.execution.notrack:
         import importlib.util
 
@@ -683,7 +763,10 @@ def parse_args(args=None, namespace=None):
     # Initialize --output-spaces if not defined
     if config.execution.output_spaces is None:
         config.execution.output_spaces = SpatialReferences(
-            [Reference('MNI152NLin2009cAsym', {'res': 'native'})]
+            [
+                Reference('MNI152NLin2009cAsym', {'res': 'native'}),
+                Reference('T1w'),
+            ],
         )
 
     # Retrieve logging level

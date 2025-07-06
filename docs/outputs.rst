@@ -73,7 +73,7 @@ As of version 23.2.0, PETPrep supports three levels of derivatives:
   preprocessing can be assessed. Because no resampling is done, confounds
   and carpetplots will be missing from the reports.
 * ``--level resampling``: This processing mode aims to produce additional
-  derivatives that enable third-party resampling, resampling BOLD series
+  derivatives that enable third-party resampling, resampling PET series
   in the working directory as needed, but these are not saved to the output
   directory.
   The ``--me-output-echos`` flag will be enabled at this level, in which
@@ -178,7 +178,7 @@ FreeSurfer derivatives
 If FreeSurfer is run, then a FreeSurfer subjects directory is created in
 ``<output dir>/sourcedata/freesurfer`` or the directory indicated with the
 ``--fs-subjects-dir`` flag.
-Additionally, FreeSurfer segmentations are resampled into the BOLD space,
+Additionally, FreeSurfer segmentations are resampled into the PET space,
 and lookup tables are provided. ::
 
     <output_dir>/
@@ -215,23 +215,23 @@ these will be indicated with ``[specifiers]``::
   sub-<subject_label>/
     func/
       sub-<subject_label>_[specifiers]_space-<space_label>_desc-brain_mask.nii.gz
-      sub-<subject_label>_[specifiers]_space-<space_label>_desc-preproc_bold.nii.gz
+      sub-<subject_label>_[specifiers]_space-<space_label>_desc-preproc_pet.nii.gz
 
 .. note::
 
-   The mask file is part of the *minimal* processing level. The BOLD series
+   The mask file is part of the *minimal* processing level. The PET series
    is only generated at the *full* processing level.
 
 **Motion correction outputs**.
 
 Head-motion correction (HMC) produces a reference image to which all volumes
-are aligned, and a corresponding transform that maps the original BOLD series
+are aligned, and a corresponding transform that maps the original PET series
 to the reference image::
 
   sub-<subject_label>/
     func/
-      sub-<subject_label>_[specifiers]_desc-hmc_boldref.nii.gz
-      sub-<subject_label>_[specifiers]_from-orig_to_boldref_mode-image_desc-hmc_xfm.txt
+      sub-<subject_label>_[specifiers]_desc-hmc_petref.nii.gz
+      sub-<subject_label>_[specifiers]_from-orig_to_petref_mode-image_desc-hmc_xfm.txt
 
 .. note::
 
@@ -239,13 +239,13 @@ to the reference image::
 
 **Coregistration outputs**.
 
-Registration of the BOLD series to the T1w image generates a further reference
+Registration of the PET series to the T1w image generates a further reference
 image and affine transform::
 
   sub-<subject_label>/
     func/
-      sub-<subject_label>_[specifiers]_desc-coreg_boldref.nii.gz
-      sub-<subject_label>_[specifiers]_from-boldref_to-T1w_mode-image_desc-coreg_xfm.txt
+      sub-<subject_label>_[specifiers]_desc-coreg_petref.nii.gz
+      sub-<subject_label>_[specifiers]_from-petref_to-T1w_mode-image_desc-coreg_xfm.txt
 
 .. note::
 
@@ -253,20 +253,20 @@ image and affine transform::
 
 **Fieldmap registration**.
 
-If a fieldmap is used for the correction of a BOLD series, then a registration
-is calculated between the BOLD series and the fieldmap. If, for example, the fieldmap
+If a fieldmap is used for the correction of a PET series, then a registration
+is calculated between the PET series and the fieldmap. If, for example, the fieldmap
 is identified with ``"B0Identifier": "TOPUP"``, the generated transform will be named::
 
   sub-<subject_label>/
     func/
-      sub-<subject_label>_[specifiers]_from-boldref_to-TOPUP_mode-image_xfm.txt
+      sub-<subject_label>_[specifiers]_from-petref_to-TOPUP_mode-image_xfm.txt
 
 If the association is discovered through the ``IntendedFor`` field of the
 fieldmap metadata, then the transform will be given an auto-generated name::
 
   sub-<subject_label>/
     func/
-      sub-<subject_label>_[specifiers]_from-boldref_to-auto000XX_mode-image_xfm.txt
+      sub-<subject_label>_[specifiers]_from-petref_to-auto000XX_mode-image_xfm.txt
 
 .. note::
 
@@ -278,7 +278,7 @@ Volumetric output spaces labels (``<space_label>`` above, and in the following) 
 
 **Surfaces, segmentations and parcellations from FreeSurfer**.
 If FreeSurfer reconstructions are used, the ``(aparc+)aseg`` segmentations are aligned to the
-subject's T1w space and resampled to the BOLD grid, and the BOLD series are resampled to the
+subject's T1w space and resampled to the PET grid, and the PET series are resampled to the
 mid-thickness surface mesh::
 
   sub-<subject_label>/
@@ -297,12 +297,12 @@ a container format that holds both volumetric (regularly sampled in a grid) and 
 (sampled on a triangular mesh) samples.
 Sub-cortical time series are sampled on a regular grid derived from one MNI template, while
 cortical time series are sampled on surfaces projected from the [Glasser2016]_ template.
-If CIFTI outputs are requested (with the ``--cifti-outputs`` argument), the BOLD series are also
+If CIFTI outputs are requested (with the ``--cifti-outputs`` argument), the PET series are also
 saved as ``dtseries.nii`` CIFTI2 files::
 
   sub-<subject_label>/
     func/
-      sub-<subject_label>_[specifiers]_bold.dtseries.nii
+      sub-<subject_label>_[specifiers]_pet.dtseries.nii
 
 CIFTI output resolution can be specified as an optional parameter after ``--cifti-output``.
 By default, '91k' outputs are produced and match up to the standard `HCP Pipelines`_ CIFTI
@@ -310,7 +310,7 @@ output (91282 grayordinates @ 2mm). However, '170k' outputs are also possible, a
 higher resolution CIFTI output (170494 grayordinates @ 1.6mm).
 
 **Extracted confounding time series**.
-For each :abbr:`BOLD (blood-oxygen level dependent)` run processed with *PETPrep*, an
+For each PET run processed with *PETPrep*, an
 accompanying *confounds* file will be generated.
 Confounds_ are saved as a :abbr:`TSV (tab-separated value)` file::
 
@@ -321,7 +321,7 @@ Confounds_ are saved as a :abbr:`TSV (tab-separated value)` file::
 
 These :abbr:`TSV (tab-separated values)` tables look like the example below,
 where each row of the file corresponds to one time point found in the
-corresponding :abbr:`BOLD (blood-oxygen level dependent)` time series::
+corresponding PET time series::
 
   csf white_matter  global_signal std_dvars dvars framewise_displacement  t_comp_cor_00 t_comp_cor_01 t_comp_cor_02 t_comp_cor_03 t_comp_cor_04 t_comp_cor_05 a_comp_cor_00 a_comp_cor_01 a_comp_cor_02 a_comp_cor_03 a_comp_cor_04 a_comp_cor_05 non_steady_state_outlier00  trans_x trans_y trans_z rot_x rot_y rot_z
   682.75275 0.0 491.64752000000004  n/a n/a n/a 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 -0.00017029 -0.0  0.0
@@ -337,7 +337,6 @@ by one column per region::
   sub-<subject_label>/
     pet/
       sub-<subject_label>_[specifiers]_desc-preproc_timeseries.tsv
-
 
 Confounds
 ---------

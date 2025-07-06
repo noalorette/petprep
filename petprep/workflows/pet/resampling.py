@@ -53,6 +53,7 @@ def init_pet_surf_wf(
     medial_surface_nan: bool,
     metadata: dict,
     output_dir: str,
+    pvc_method: str | None = None,
     name: str = 'pet_surf_wf',
 ):
     """
@@ -85,6 +86,9 @@ def init_pet_surf_wf(
         native surface.
     medial_surface_nan : :obj:`bool`
         Replace medial wall values with NaNs on functional GIFTI files
+    pvc_method : :obj:`str`, optional
+        Name of the PVC method, if applied. Used to set the ``pvc`` BIDS entity
+        on derivative files.
 
     Inputs
     ------
@@ -199,6 +203,8 @@ The PET time-series were resampled onto the following surfaces
         mem_gb=DEFAULT_MEMORY_MIN_GB,
     )
     ds_pet_surfs.inputs.hemi = ['L', 'R']
+    if pvc_method is not None:
+        ds_pet_surfs.inputs.pvc = pvc_method
 
     workflow.connect([
         (inputnode, get_fsnative, [
