@@ -10,9 +10,7 @@ from nipype.interfaces.fsl import Split, Merge
 import nibabel as nb
 from nipype.interfaces.freesurfer import ApplyVolTransform, Tkregister2, MRICoreg
 
-from petprep.interfaces.pvc import (CSVtoNifti, StackTissueProbabilityMaps, 
-                                    Binarise4DSegmentation, GTMPVC, GTMStatsTo4DNifti,
-                                    ClipValues, DiscardOutliers)
+from petprep.interfaces.pvc import CSVtoNifti, StackTissueProbabilityMaps, Binarise4DSegmentation, GTMPVC, GTMStatsTo4DNifti
 
 
 def load_pvc_config(config_path: Path) -> dict:
@@ -85,64 +83,55 @@ def init_pet_pvc_wf(
             iterfield=['source_file'],
             name='resample_pet_to_anat'
         )
-        
-        clip_values = pe.MapNode(
-            ClipValues(),
-            iterfield=['in_file'],
-            name='clip_values'
-        )
-        
+
         pvc_node = pe.MapNode(
             PETPVC(pvc=method_config.pop('pvc'), **method_config),
             iterfield=['in_file'],
             name=f'{tool_lower}_{safe_method}_pvc_node'
-        )
-        
-        discard_outliers = pe.MapNode(
-            DiscardOutliers(),
-            iterfield=['in_file'],
-            name='discard_outliers'
         )
 
         workflow.connect([
             (inputnode, split_frames, [('pet_file', 'in_file')]),
             (split_frames, resample_pet_to_anat, [('out_files', 'source_file')]),
             (inputnode, resample_pet_to_anat, [('segmentation', 'target_file')]),
-            (resample_pet_to_anat, clip_values, [('transformed_file', 'in_file')]),
-            (clip_values, pvc_node, [('out_file', 'in_file')]),
+            (resample_pet_to_anat, pvc_node, [('transformed_file', 'in_file')]),
         ])
-        
-            
-        if method_key == 'GTM':
+
+        if method_key == 'MG':
+            stack_node = pe.Node(StackTissueProbabilityMaps(), name='stack_probmaps')
+            workflow.connect([
+                (inputnode, stack_node, [('t1w_tpms', 't1w_tpms')]),
+                (stack_node, pvc_node, [('out_file', 'mask_file')]),
+                (pvc_node, merge_frames, [('out_file', 'in_files')]),
+            ])
+
+        else:
             binarise_segmentation = pe.Node(Binarise4DSegmentation(), name='binarise_segmentation')
             workflow.connect([
                 (inputnode, binarise_segmentation, [('segmentation', 'dseg_file')]),
                 (binarise_segmentation, pvc_node, [('out_file', 'mask_file')]),
             ])
 
-            pvc_node.inputs.out_file = 'gtm_output.csv'
+            if method_key == 'GTM':
+                pvc_node.inputs.out_file = 'gtm_output.csv'
 
-            csv_to_nifti_node = pe.MapNode(
-                CSVtoNifti(),
-                iterfield=['csv_file'],
-                name='csv_to_nifti_node'
-            )
+                csv_to_nifti_node = pe.MapNode(
+                    CSVtoNifti(),
+                    iterfield=['csv_file'],
+                    name='csv_to_nifti_node'
+                )
 
-            workflow.connect([
-                (pvc_node, csv_to_nifti_node, [('out_file', 'csv_file')]),
-                (binarise_segmentation, csv_to_nifti_node, [('label_list', 'label_list')]),
-                (inputnode, csv_to_nifti_node, [('segmentation', 'reference_nifti')]),
-                (csv_to_nifti_node, merge_frames, [('out_file', 'in_files')]),
-            ])
+                workflow.connect([
+                    (pvc_node, csv_to_nifti_node, [('out_file', 'csv_file')]),
+                    (binarise_segmentation, csv_to_nifti_node, [('label_list', 'label_list')]),
+                    (inputnode, csv_to_nifti_node, [('segmentation', 'reference_nifti')]),
+                    (csv_to_nifti_node, merge_frames, [('out_file', 'in_files')]),
+                ])
 
-        else:
-            stack_node = pe.Node(StackTissueProbabilityMaps(), name='stack_probmaps')
-            workflow.connect([
-                (inputnode, stack_node, [('t1w_tpms', 't1w_tpms')]),
-                (stack_node, pvc_node, [('out_file', 'mask_file')]),
-                (pvc_node, discard_outliers, [('out_file', 'in_file')]),
-                (discard_outliers, merge_frames, [('out_file', 'in_files')]),
-            ])
+            else:
+                workflow.connect([
+                    (pvc_node, merge_frames, [('out_file', 'in_files')]),
+                ])
 
         workflow.connect([
             (merge_frames, resample_pet_to_petref, [('merged_file', 'source_file')]),

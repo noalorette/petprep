@@ -15,78 +15,6 @@ import os
 
 from nipype.interfaces.freesurfer.base import FSCommand, FSTraitedSpec
 
-class ClipValuesInputSpec(BaseInterfaceInputSpec):
-    in_file = File(exists=True, mandatory=True, desc="Input image file")
-    out_file = File("handled_volume.nii.gz", usedefault=True, desc="Output handled image file")
-
-class ClipValuesOutputSpec(TraitedSpec):
-    out_file = File(exists=True, desc="Output handled image file")
-
-class ClipValues(BaseInterface):
-    input_spec = ClipValuesInputSpec
-    output_spec = ClipValuesOutputSpec
-
-    def _run_interface(self, runtime):
-        in_img = nb.load(self.inputs.in_file)
-        in_data = in_img.get_fdata()
-
-        # Handle negative values, infinities, and NaNs
-        clipped_data = np.clip(in_data, 0, None)
-        clipped_data = clipped_data.astype(np.float32)
-
-        new_img = nb.Nifti1Image(clipped_data, affine=in_img.affine, header=in_img.header)
-        nb.save(new_img, os.path.abspath(self.inputs.out_file))
-
-        return runtime
-
-    def _list_outputs(self):
-        return {"out_file": os.path.abspath(self.inputs.out_file)}
-
-class DiscardOutliersInputSpec(BaseInterfaceInputSpec):
-    in_file = File(exists=True, mandatory=True, desc="Input image file")
-    out_file = File("discarded_outliers.nii.gz", usedefault=True, desc="Output image file with outliers discarded")
-    threshold = traits.Float(3.0, usedefault=True, desc="Threshold for outlier detection (in terms of MAD)")
-
-class DiscardOutliersOutputSpec(TraitedSpec):
-    out_file = File(exists=True, desc="Output image file with outliers discarded")
-    
-class DiscardOutliers(BaseInterface):
-    input_spec = DiscardOutliersInputSpec
-    output_spec = DiscardOutliersOutputSpec
-
-    def _run_interface(self, runtime):
-        in_img = nb.load(self.inputs.in_file)
-        in_data = in_img.get_fdata()
-        
-        # Find inf values and NaNs
-        inf_mask = np.isinf(in_data)
-        nan_mask = np.isnan(in_data)
-
-        # Combine masks
-        outlier_mask = inf_mask #| nan_mask
-        
-        # Set outliers to zero
-        in_data[outlier_mask] = np.nan
-        in_data_flat = in_data.flatten()
-        
-        # Calculate the median and MAD
-        median = np.nanmedian(in_data_flat[in_data_flat!=0])
-        mad = np.nanmedian(np.abs(in_data_flat - median))
-        
-        # Identify outliers based on the threshold
-        threshold = self.inputs.threshold * mad
-        outlier_mask = np.abs(in_data - median) > threshold
-        
-        # Set outliers as NaN
-        in_data[outlier_mask] = np.nan
-
-        new_img = nb.Nifti1Image(in_data, affine=in_img.affine, header=in_img.header)
-        nb.save(new_img, os.path.abspath(self.inputs.out_file))
-
-        return runtime
-
-    def _list_outputs(self):
-        return {"out_file": os.path.abspath(self.inputs.out_file)}
 
 class Binarise4DSegmentationInputSpec(BaseInterfaceInputSpec):
     dseg_file = File(exists=True, mandatory=True, desc="Input segmentation file (_dseg.nii.gz)")
@@ -148,19 +76,6 @@ class StackTissueProbabilityMaps(BaseInterface):
         affine = nb.load(self.inputs.t1w_tpms[0]).affine
 
         stacked_img = np.stack(imgs, axis=-1)
-        
-        # Ensure the array sums to 1 across the last dimension
-        stacked_img_sum = np.sum(stacked_img, axis=-1, keepdims=True)
-        stacked_img = np.divide(stacked_img, stacked_img_sum, 
-                                out=np.zeros_like(stacked_img), 
-                                where=stacked_img_sum != 0)
-
-        # add background to the stacked image
-        background_mask = np.ones_like(stacked_img[..., 0], dtype=np.float32, order='F')
-        background_mask[stacked_img.sum(axis=-1) > 0] = 0
-        stacked_img = np.concatenate(
-                      (stacked_img, background_mask[..., np.newaxis]),
-                      axis=-1)
 
         new_img = nb.Nifti1Image(stacked_img, affine=affine)
         nb.save(new_img, os.path.abspath(self.inputs.out_file))
