@@ -10,7 +10,7 @@ from nipype.interfaces.fsl import Split, Merge
 import nibabel as nb
 from nipype.interfaces.freesurfer import ApplyVolTransform, Tkregister2, MRICoreg
 
-from petprep.interfaces.pvc import CSVtoNifti, StackTissueProbabilityMaps, Binarise4DSegmentation, GTMPVC, GTMStatsTo4DNifti
+from petprep.interfaces.pvc import CSVtoNifti, StackTissueProbabilityMaps, Binarise4DSegmentation, GTMPVC, GTMStatsTo4DNifti, ClipValues
 
 
 def load_pvc_config(config_path: Path) -> dict:
@@ -84,17 +84,25 @@ def init_pet_pvc_wf(
             name='resample_pet_to_anat'
         )
 
+        clip_values = pe.MapNode(
+            ClipValues(),
+            iterfield=['in_file'],
+            name='clip_values'
+        )
+
         pvc_node = pe.MapNode(
             PETPVC(pvc=method_config.pop('pvc'), **method_config),
             iterfield=['in_file'],
             name=f'{tool_lower}_{safe_method}_pvc_node'
         )
 
+
         workflow.connect([
             (inputnode, split_frames, [('pet_file', 'in_file')]),
             (split_frames, resample_pet_to_anat, [('out_files', 'source_file')]),
             (inputnode, resample_pet_to_anat, [('segmentation', 'target_file')]),
-            (resample_pet_to_anat, pvc_node, [('transformed_file', 'in_file')]),
+            (resample_pet_to_anat, clip_values, [('transformed_file', 'in_file')]),
+            (clip_values, pvc_node, [('out_file', 'in_file')]),
         ])
 
         if method_key == 'MG':

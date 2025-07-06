@@ -16,6 +16,36 @@ import os
 from nipype.interfaces.freesurfer.base import FSCommand, FSTraitedSpec
 
 
+class ClipValuesInputSpec(BaseInterfaceInputSpec):
+    in_file = File(exists=True, mandatory=True, desc="Input image file")
+    out_file = File("handled_volume.nii.gz", usedefault=True, desc="Output handled image file")
+
+
+class ClipValuesOutputSpec(TraitedSpec):
+    out_file = File(exists=True, desc="Output handled image file")
+
+
+class ClipValues(BaseInterface):
+    input_spec = ClipValuesInputSpec
+    output_spec = ClipValuesOutputSpec
+
+    def _run_interface(self, runtime):
+        in_img = nb.load(self.inputs.in_file)
+        in_data = in_img.get_fdata()
+
+        # Handle negative values, infinities, and NaNs
+        clipped_data = np.clip(in_data, 0, None)
+        clipped_data = clipped_data.astype(np.float32)
+
+        new_img = nb.Nifti1Image(clipped_data, affine=in_img.affine, header=in_img.header)
+        nb.save(new_img, os.path.abspath(self.inputs.out_file))
+
+        return runtime
+
+    def _list_outputs(self):
+        return {"out_file": os.path.abspath(self.inputs.out_file)}
+
+
 class Binarise4DSegmentationInputSpec(BaseInterfaceInputSpec):
     dseg_file = File(exists=True, mandatory=True, desc="Input segmentation file (_dseg.nii.gz)")
     out_file = File("binarised_4d.nii.gz", usedefault=True, desc="Output 4D binary segmentation")
