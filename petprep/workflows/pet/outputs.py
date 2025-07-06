@@ -79,6 +79,7 @@ def init_func_fit_reports_wf(
     *,
     freesurfer: bool,
     output_dir: str,
+    ref_name: str,
     name='func_fit_reports_wf',
 ) -> pe.Workflow:
     """
@@ -121,6 +122,8 @@ def init_func_fit_reports_wf(
         Summary of preprocessing steps
     validation_report
         Reportlet from input data validation
+    ref_name
+        Name of the reference region mask
     refmask_report
         Reportlet showing the reference region mask
 
@@ -176,7 +179,9 @@ def init_func_fit_reports_wf(
         DerivativesDataSink(
             base_directory=output_dir,
             desc='refmask',
+            ref=ref_name,
             datatype='figures',
+            allowed_entities=('ref',),
         ),
         name='ds_report_refmask',
         run_without_submitting=True,
@@ -295,8 +300,10 @@ def init_func_fit_reports_wf(
         DerivativesDataSink(
             base_directory=output_dir,
             desc='refmask',
+            ref=ref_name,
             suffix='pet',
             datatype='figures',
+            allowed_entities=('ref',),
         ),
         name='ds_pet_t1_refmask_report',
     )
@@ -438,7 +445,17 @@ def init_ds_refmask_wf(
     ref_name: str,
     name='ds_refmask_wf',
 ) -> pe.Workflow:
-    """Write out a reference region mask."""
+    """Write out a reference region mask.
+
+    Parameters
+    ----------
+    output_dir : :obj:`str`
+        Directory in which to save derivatives
+    ref_name : :obj:`str`
+        Name of the reference region mask
+    name : :obj:`str`, optional
+        Workflow name (default: ``ds_refmask_wf``)
+    """
 
     workflow = pe.Workflow(name=name)
 
@@ -462,7 +479,9 @@ def init_ds_refmask_wf(
             base_directory=output_dir,
             datatype='pet',
             suffix='mask',
-            desc=ref_name,
+            desc='refmask',
+            ref=ref_name,
+            allowed_entities=('ref',),
             compress=True,
         ),
         name='ds_refmask',
@@ -875,11 +894,23 @@ def init_pet_preproc_report_wf(
     return workflow
 
 
-def init_refmask_report_wf(*, output_dir: str, name: str = 'refmask_report_wf') -> pe.Workflow:
-    """Generate a reportlet for the reference mask."""
+def init_refmask_report_wf(
+    *, output_dir: str, ref_name: str, name: str = 'refmask_report_wf'
+) -> pe.Workflow:
+    """Generate a reportlet for the reference mask.
 
-    from niworkflows.interfaces.reportlets.masks import SimpleShowMaskRPT
+    Parameters
+    ----------
+    output_dir : :obj:`str`
+        Directory in which to save derivatives
+    ref_name : :obj:`str`
+        Name of the reference region mask
+    name : :obj:`str`, optional
+        Workflow name (default: ``refmask_report_wf``)
+    """
+
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    from niworkflows.interfaces.reportlets.masks import SimpleShowMaskRPT
 
     workflow = Workflow(name=name)
 
@@ -894,7 +925,9 @@ def init_refmask_report_wf(*, output_dir: str, name: str = 'refmask_report_wf') 
         DerivativesDataSink(
             base_directory=output_dir,
             desc='refmask',
+            ref=ref_name,
             datatype='figures',
+            allowed_entities=('ref',),
         ),
         name='ds_report_refmask',
         run_without_submitting=True,

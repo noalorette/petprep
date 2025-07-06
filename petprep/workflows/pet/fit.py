@@ -225,6 +225,7 @@ def init_pet_fit_wf(
     func_fit_reports_wf = init_func_fit_reports_wf(
         freesurfer=config.workflow.run_reconall,
         output_dir=config.execution.petprep_dir,
+        ref_name=config.workflow.ref_mask_name,
     )
 
     workflow.connect([
@@ -254,7 +255,7 @@ def init_pet_fit_wf(
     # Stage 1: Estimate head motion and reference image
     if not hmc_xforms:
         config.loggers.workflow.info(
-            'Stage 1: Adding motion correction workflow and petref estimation'
+            'PET Stage 1: Adding motion correction workflow and petref estimation'
         )
         pet_hmc_wf = init_pet_hmc_wf(
             name='pet_hmc_wf',
@@ -312,7 +313,7 @@ def init_pet_fit_wf(
 
     # Stage 2: Coregistration
     if not petref2anat_xform:
-        config.loggers.workflow.info('Stage 2: Adding co-registration workflow of PET to T1w')
+        config.loggers.workflow.info('PET Stage 2: Adding co-registration workflow of PET to T1w')
         # calculate PET registration to T1w
         pet_reg_wf = init_pet_reg_wf(
             pet2anat_dof=config.workflow.pet2anat_dof,
@@ -343,7 +344,7 @@ def init_pet_fit_wf(
         outputnode.inputs.petref2anat_xfm = petref2anat_xform
 
     # Stage 3: Estimate PET brain mask
-    config.loggers.workflow.info('Stage 3: Adding estimation of PET brain mask')
+    config.loggers.workflow.info('PET Stage 3: Adding estimation of PET brain mask')
     from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
     from .confounds import _binary_union, _smooth_binarize
@@ -386,7 +387,7 @@ def init_pet_fit_wf(
 
     # Stage 4: Segmentation
     config.loggers.workflow.info(
-        'Stage 4: Adding segmentation workflow using the segmentation: %s', config.workflow.seg
+        'PET Stage 4: Adding segmentation workflow using the segmentation: %s', config.workflow.seg
     )
     segmentation_wf = init_segmentation_wf(
         seg=config.workflow.seg,
@@ -418,7 +419,7 @@ def init_pet_fit_wf(
     # Stage 5: Reference mask generation
     if config.workflow.ref_mask_name:
         config.loggers.workflow.info(
-            'Stage 5: Generating %s reference mask',
+            'PET Stage 5: Generating %s reference mask',
             config.workflow.ref_mask_name,
         )
 
@@ -441,9 +442,10 @@ def init_pet_fit_wf(
 
         refmask_report_wf = init_refmask_report_wf(
             output_dir=config.execution.petprep_dir,
+            ref_name=config.workflow.ref_mask_name,
             name='refmask_report_wf',
         )
-        
+
         workflow.connect(
             [
                 (

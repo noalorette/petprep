@@ -33,7 +33,10 @@ def test_datasink_datatype(tmp_path: Path):
         wf = init_ds_petmask_wf(output_dir=out_dir, desc='brain')
         assert wf.get_node('ds_petmask').inputs.datatype == 'pet'
         wf = init_ds_refmask_wf(output_dir=out_dir, ref_name='test')
-        assert wf.get_node('ds_refmask').inputs.datatype == 'pet'
+        ref_node = wf.get_node('ds_refmask')
+        assert ref_node.inputs.datatype == 'pet'
+        assert ref_node.inputs.desc == 'refmask'
+        assert ref_node.inputs.ref == 'test'
         wf = init_ds_pet_native_wf(
             bids_root=bids_dir,
             output_dir=out_dir,

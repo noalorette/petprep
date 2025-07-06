@@ -84,6 +84,12 @@ def test_pet_fit_precomputes(
     # The workflow will attempt to read file headers
     for path in pet_series:
         img.to_filename(path)
+        Path(path).with_suffix('').with_suffix('.json').write_text(
+            '{"FrameTimesStart": [0], "FrameDuration": [1]}'
+        )
+        Path(path).with_suffix('').with_suffix('.json').write_text(
+            '{"FrameTimesStart": [0], "FrameDuration": [1]}'
+        )
 
     dummy_nifti = str(tmp_path / 'dummy.nii')
     dummy_affine = str(tmp_path / 'dummy.txt')
@@ -101,7 +107,7 @@ def test_pet_fit_precomputes(
 
     with mock_config(bids_dir=bids_root):
         if have_petref != have_hmc_xfms:
-            with pytest.raises(ValueError):
+            with pytest.raises(ValueError):  # noqa: PT011
                 init_pet_fit_wf(
                     pet_series=pet_series,
                     precomputed=precomputed,
@@ -141,6 +147,9 @@ def test_pet_native_precomputes(
     # The workflow will attempt to read file headers
     for path in pet_series:
         img.to_filename(path)
+        Path(path).with_suffix('').with_suffix('.json').write_text(
+            '{"FrameTimesStart": [0], "FrameDuration": [1]}'
+        )
 
     with mock_config(bids_dir=bids_root):
         wf = init_pet_native_wf(
@@ -228,6 +237,9 @@ def test_refmask_report_connections(bids_root: Path, tmp_path: Path):
         )
 
     assert 'ds_refmask_wf.ds_refmask' in wf.list_node_names()
+    ref_ds = wf.get_node('ds_refmask_wf').get_node('ds_refmask')
+    assert ref_ds.inputs.desc == 'refmask'
+    assert ref_ds.inputs.ref == 'cerebellum'
     assert 'func_fit_reports_wf.pet_t1_refmask_report' in wf.list_node_names()
     reports_node = wf.get_node('func_fit_reports_wf')
     edge = wf._graph.get_edge_data(wf.get_node('outputnode'), reports_node)
@@ -272,7 +284,7 @@ def test_pet_fit_requires_both_derivatives(bids_root: Path, tmp_path: Path):
 
     # Only petref provided
     with mock_config(bids_dir=bids_root):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             init_pet_fit_wf(
                 pet_series=pet_series,
                 precomputed={'petref': str(ref_file)},
@@ -281,7 +293,7 @@ def test_pet_fit_requires_both_derivatives(bids_root: Path, tmp_path: Path):
 
     # Only hmc transforms provided
     with mock_config(bids_dir=bids_root):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             init_pet_fit_wf(
                 pet_series=pet_series,
                 precomputed={'transforms': {'hmc': str(hmc_xfm)}},
@@ -298,7 +310,12 @@ def test_pet_fit_stage1_with_cached_baseline(bids_root: Path, tmp_path: Path):
 
     deriv_root = tmp_path / 'derivs'
     petref = deriv_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_desc-hmc_petref.nii.gz'
-    xfm = deriv_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_from-orig_to-petref_mode-image_xfm.txt'
+    xfm = (
+        deriv_root
+        / 'sub-01'
+        / 'pet'
+        / 'sub-01_task-rest_run-1_from-orig_to-petref_mode-image_xfm.txt'
+    )
     petref.parent.mkdir(parents=True)
     img.to_filename(petref)
     np.savetxt(xfm, np.eye(4))
@@ -318,8 +335,11 @@ def test_pet_fit_stage1_with_cached_baseline(bids_root: Path, tmp_path: Path):
 
 def test_init_refmask_report_wf(tmp_path: Path):
     """Ensure the refmask report workflow initializes without errors."""
-    wf = init_refmask_report_wf(output_dir=str(tmp_path))
+    wf = init_refmask_report_wf(output_dir=str(tmp_path), ref_name='test')
     assert 'mask_report' in wf.list_node_names()
+    ds = wf.get_node('ds_report_refmask')
+    assert ds.inputs.desc == 'refmask'
+    assert ds.inputs.ref == 'test'
 
 
 def test_reports_spec_contains_refmask():
@@ -330,10 +350,6 @@ def test_reports_spec_contains_refmask():
         )
         pet_section = next(s for s in spec['sections'] if s['name'] == 'PET')
         assert any(
-            r.get('bids', {}).get('desc') == 'refmask'
-            for r in pet_section['reportlets']
-        )
-        assert any(
-            r.get('bids', {}).get('desc') == 'refmask'
+            r.get('bids', {}).get('desc') == 'refmask' and r.get('bids', {}).get('ref') == '.*'
             for r in pet_section['reportlets']
         )
