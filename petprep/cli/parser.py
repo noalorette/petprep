@@ -554,6 +554,18 @@ https://petprep.readthedocs.io/en/%s/spaces.html"""
         help='Segmentation method to use.',
     )
 
+    g_refmask = parser.add_argument_group('Options for reference mask generation')
+    g_refmask.add_argument(
+        '--ref-mask-name',
+        help='Predefined reference regions. Pair with --ref-mask-index to define custom labels.',
+    )
+    g_refmask.add_argument(
+        '--ref-mask-index',
+        nargs='+',
+        type=int,
+        help='List of segmentation indices to use for the reference mask.',
+    )
+
     g_pvc = parser.add_argument_group('Options for partial volume correction')
 
     try:
@@ -720,6 +732,14 @@ def parse_args(args=None, namespace=None):
         parser.error(
             'Options --pvc-tool, --pvc-method and --pvc-psf must be used together.'
         )
+
+    if opts.ref_mask_index is not None and opts.ref_mask_name is None:
+        parser.error('Option --ref-mask-index requires --ref-mask-name.')
+
+    if opts.ref_mask_name is not None:
+        config.workflow.ref_mask_name = opts.ref_mask_name
+    if opts.ref_mask_index is not None:
+        config.workflow.ref_mask_index = tuple(opts.ref_mask_index)
 
     if opts.pvc_tool is not None:
         config.workflow.pvc_tool = opts.pvc_tool

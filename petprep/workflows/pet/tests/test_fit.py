@@ -3,13 +3,16 @@ from pathlib import Path
 import nibabel as nb
 import numpy as np
 import pytest
+import yaml
 from nipype.pipeline.engine.utils import generate_expanded_graph
 from niworkflows.utils.testing import generate_bids_skeleton
 
+from .... import config, data
+from ....utils import bids
 from ...tests import mock_config
 from ...tests.test_base import BASE_LAYOUT
-from ....utils import bids
 from ..fit import init_pet_fit_wf, init_pet_native_wf
+from ..outputs import init_refmask_report_wf
 
 
 @pytest.fixture(scope='module', autouse=True)
@@ -81,6 +84,12 @@ def test_pet_fit_precomputes(
     # The workflow will attempt to read file headers
     for path in pet_series:
         img.to_filename(path)
+        Path(path).with_suffix('').with_suffix('.json').write_text(
+            '{"FrameTimesStart": [0], "FrameDuration": [1]}'
+        )
+        Path(path).with_suffix('').with_suffix('.json').write_text(
+            '{"FrameTimesStart": [0], "FrameDuration": [1]}'
+        )
 
     dummy_nifti = str(tmp_path / 'dummy.nii')
     dummy_affine = str(tmp_path / 'dummy.txt')
@@ -98,7 +107,7 @@ def test_pet_fit_precomputes(
 
     with mock_config(bids_dir=bids_root):
         if have_petref != have_hmc_xfms:
-            with pytest.raises(ValueError):
+            with pytest.raises(ValueError):  # noqa: PT011
                 init_pet_fit_wf(
                     pet_series=pet_series,
                     precomputed=precomputed,
@@ -138,6 +147,9 @@ def test_pet_native_precomputes(
     # The workflow will attempt to read file headers
     for path in pet_series:
         img.to_filename(path)
+        Path(path).with_suffix('').with_suffix('.json').write_text(
+            '{"FrameTimesStart": [0], "FrameDuration": [1]}'
+        )
 
     with mock_config(bids_dir=bids_root):
         wf = init_pet_native_wf(
@@ -197,6 +209,51 @@ def test_petref_report_connections(bids_root: Path, tmp_path: Path):
     assert ('petref', 'inputnode.petref') in edge['connect']
 
 
+def test_refmask_report_connections(bids_root: Path, tmp_path: Path):
+    """Ensure the reference mask report is passed to the reports workflow."""
+    pet_series = [str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')]
+    img = nb.Nifti1Image(np.zeros((2, 2, 2, 1)), np.eye(4))
+    for path in pet_series:
+        img.to_filename(path)
+
+    sidecar = Path(pet_series[0]).with_suffix('').with_suffix('.json')
+    sidecar.write_text('{"FrameTimesStart": [0], "FrameDuration": [1]}')
+
+    dummy_ref = str(tmp_path / 'dummy.nii')
+    dummy_xfm = str(tmp_path / 'dummy.txt')
+    img.to_filename(dummy_ref)
+    np.savetxt(dummy_xfm, np.eye(4))
+    precomputed = {
+        'petref': dummy_ref,
+        'transforms': {'hmc': dummy_xfm, 'petref2anat': dummy_xfm},
+    }
+
+    with mock_config(bids_dir=bids_root):
+        config.workflow.ref_mask_name = 'cerebellum'
+        wf = init_pet_fit_wf(
+            pet_series=pet_series,
+            precomputed=precomputed,
+            omp_nthreads=1,
+        )
+
+    assert 'ds_refmask_wf.ds_refmask' in wf.list_node_names()
+    ref_ds = wf.get_node('ds_refmask_wf').get_node('ds_refmask')
+    assert ref_ds.inputs.desc == 'refmask'
+    assert ref_ds.inputs.ref == 'cerebellum'
+    assert 'func_fit_reports_wf.pet_t1_refmask_report' in wf.list_node_names()
+    reports_node = wf.get_node('func_fit_reports_wf')
+    edge = wf._graph.get_edge_data(wf.get_node('outputnode'), reports_node)
+    assert ('refmask', 'inputnode.refmask') in edge['connect']
+
+    seg_node = wf.get_node(f'pet_{config.workflow.seg}_seg_wf')
+    ds_refmask = wf.get_node('ds_refmask_wf')
+    seg_edge = wf._graph.get_edge_data(seg_node, ds_refmask)
+    assert (
+        'outputnode.segmentation',
+        'inputnode.source_files',
+    ) in seg_edge['connect']
+
+
 def test_pet_fit_stage1_inclusion(bids_root: Path, tmp_path: Path):
     """Stage 1 should run only when HMC derivatives are missing."""
     pet_series = [str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')]
@@ -235,7 +292,7 @@ def test_pet_fit_requires_both_derivatives(bids_root: Path, tmp_path: Path):
 
     # Only petref provided
     with mock_config(bids_dir=bids_root):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             init_pet_fit_wf(
                 pet_series=pet_series,
                 precomputed={'petref': str(ref_file)},
@@ -244,7 +301,7 @@ def test_pet_fit_requires_both_derivatives(bids_root: Path, tmp_path: Path):
 
     # Only hmc transforms provided
     with mock_config(bids_dir=bids_root):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             init_pet_fit_wf(
                 pet_series=pet_series,
                 precomputed={'transforms': {'hmc': str(hmc_xfm)}},
@@ -261,7 +318,12 @@ def test_pet_fit_stage1_with_cached_baseline(bids_root: Path, tmp_path: Path):
 
     deriv_root = tmp_path / 'derivs'
     petref = deriv_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_desc-hmc_petref.nii.gz'
-    xfm = deriv_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_from-orig_to-petref_mode-image_xfm.txt'
+    xfm = (
+        deriv_root
+        / 'sub-01'
+        / 'pet'
+        / 'sub-01_task-rest_run-1_from-orig_to-petref_mode-image_xfm.txt'
+    )
     petref.parent.mkdir(parents=True)
     img.to_filename(petref)
     np.savetxt(xfm, np.eye(4))
@@ -277,3 +339,25 @@ def test_pet_fit_stage1_with_cached_baseline(bids_root: Path, tmp_path: Path):
         wf = init_pet_fit_wf(pet_series=pet_series, precomputed=precomputed, omp_nthreads=1)
 
     assert not any(name.startswith('pet_hmc_wf') for name in wf.list_node_names())
+
+
+def test_init_refmask_report_wf(tmp_path: Path):
+    """Ensure the refmask report workflow initializes without errors."""
+    wf = init_refmask_report_wf(output_dir=str(tmp_path), ref_name='test')
+    assert 'mask_report' in wf.list_node_names()
+    ds = wf.get_node('ds_report_refmask')
+    assert ds.inputs.desc == 'refmask'
+    assert ds.inputs.ref == 'test'
+
+
+def test_reports_spec_contains_refmask():
+    """Check that the report specification includes the refmask reportlet."""
+    for fname in ('reports-spec.yml', 'reports-spec-pet.yml'):
+        spec = yaml.safe_load(
+            (data.load.readable(fname)).read_text()
+        )
+        pet_section = next(s for s in spec['sections'] if s['name'] == 'PET')
+        assert any(
+            r.get('bids', {}).get('desc') == 'refmask' and r.get('bids', {}).get('ref') == '.*'
+            for r in pet_section['reportlets']
+        )

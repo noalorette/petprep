@@ -283,3 +283,25 @@ def test_pvc_invalid_method(tmp_path, minimal_bids):
     with pytest.raises(SystemExit):
         parse_args(args=args)
     _reset_config()
+
+
+def test_reference_mask_options(tmp_path, minimal_bids, monkeypatch):
+    work_dir = tmp_path / 'work'
+    base_args = [
+        str(minimal_bids),
+        str(tmp_path / 'out'),
+        'participant',
+        '-w',
+        str(work_dir),
+        '--skip-bids-validation',
+    ]
+
+    # Missing --ref-mask-name should raise error when --ref-mask-index is used
+    with pytest.raises(SystemExit):
+        parse_args(args=base_args + ['--ref-mask-index', '1', '2'])
+    _reset_config()
+
+    parse_args(args=base_args + ['--ref-mask-name', 'cerebellum', '--ref-mask-index', '3', '4'])
+    assert config.workflow.ref_mask_name == 'cerebellum'
+    assert config.workflow.ref_mask_index == (3, 4)
+    _reset_config()

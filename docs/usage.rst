@@ -203,6 +203,13 @@ method with a 5 mm PSF::
     $ petprep /data/bids_root /out participant \
         --pvc-tool petpvc --pvc-method GTM --pvc-psf 5
 
+Reference region masks
+----------------------
+*PETPrep* can build masks for reference regions used in quantification.
+Use ``--ref-mask-name`` to select a predefined region and
+``--ref-mask-index`` to override the label indices.
+The presets are defined in ``petprep/data/reference_mask/config.json``.
+
 Troubleshooting
 ---------------
 Logs and crashfiles are output into the

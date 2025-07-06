@@ -27,6 +27,7 @@ from niworkflows.interfaces.header import ValidateImage
 from niworkflows.utils.connections import listify
 
 from ... import config
+from ...data import load as load_data
 from ...interfaces.reports import FunctionalSummary
 from ...interfaces.resampling import ResampleSeries
 from ...utils.misc import estimate_pet_mem_usage
@@ -36,11 +37,14 @@ from .hmc import init_pet_hmc_wf
 from .outputs import (
     init_ds_hmc_wf,
     init_ds_petmask_wf,
-    init_ds_registration_wf,
     init_ds_petref_wf,
+    init_ds_refmask_wf,
+    init_ds_registration_wf,
     init_func_fit_reports_wf,
+    init_refmask_report_wf,
     prepare_timing_parameters,
 )
+from .reference_mask import init_pet_refmask_wf
 from .registration import init_pet_reg_wf
 from .segmentation import init_segmentation_wf
 
@@ -174,6 +178,7 @@ def init_pet_fit_wf(
                 'petref2anat_xfm',
                 'segmentation',
                 'dseg_tsv',
+                'refmask',
             ],
         ),
         name='outputnode',
@@ -201,8 +206,9 @@ def init_pet_fit_wf(
 
     if frame_durations is None or frame_start_times is None:
         raise ValueError(
-            "Metadata is missing required frame timing information: 'FrameDuration' or 'FrameTimesStart'. "
-            "Please check your BIDS JSON sidecar."
+            'Metadata is missing required frame timing information: '
+            "'FrameDuration' or 'FrameTimesStart'. "
+            'Please check your BIDS JSON sidecar.'
         )
 
     summary = pe.Node(
@@ -219,6 +225,7 @@ def init_pet_fit_wf(
     func_fit_reports_wf = init_func_fit_reports_wf(
         freesurfer=config.workflow.run_reconall,
         output_dir=config.execution.petprep_dir,
+        ref_name=config.workflow.ref_mask_name,
     )
 
     workflow.connect([
@@ -247,7 +254,9 @@ def init_pet_fit_wf(
 
     # Stage 1: Estimate head motion and reference image
     if not hmc_xforms:
-        config.loggers.workflow.info('Stage 1: Adding motion correction workflow and petref estimation')
+        config.loggers.workflow.info(
+            'PET Stage 1: Adding motion correction workflow and petref estimation'
+        )
         pet_hmc_wf = init_pet_hmc_wf(
             name='pet_hmc_wf',
             mem_gb=mem_gb['filesize'],
@@ -288,7 +297,9 @@ def init_pet_fit_wf(
             (pet_hmc_wf, ds_petref_wf, [('outputnode.petref', 'inputnode.petref')]),
         ])  # fmt:skip
     else:
-        config.loggers.workflow.info('Found head motion correction transforms and petref - skipping Stage 1')
+        config.loggers.workflow.info(
+            'Found head motion correction transforms and petref - skipping Stage 1'
+        )
 
         val_pet = pe.Node(ValidateImage(), name='val_pet')
 
@@ -302,7 +313,7 @@ def init_pet_fit_wf(
 
     # Stage 2: Coregistration
     if not petref2anat_xform:
-        config.loggers.workflow.info('Stage 2: Adding co-registration workflow of PET to T1w')
+        config.loggers.workflow.info('PET Stage 2: Adding co-registration workflow of PET to T1w')
         # calculate PET registration to T1w
         pet_reg_wf = init_pet_reg_wf(
             pet2anat_dof=config.workflow.pet2anat_dof,
@@ -333,7 +344,7 @@ def init_pet_fit_wf(
         outputnode.inputs.petref2anat_xfm = petref2anat_xform
 
     # Stage 3: Estimate PET brain mask
-    config.loggers.workflow.info('Stage 3: Adding estimation of PET brain mask')
+    config.loggers.workflow.info('PET Stage 3: Adding estimation of PET brain mask')
     from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
     from .confounds import _binary_union, _smooth_binarize
@@ -342,9 +353,7 @@ def init_pet_fit_wf(
         ApplyTransforms(interpolation='MultiLabel', invert_transform_flags=[True]),
         name='t1w_mask_tfm',
     )
-    petref_mask = pe.Node(
-        niu.Function(function=_smooth_binarize), name='petref_mask'
-    )
+    petref_mask = pe.Node(niu.Function(function=_smooth_binarize), name='petref_mask')
     petref_mask.inputs.fwhm = 10.0
     petref_mask.inputs.thresh = 0.2
     merge_mask = pe.Node(niu.Function(function=_binary_union), name='merge_mask')
@@ -377,23 +386,128 @@ def init_pet_fit_wf(
 
 
     # Stage 4: Segmentation
-    config.loggers.workflow.info('Stage 4: Adding segmentation workflow using the segmentation: %s', config.workflow.seg)
+    config.loggers.workflow.info(
+        'PET Stage 4: Adding segmentation workflow using the segmentation: %s', config.workflow.seg
+    )
     segmentation_wf = init_segmentation_wf(
         seg=config.workflow.seg,
         name=f'pet_{config.workflow.seg}_seg_wf',
     )
 
-    workflow.connect([
-        (inputnode, segmentation_wf, [
-            ('t1w_preproc', 'inputnode.t1w_preproc'),
-            ('subject_id', 'inputnode.subject_id'),
-            ('subjects_dir', 'inputnode.subjects_dir'),
-        ]),
-        (segmentation_wf, outputnode, [
-            ('outputnode.segmentation', 'segmentation'),
-            ('outputnode.dseg_tsv', 'dseg_tsv'),
-        ]),
-    ])
+    workflow.connect(
+        [
+            (
+                inputnode,
+                segmentation_wf,
+                [
+                    ('t1w_preproc', 'inputnode.t1w_preproc'),
+                    ('subject_id', 'inputnode.subject_id'),
+                    ('subjects_dir', 'inputnode.subjects_dir'),
+                ],
+            ),
+            (
+                segmentation_wf,
+                outputnode,
+                [
+                    ('outputnode.segmentation', 'segmentation'),
+                    ('outputnode.dseg_tsv', 'dseg_tsv'),
+                ],
+            ),
+        ]
+    )
+
+    # Stage 5: Reference mask generation
+    if config.workflow.ref_mask_name:
+        config.loggers.workflow.info(
+            'PET Stage 5: Generating %s reference mask',
+            config.workflow.ref_mask_name,
+        )
+
+        refmask_wf = init_pet_refmask_wf(
+            segmentation=config.workflow.seg,
+            ref_mask_name=config.workflow.ref_mask_name,
+            ref_mask_index=list(config.workflow.ref_mask_index)
+            if config.workflow.ref_mask_index
+            else None,
+            config_path=str(load_data('reference_mask/config.json')),
+            name='pet_refmask_wf',
+        )
+
+        ds_refmask_wf = init_ds_refmask_wf(
+            output_dir=config.execution.petprep_dir,
+            ref_name=config.workflow.ref_mask_name,
+            name='ds_refmask_wf',
+        )
+
+        refmask_report_wf = init_refmask_report_wf(
+            output_dir=config.execution.petprep_dir,
+            ref_name=config.workflow.ref_mask_name,
+            name='refmask_report_wf',
+        )
+
+        workflow.connect(
+            [
+                (
+                    segmentation_wf,
+                    refmask_wf,
+                    [
+                        ('outputnode.segmentation', 'inputnode.seg_file'),
+                    ],
+                ),
+                (
+                    refmask_wf,
+                    outputnode,
+                    [
+                        ('outputnode.refmask_file', 'refmask'),
+                    ],
+                ),
+                (
+                    refmask_wf,
+                    ds_refmask_wf,
+                    [
+                        ('outputnode.refmask_file', 'inputnode.refmask'),
+                    ],
+                ),
+                (
+                    segmentation_wf,
+                    ds_refmask_wf,
+                    [
+                        ('outputnode.segmentation', 'inputnode.source_files'),
+                    ],
+                ),
+                (
+                    petref_buffer,
+                    refmask_report_wf,
+                    [
+                        ('pet_file', 'inputnode.source_file'),
+                        ('petref', 'inputnode.petref'),
+                    ],
+                ),
+                (
+                    refmask_wf,
+                    refmask_report_wf,
+                    [
+                        ('outputnode.refmask_file', 'inputnode.refmask'),
+                    ],
+                ),
+                (
+                    refmask_report_wf,
+                    func_fit_reports_wf,
+                    [
+                        ('outputnode.refmask_report', 'inputnode.refmask_report'),
+                    ],
+                ),
+                (
+                    outputnode,
+                    func_fit_reports_wf,
+                    [
+                        ('refmask', 'inputnode.refmask'),
+                    ],
+                ),
+            ]
+        )
+    else:
+        config.loggers.workflow.info('Stage 5: Reference mask generation skipped')
 
     return workflow
 
