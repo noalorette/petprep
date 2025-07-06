@@ -600,6 +600,8 @@ class workflow(_Config):
     """Segmentation approach ('gtm', 'brainstem', 'thalamicNuclei',
     'hippocampusAmygdala', 'wm', 'raphe', 'limbic')."""
 
+    pvc_tool: str | None = None
+    """Tool used for partial volume correction."""
     pvc_method: str | None = None
     """Algorithm used for partial volume correction."""
     pvc_psf: tuple | None = None

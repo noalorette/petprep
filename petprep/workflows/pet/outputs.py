@@ -669,6 +669,7 @@ def init_ds_volumes_wf(
     bids_root: str,
     output_dir: str,
     metadata: list[dict],
+    pvc_method: str | None = None,
     name='ds_volumes_wf',
 ) -> pe.Workflow:
     timing_parameters = prepare_timing_parameters(metadata)
@@ -722,6 +723,8 @@ def init_ds_volumes_wf(
         name='ds_pet',
         mem_gb=DEFAULT_MEMORY_MIN_GB,
     )
+    if pvc_method is not None:
+        ds_pet.inputs.pvc = pvc_method
     workflow.connect([
         (inputnode, sources, [
             ('source_files', 'in1'),

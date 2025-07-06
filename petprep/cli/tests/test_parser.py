@@ -262,6 +262,29 @@ def test_pvc_argument_handling(tmp_path, minimal_bids):
     _reset_config()
 
 
+def test_pvc_invalid_method(tmp_path, minimal_bids):
+    out_dir = tmp_path / 'out'
+    work_dir = tmp_path / 'work'
+    args = [
+        str(minimal_bids),
+        str(out_dir),
+        'participant',
+        '-w',
+        str(work_dir),
+        '--skip-bids-validation',
+        '--pvc-tool',
+        'petpvc',
+        '--pvc-method',
+        'BAD',
+        '--pvc-psf',
+        '5',
+    ]
+
+    with pytest.raises(SystemExit):
+        parse_args(args=args)
+    _reset_config()
+
+
 def test_reference_mask_options(tmp_path, minimal_bids, monkeypatch):
     work_dir = tmp_path / 'work'
     base_args = [
