@@ -10,7 +10,7 @@ from nipype.interfaces.fsl import Split, Merge
 import nibabel as nb
 from nipype.interfaces.freesurfer import ApplyVolTransform, Tkregister2, MRICoreg
 
-from petprep.interfaces.pvc import CSVtoNifti, StackTissueProbabilityMaps, Binarise4DSegmentation, GTMPVC, GTMStatsTo4DNifti
+from petprep.interfaces.pvc import CSVtoNifti, StackTissueProbabilityMaps, Binarise4DSegmentation, GTMPVC, GTMStatsTo4DNifti, ClipValues
 
 
 def load_pvc_config(config_path: Path) -> dict:
@@ -19,7 +19,7 @@ def load_pvc_config(config_path: Path) -> dict:
 
 
 # Add a function to dynamically construct the path
-def construct_gtmseg_path(subjects_dir, subject_id):
+def construct_gtmseg_path(subjects_dir, subject_id, seg_ready=None):
     from pathlib import Path
     return str(Path(subjects_dir) / subject_id / 'mri' / 'gtmseg.mgz')
 
@@ -67,7 +67,7 @@ def init_pet_pvc_wf(
     method_config = config[tool_lower][method_key].copy()
     method_config.update(pvc_params)
 
-    resample_pet_to_petref = pe.MapNode(
+    resample_pet_to_petref = pe.Node(
             ApplyVolTransform(interp='nearest', reg_header=True),
             iterfield=['source_file'],
             name='resample_pet_to_petref'
@@ -84,17 +84,25 @@ def init_pet_pvc_wf(
             name='resample_pet_to_anat'
         )
 
+        clip_values = pe.MapNode(
+            ClipValues(),
+            iterfield=['in_file'],
+            name='clip_values'
+        )
+
         pvc_node = pe.MapNode(
             PETPVC(pvc=method_config.pop('pvc'), **method_config),
             iterfield=['in_file'],
             name=f'{tool_lower}_{safe_method}_pvc_node'
         )
 
+
         workflow.connect([
             (inputnode, split_frames, [('pet_file', 'in_file')]),
             (split_frames, resample_pet_to_anat, [('out_files', 'source_file')]),
             (inputnode, resample_pet_to_anat, [('segmentation', 'target_file')]),
-            (resample_pet_to_anat, pvc_node, [('transformed_file', 'in_file')]),
+            (resample_pet_to_anat, clip_values, [('transformed_file', 'in_file')]),
+            (clip_values, pvc_node, [('out_file', 'in_file')]),
         ])
 
         if method_key == 'MG':
@@ -152,7 +160,7 @@ def init_pet_pvc_wf(
 
         gtmseg_path_node = pe.Node(
             niu.Function(
-                input_names=['subjects_dir', 'subject_id'],
+                input_names=['subjects_dir', 'subject_id', 'seg_ready'],
                 output_names=['gtmseg_path'],
                 function=construct_gtmseg_path
             ),
@@ -184,13 +192,14 @@ def init_pet_pvc_wf(
                 ('subjects_dir', 'subjects_dir'),
                 ('subject_id', 'subject_id'),
             ]),
-            (inputnode, tkregister_node, [('petref', 'moving_image')]),
+            (inputnode, tkregister_node, [('pet_file', 'moving_image')]),
             (nu_path_node, tkregister_node, [('nu_path', 'target_image')]),
             (inputnode, tkregister_node, [('subjects_dir', 'subjects_dir'), ('subject_id', 'subject_id')]),
             (tkregister_node, pvc_node, [('lta_file', 'reg_file')]),
             (inputnode, gtmseg_path_node, [
                 ('subjects_dir', 'subjects_dir'),
                 ('subject_id', 'subject_id'),
+                ('segmentation', 'seg_ready'),
             ]),
             (inputnode, pvc_node, [
                 ('pet_file', 'in_file'),

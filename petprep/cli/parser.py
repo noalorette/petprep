@@ -555,8 +555,36 @@ https://petprep.readthedocs.io/en/%s/spaces.html"""
     )
 
     g_pvc = parser.add_argument_group('Options for partial volume correction')
-    parser.add_argument('--pvc-tool', choices=['petpvc', 'petsurfer'], help='Tool to use for partial volume correction')
-    g_pvc.add_argument('--pvc-method', action='store', help='PVC method identifier')
+
+    try:
+        from importlib.resources import files as ir_files
+    except ImportError:  # PY<3.9
+        from importlib_resources import files as ir_files
+    from json import load
+
+    with open(ir_files('petprep.data.pvc') / 'config.json') as f:
+        pvc_config = load(f)
+    petpvc_methods = sorted(pvc_config.get('petpvc', {}).keys())
+    petsurfer_methods = sorted(pvc_config.get('petsurfer', {}).keys())
+    all_pvc_methods = sorted(set(petpvc_methods + petsurfer_methods))
+
+    parser.add_argument(
+        '--pvc-tool',
+        choices=['petpvc', 'petsurfer'],
+        help='Tool to use for partial volume correction',
+    )
+    g_pvc.add_argument(
+        '--pvc-method',
+        action='store',
+        choices=all_pvc_methods,
+        help=(
+            'PVC method identifier. PETPVC: '
+            + ', '.join(petpvc_methods)
+            + '. PETSurfer: '
+            + ', '.join(petsurfer_methods)
+            + '.'
+        ),
+    )
     g_pvc.add_argument(
         '--pvc-psf',
         nargs='+',
@@ -715,7 +743,10 @@ def parse_args(args=None, namespace=None):
     # Initialize --output-spaces if not defined
     if config.execution.output_spaces is None:
         config.execution.output_spaces = SpatialReferences(
-            [Reference('MNI152NLin2009cAsym', {'res': 'native'})]
+            [
+                Reference('MNI152NLin2009cAsym', {'res': 'native'}),
+                Reference('T1w'),
+            ],
         )
 
     # Retrieve logging level

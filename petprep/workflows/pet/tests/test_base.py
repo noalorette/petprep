@@ -109,3 +109,75 @@ def test_pet_wf_without_pvc(bids_root: Path):
         wf = init_pet_wf(pet_series=pet_series, precomputed={})
 
     assert 'pet_pvc_wf' not in [n.split('.')[-1] for n in wf.list_node_names()]
+
+
+def test_pvc_entity_added(bids_root: Path):
+    """Outputs include the ``pvc`` entity when PVC is run."""
+    pet_series = _prep_pet_series(bids_root)
+
+    with mock_config(bids_dir=bids_root):
+        config.workflow.pvc_tool = 'PETPVC'
+        config.workflow.pvc_method = 'GTM'
+        config.workflow.pvc_psf = (1.0, 1.0, 1.0)
+
+        wf = init_pet_wf(pet_series=pet_series, precomputed={})
+
+    pvc_method = config.workflow.pvc_method
+    assert wf.get_node('ds_pet_t1_wf.ds_pet').inputs.pvc == pvc_method
+    assert wf.get_node('ds_pet_std_wf.ds_pet').inputs.pvc == pvc_method
+    assert wf.get_node('pet_surf_wf.ds_pet_surfs').inputs.pvc == pvc_method
+    assert wf.get_node('ds_pet_cifti').inputs.pvc == pvc_method
+
+
+def test_pvc_used_in_std_space(bids_root: Path):
+    """Standard-space outputs should originate from PVC data when enabled."""
+    pet_series = _prep_pet_series(bids_root)
+
+    with mock_config(bids_dir=bids_root):
+        config.workflow.pvc_tool = 'PETPVC'
+        config.workflow.pvc_method = 'GTM'
+        config.workflow.pvc_psf = (1.0, 1.0, 1.0)
+
+        wf = init_pet_wf(pet_series=pet_series, precomputed={})
+
+    # Connection from PVC workflow to standard-space workflow
+    edge = wf._graph.get_edge_data(wf.get_node('pet_pvc_wf'), wf.get_node('pet_std_wf'))
+    assert ('outputnode.pet_pvc_file', 'inputnode.pet_file') in edge['connect']
+
+    # Ensure uncorrected PET is not used as the source image
+    edge_native = wf._graph.get_edge_data(wf.get_node('pet_native_wf'), wf.get_node('pet_std_wf'))
+    assert ('outputnode.pet_minimal', 'inputnode.pet_file') not in edge_native['connect']
+    assert ('outputnode.motion_xfm', 'inputnode.motion_xfm') not in edge_native['connect']
+
+    edge_fit = wf._graph.get_edge_data(wf.get_node('pet_fit_wf'), wf.get_node('pet_std_wf'))
+    assert ('outputnode.petref2anat_xfm', 'inputnode.petref2anat_xfm') not in edge_fit['connect']
+
+
+def test_std_space_connections_without_pvc(bids_root: Path):
+    """Standard-space workflow should use native outputs when PVC is disabled."""
+    pet_series = _prep_pet_series(bids_root)
+
+    with mock_config(bids_dir=bids_root):
+        wf = init_pet_wf(pet_series=pet_series, precomputed={})
+
+    edge = wf._graph.get_edge_data(wf.get_node('pet_native_wf'), wf.get_node('pet_std_wf'))
+    assert ('outputnode.pet_minimal', 'inputnode.pet_file') in edge['connect']
+    assert ('outputnode.motion_xfm', 'inputnode.motion_xfm') in edge['connect']
+
+    edge_fit = wf._graph.get_edge_data(wf.get_node('pet_fit_wf'), wf.get_node('pet_std_wf'))
+    assert ('outputnode.petref2anat_xfm', 'inputnode.petref2anat_xfm') in edge_fit['connect']
+
+
+def test_pvc_receives_segmentation(bids_root: Path):
+    """PVC workflow should receive segmentation from the fit workflow."""
+    pet_series = _prep_pet_series(bids_root)
+
+    with mock_config(bids_dir=bids_root):
+        config.workflow.pvc_tool = 'PETPVC'
+        config.workflow.pvc_method = 'GTM'
+        config.workflow.pvc_psf = (1.0, 1.0, 1.0)
+
+        wf = init_pet_wf(pet_series=pet_series, precomputed={})
+
+    edge = wf._graph.get_edge_data(wf.get_node('pet_fit_wf'), wf.get_node('pet_pvc_wf'))
+    assert ('outputnode.segmentation', 'inputnode.segmentation') in edge['connect']
