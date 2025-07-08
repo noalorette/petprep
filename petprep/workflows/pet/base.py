@@ -645,6 +645,35 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (pet_tacs_wf, ds_pet_tacs, [('outputnode.timeseries', 'in_file')]),
     ])  # fmt:skip
 
+    if config.workflow.ref_mask_name:
+        pet_ref_tacs_wf = init_pet_ref_tacs_wf(name='pet_ref_tacs_wf')
+        pet_ref_tacs_wf.inputs.inputnode.metadata = str(
+            Path(pet_file).with_suffix('').with_suffix('.json')
+        )
+        pet_ref_tacs_wf.inputs.inputnode.ref_mask_name = config.workflow.ref_mask_name
+
+        ds_ref_tacs = pe.Node(
+            DerivativesDataSink(
+                base_directory=petprep_dir,
+                suffix='timeseries',
+                desc=config.workflow.seg,
+                ref=config.workflow.ref_mask_name,
+                allowed_entities=('ref',),
+                TaskName=all_metadata[0].get('TaskName'),
+                **prepare_timing_parameters(all_metadata[0]),
+            ),
+            name='ds_ref_tacs',
+            run_without_submitting=True,
+            mem_gb=config.DEFAULT_MEMORY_MIN_GB,
+        )
+        ds_ref_tacs.inputs.source_file = pet_file
+
+        workflow.connect([
+            (pet_t1w_src, pet_ref_tacs_wf, [(pet_t1w_field, 'inputnode.pet_anat')]),
+            (pet_fit_wf, pet_ref_tacs_wf, [('outputnode.refmask', 'inputnode.mask_file')]),
+            (pet_ref_tacs_wf, ds_ref_tacs, [('outputnode.timeseries', 'in_file')]),
+        ])  # fmt:skip
+
     pet_confounds_wf = init_pet_confs_wf(
         mem_gb=mem_gb['largemem'],
         metadata=all_metadata[0],
