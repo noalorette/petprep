@@ -338,6 +338,13 @@ by one column per region::
     pet/
       sub-<subject_label>_[specifiers]_desc-preproc_timeseries.tsv
 
+If a reference mask is specified, a separate table contains the mean uptake
+within that region::
+
+  sub-<subject_label>/
+    pet/
+      sub-<subject_label>_[specifiers]_desc-<seg>_ref-<ref>_timeseries.tsv
+
 Confounds
 ---------
 The :abbr:`BOLD (blood-oxygen level dependent)` signal measured with fMRI is a mixture of fluctuations
