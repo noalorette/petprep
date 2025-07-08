@@ -51,6 +51,7 @@ from .outputs import (
     prepare_timing_parameters,
 )
 from .tacs import init_pet_tacs_wf
+from .ref_tacs import init_pet_ref_tacs_wf
 from .pvc import init_pet_pvc_wf
 from .resampling import init_pet_surf_wf
 
