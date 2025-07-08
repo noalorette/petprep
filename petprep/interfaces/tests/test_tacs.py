@@ -10,7 +10,7 @@ import pytest
 from nipype.pipeline import engine as pe
 from nipype.pipeline.engine.nodes import NodeExecutionError
 
-from petprep.interfaces.tacs import ExtractTACs
+from petprep.interfaces.tacs import ExtractTACs, ExtractRefTAC
 from petprep.workflows.pet.tacs import init_pet_tacs_wf
 
 
@@ -119,3 +119,75 @@ def test_tacs_workflow(tmp_path):
 
     assert inputs['in_file'] == str(resampled_pet)
     assert Path(tmp_path / 'pet_tacs_wf' / 'tac' / 'pet_resampled_timeseries.tsv').exists()
+
+
+def test_ExtractRefTAC(tmp_path):
+    pet_data = np.stack(
+        [
+            np.ones((2, 2, 2)),
+            np.ones((2, 2, 2)) * 2,
+        ],
+        axis=-1,
+    )
+    pet_file = tmp_path / "pet.nii.gz"
+    nb.Nifti1Image(pet_data, np.eye(4)).to_filename(pet_file)
+
+    mask_data = np.zeros((2, 2, 2), dtype="int16")
+    mask_data[0] = 1
+    mask_file = tmp_path / "mask.nii.gz"
+    nb.Nifti1Image(mask_data, np.eye(4)).to_filename(mask_file)
+
+    meta_json = tmp_path / "pet.json"
+    meta_json.write_text(
+        json.dumps({"FrameTimesStart": [0, 1], "FrameDuration": [1, 1]})
+    )
+
+    node = pe.Node(
+        ExtractRefTAC(
+            in_file=str(pet_file),
+            mask_file=str(mask_file),
+            ref_mask_name="ref",
+            metadata=str(meta_json),
+        ),
+        name="tac",
+        base_dir=tmp_path,
+    )
+    res = node.run()
+
+    out = pd.read_csv(res.outputs.out_file, sep="\t")
+    assert list(out.columns) == ["FrameTimesStart", "FrameTimesEnd", "ref"]
+    assert np.allclose(out["ref"], [1, 2])
+
+
+def test_ExtractRefTAC_mismatched_meta(tmp_path):
+    pet_data = np.stack(
+        [
+            np.ones((2, 2, 2)),
+            np.ones((2, 2, 2)) * 2,
+        ],
+        axis=-1,
+    )
+    pet_file = tmp_path / "pet.nii.gz"
+    nb.Nifti1Image(pet_data, np.eye(4)).to_filename(pet_file)
+
+    mask_data = np.zeros((2, 2, 2), dtype="int16")
+    mask_data[0] = 1
+    mask_file = tmp_path / "mask.nii.gz"
+    nb.Nifti1Image(mask_data, np.eye(4)).to_filename(mask_file)
+
+    meta_json = tmp_path / "pet.json"
+    meta_json.write_text(json.dumps({"FrameTimesStart": [0], "FrameDuration": [1, 1]}))
+
+    node = pe.Node(
+        ExtractRefTAC(
+            in_file=str(pet_file),
+            mask_file=str(mask_file),
+            ref_mask_name="ref",
+            metadata=str(meta_json),
+        ),
+        name="tac2",
+        base_dir=tmp_path,
+    )
+
+    with pytest.raises(NodeExecutionError):
+        node.run()
