@@ -50,6 +50,7 @@ from .outputs import (
     init_ds_volumes_wf,
     prepare_timing_parameters,
 )
+from .tacs import init_pet_tacs_wf
 from .pvc import init_pet_pvc_wf
 from .resampling import init_pet_surf_wf
 
@@ -612,6 +613,37 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 (('outputnode.cifti_metadata', _read_json), 'meta_dict'),
             ]),
         ])  # fmt:skip
+
+    pet_tacs_wf = init_pet_tacs_wf(
+        output_dir=petprep_dir,
+        metadata=all_metadata[0],
+    )
+    pet_tacs_wf.inputs.inputnode.metadata = str(
+        Path(pet_file).with_suffix('').with_suffix('.json')
+    )
+
+    ds_pet_tacs = pe.Node(
+        DerivativesDataSink(
+            base_directory=petprep_dir,
+            suffix='timeseries',
+            desc=config.workflow.seg,
+            TaskName=all_metadata[0].get('TaskName'),
+            **prepare_timing_parameters(all_metadata[0]),
+        ),
+        name='ds_pet_tacs',
+        run_without_submitting=True,
+        mem_gb=config.DEFAULT_MEMORY_MIN_GB,
+    )
+    ds_pet_tacs.inputs.source_file = pet_file
+
+    workflow.connect([
+        (pet_t1w_src, pet_tacs_wf, [(pet_t1w_field, 'inputnode.pet_anat')]),
+        (pet_fit_wf, pet_tacs_wf, [
+            ('outputnode.segmentation', 'inputnode.segmentation'),
+            ('outputnode.dseg_tsv', 'inputnode.dseg_tsv'),
+        ]),
+        (pet_tacs_wf, ds_pet_tacs, [('outputnode.timeseries', 'in_file')]),
+    ])  # fmt:skip
 
     pet_confounds_wf = init_pet_confs_wf(
         mem_gb=mem_gb['largemem'],
