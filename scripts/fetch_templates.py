@@ -84,7 +84,7 @@ def fetch_fsaverage():
     tpl-fsaverage/tpl-fsaverage_hemi-L_den-164k_midthickness.surf.gii
     tpl-fsaverage/tpl-fsaverage_hemi-R_den-164k_midthickness.surf.gii
     tpl-fsaverage/tpl-fsaverage_hemi-L_den-164k_sulc.shape.gii
-    tpl-fsaverage/tpl-sfaverage_hemi-R_den-164k_sulc.shape.gii
+    tpl-fsaverage/tpl-fsaverage_hemi-R_den-164k_sulc.shape.gii
     """
     template = 'fsaverage'
 
