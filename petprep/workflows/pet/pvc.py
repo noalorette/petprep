@@ -234,7 +234,9 @@ def init_pet_pvc_wf(
             (inputnode, tkregister_node, [('pet_file', 'moving_image')]),
             (nu_path_node, tkregister_node, [('nu_path', 'target_image')]),
             (inputnode, tkregister_node, [('subjects_dir', 'subjects_dir'), ('subject_id', 'subject_id')]),
-            if method_key == 'AGTM':
+        ])
+
+        if method_key == 'AGTM':
             workflow.connect([
                 (tkregister_node, est_node, [('lta_file', 'reg_file')]),
                 (inputnode, gtmseg_path_node, [
