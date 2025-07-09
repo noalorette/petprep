@@ -50,10 +50,10 @@ from .outputs import (
     init_ds_volumes_wf,
     prepare_timing_parameters,
 )
-from .tacs import init_pet_tacs_wf
-from .ref_tacs import init_pet_ref_tacs_wf
 from .pvc import init_pet_pvc_wf
+from .ref_tacs import init_pet_ref_tacs_wf
 from .resampling import init_pet_surf_wf
+from .tacs import init_pet_tacs_wf
 
 
 def init_pet_wf(
@@ -615,10 +615,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ]),
         ])  # fmt:skip
 
-    pet_tacs_wf = init_pet_tacs_wf(
-        output_dir=petprep_dir,
-        metadata=all_metadata[0],
-    )
+    pet_tacs_wf = init_pet_tacs_wf()
     pet_tacs_wf.inputs.inputnode.metadata = str(
         Path(pet_file).with_suffix('').with_suffix('.json')
     )

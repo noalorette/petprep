@@ -1,17 +1,14 @@
 from __future__ import annotations
 
+from nilearn.image import resample_to_img
 from nipype.interfaces import utility as niu
+from nipype.interfaces.utility import Function
 from nipype.pipeline import engine as pe
 
-from ... import config
-from ...interfaces import DerivativesDataSink, ExtractTACs
-from .outputs import prepare_timing_parameters
-from nilearn.image import resample_to_img
-from nipype.interfaces.utility import Function
+from ...interfaces import ExtractTACs
 
 
 def resample_pet_to_segmentation(pet_file, segmentation_file):
-    from nilearn.image import resample_to_img
     import os
 
     resampled_pet = resample_to_img(pet_file, segmentation_file, interpolation='continuous')
@@ -20,15 +17,24 @@ def resample_pet_to_segmentation(pet_file, segmentation_file):
     return out_file
 
 
-def init_pet_tacs_wf(*, output_dir: str, metadata: dict, name: str = 'pet_tacs_wf') -> pe.Workflow:
-    """Extract time activity curves from a segmentation."""
+def init_pet_tacs_wf(*, name: str = 'pet_tacs_wf') -> pe.Workflow:
+    """Create a workflow to extract time–activity curves from a segmentation.
+
+    Parameters
+    ----------
+    name : :obj:`str`
+        Name of workflow (default: ``pet_tacs_wf``)
+
+    Returns
+    -------
+    workflow : :class:`~nipype.pipeline.engine.Workflow`
+        The TAC extraction workflow.
+    """
 
     workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(
-        niu.IdentityInterface(
-            fields=['pet_anat', 'segmentation', 'dseg_tsv', 'metadata']
-        ),
+        niu.IdentityInterface(fields=['pet_anat', 'segmentation', 'dseg_tsv', 'metadata']),
         name='inputnode',
     )
     outputnode = pe.Node(niu.IdentityInterface(fields=['timeseries']), name='outputnode')
@@ -49,7 +55,7 @@ def init_pet_tacs_wf(*, output_dir: str, metadata: dict, name: str = 'pet_tacs_w
     )
 
     workflow.connect(
-            [
+        [
             (
                 inputnode,
                 resample_pet,
