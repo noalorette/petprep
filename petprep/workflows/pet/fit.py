@@ -301,7 +301,7 @@ def init_pet_fit_wf(
         ])  # fmt:skip
     else:
         config.loggers.workflow.info(
-            'Found head motion correction transforms and petref - skipping Stage 1'
+            'PET Stage 1: Found head motion correction transforms and petref - skipping Stage 1'
         )
 
         val_pet = pe.Node(ValidateImage(), name='val_pet')
@@ -553,7 +553,7 @@ def init_pet_fit_wf(
             ]
         )
     else:
-        config.loggers.workflow.info('Stage 5: Reference mask generation skipped')
+        config.loggers.workflow.info('PET Stage 5: Reference mask generation skipped')
 
     return workflow
 
