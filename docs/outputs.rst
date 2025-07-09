@@ -330,24 +330,27 @@ corresponding PET time series::
   662.82715 0.0 487.37302 1.01591 15.281561 0.0333937 0.3328022893  -0.2220965269 -0.0912891436 0.2326688125  0.279138129 -0.111878887  0.16901660629999998 0.0550480212  0.1798747037  -0.25383302620000003  0.1646403629  0.3953613889  0.0 0.010164  -0.0103568  0.0424513 0.0 -0.0  0.00019174
 
 **Time activity curves**.
-For each PET file, mean uptake values are extracted from the anatomical segmentation.
-The resulting table has ``FrameTimesStart`` and ``FrameTimesEnd`` columns followed
-by one column per region::
+The workflow :func:`petprep.workflows.pet.tacs.init_pet_tacs_wf` extracts mean uptake
+from an anatomical segmentation. The resulting table has ``FrameTimesStart`` and
+``FrameTimesEnd`` columns followed by one column per region::
 
   sub-<subject_label>/
     pet/
       sub-<subject_label>_[specifiers]_desc-preproc_timeseries.tsv
 
 If partial volume correction is applied, the filenames also include the
-``_pvc-<method>`` entity.
+``_pvc-<method>`` entity, indicating the algorithm used.
 
-If a reference mask is specified, a separate table contains the mean uptake
-within that region::
+If a reference mask is specified, the workflow
+:func:`petprep.workflows.pet.ref_tacs.init_pet_ref_tacs_wf` extracts a separate
+table containing the mean uptake within that region::
 
   sub-<subject_label>/
     pet/
       sub-<subject_label>_[specifiers]_desc-<seg>_ref-<ref>_timeseries.tsv
 
+The ``ref`` entity captures the reference region identifier provided via the
+:ref:`CLI options <cli_refmask>` ``--ref-mask-name`` and ``--ref-mask-index``.
 When partial volume correction is performed, the ``_pvc-<method>`` entity is
 also included.
 
