@@ -21,6 +21,7 @@
 #     https://www.nipreps.org/community/licensing/
 #
 import nibabel as nb
+from pathlib import Path
 from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
 from niworkflows.interfaces.header import ValidateImage
@@ -28,6 +29,7 @@ from niworkflows.utils.connections import listify
 
 from ... import config
 from ...data import load as load_data
+from ...interfaces import DerivativesDataSink
 from ...interfaces.reports import FunctionalSummary
 from ...interfaces.resampling import ResampleSeries
 from ...utils.misc import estimate_pet_mem_usage
@@ -45,6 +47,7 @@ from .outputs import (
     prepare_timing_parameters,
 )
 from .reference_mask import init_pet_refmask_wf
+from .ref_tacs import init_pet_ref_tacs_wf
 from .registration import init_pet_reg_wf
 from .segmentation import init_segmentation_wf
 
@@ -298,7 +301,7 @@ def init_pet_fit_wf(
         ])  # fmt:skip
     else:
         config.loggers.workflow.info(
-            'Found head motion correction transforms and petref - skipping Stage 1'
+            'PET Stage 1: Found head motion correction transforms and petref - skipping Stage 1'
         )
 
         val_pet = pe.Node(ValidateImage(), name='val_pet')
@@ -445,6 +448,28 @@ def init_pet_fit_wf(
             name='refmask_report_wf',
         )
 
+        pet_ref_tacs_wf = init_pet_ref_tacs_wf(name="pet_ref_tacs_wf")
+        pet_ref_tacs_wf.inputs.inputnode.metadata = str(
+            Path(pet_file).with_suffix("").with_suffix(".json")
+        )
+        pet_ref_tacs_wf.inputs.inputnode.ref_mask_name = config.workflow.ref_mask_name
+
+        ds_ref_tacs = pe.Node(
+            DerivativesDataSink(
+                base_directory=config.execution.petprep_dir,
+                suffix="timeseries",
+                desc=config.workflow.seg,
+                ref=config.workflow.ref_mask_name,
+                allowed_entities=("ref",),
+                TaskName=metadata.get("TaskName"),
+                **timing_parameters,
+            ),
+            name="ds_ref_tacs",
+            run_without_submitting=True,
+            mem_gb=config.DEFAULT_MEMORY_MIN_GB,
+        )
+        ds_ref_tacs.inputs.source_file = pet_file
+
         workflow.connect(
             [
                 (
@@ -501,13 +526,34 @@ def init_pet_fit_wf(
                     outputnode,
                     func_fit_reports_wf,
                     [
-                        ('refmask', 'inputnode.refmask'),
+                        ("refmask", "inputnode.refmask"),
+                    ],
+                ),
+                (
+                    petref_buffer,
+                    pet_ref_tacs_wf,
+                    [
+                        ("pet_file", "inputnode.pet_anat"),
+                    ],
+                ),
+                (
+                    refmask_wf,
+                    pet_ref_tacs_wf,
+                    [
+                        ("outputnode.refmask_file", "inputnode.mask_file"),
+                    ],
+                ),
+                (
+                    pet_ref_tacs_wf,
+                    ds_ref_tacs,
+                    [
+                        ("outputnode.timeseries", "in_file"),
                     ],
                 ),
             ]
         )
     else:
-        config.loggers.workflow.info('Stage 5: Reference mask generation skipped')
+        config.loggers.workflow.info('PET Stage 5: Reference mask generation skipped')
 
     return workflow
 

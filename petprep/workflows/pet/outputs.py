@@ -149,8 +149,9 @@ def init_func_fit_reports_wf(
         # Report snippets
         'summary_report',
         'validation_report',
-        'refmask_report',
     ]
+    if ref_name:
+        inputfields.append('refmask_report')
     inputnode = pe.Node(niu.IdentityInterface(fields=inputfields), name='inputnode')
 
     ds_summary = pe.Node(
@@ -175,18 +176,19 @@ def init_func_fit_reports_wf(
         mem_gb=config.DEFAULT_MEMORY_MIN_GB,
     )
 
-    ds_refmask_report = pe.Node(
-        DerivativesDataSink(
-            base_directory=output_dir,
-            desc='refmask',
-            ref=ref_name,
-            datatype='figures',
-            allowed_entities=('ref',),
-        ),
-        name='ds_report_refmask',
-        run_without_submitting=True,
-        mem_gb=config.DEFAULT_MEMORY_MIN_GB,
-    )
+    if ref_name:
+        ds_refmask_report = pe.Node(
+            DerivativesDataSink(
+                base_directory=output_dir,
+                desc='refmask',
+                ref=ref_name,
+                datatype='figures',
+                allowed_entities=('ref',),
+            ),
+            name='ds_report_refmask',
+            run_without_submitting=True,
+            mem_gb=config.DEFAULT_MEMORY_MIN_GB,
+        )
 
     # Resample anatomical references into PET space for plotting
     t1w_petref = pe.Node(
@@ -219,16 +221,17 @@ def init_func_fit_reports_wf(
         mem_gb=1,
     )
 
-    petref_refmask = pe.Node(
-        ApplyTransforms(
-            dimension=3,
-            default_value=0,
-            invert_transform_flags=[True],
-            interpolation='NearestNeighbor',
-        ),
-        name='petref_refmask',
-        mem_gb=1,
-    )
+    if ref_name:
+        petref_refmask = pe.Node(
+            ApplyTransforms(
+                dimension=3,
+                default_value=0,
+                invert_transform_flags=[True],
+                interpolation='NearestNeighbor',
+            ),
+            name='petref_refmask',
+            mem_gb=1,
+        )
 
     # fmt:off
     workflow.connect([
@@ -239,10 +242,6 @@ def init_func_fit_reports_wf(
         (inputnode, ds_validation, [
             ('source_file', 'source_file'),
             ('validation_report', 'in_file'),
-        ]),
-        (inputnode, ds_refmask_report, [
-            ('source_file', 'source_file'),
-            ('refmask_report', 'in_file'),
         ]),
         (inputnode, t1w_petref, [
             ('t1w_preproc', 'input_image'),
@@ -255,12 +254,19 @@ def init_func_fit_reports_wf(
             ('petref2anat_xfm', 'transforms'),
         ]),
         (t1w_wm, petref_wm, [('out', 'input_image')]),
-        (inputnode, petref_refmask, [
-            ('refmask', 'input_image'),
-            ('petref', 'reference_image'),
-            ('petref2anat_xfm', 'transforms'),
-        ]),
     ])
+    if ref_name:
+        workflow.connect([
+            (inputnode, ds_refmask_report, [
+                ('source_file', 'source_file'),
+                ('refmask_report', 'in_file'),
+            ]),
+            (inputnode, petref_refmask, [
+                ('refmask', 'input_image'),
+                ('petref', 'reference_image'),
+                ('petref2anat_xfm', 'transforms'),
+            ]),
+        ])
     # fmt:on
 
     # EPI-T1 registration
@@ -286,27 +292,28 @@ def init_func_fit_reports_wf(
         name='ds_pet_t1_report',
     )
 
-    pet_t1_refmask_report = pe.Node(
-        SimpleBeforeAfter(
-            before_label='T1w',
-            after_label='PET',
-            dismiss_affine=True,
-        ),
-        name='pet_t1_refmask_report',
-        mem_gb=0.1,
-    )
+    if ref_name:
+        pet_t1_refmask_report = pe.Node(
+            SimpleBeforeAfter(
+                before_label='T1w',
+                after_label='PET',
+                dismiss_affine=True,
+            ),
+            name='pet_t1_refmask_report',
+            mem_gb=0.1,
+        )
 
-    ds_pet_t1_refmask_report = pe.Node(
-        DerivativesDataSink(
-            base_directory=output_dir,
-            desc='refmask',
-            ref=ref_name,
-            suffix='pet',
-            datatype='figures',
-            allowed_entities=('ref',),
-        ),
-        name='ds_pet_t1_refmask_report',
-    )
+        ds_pet_t1_refmask_report = pe.Node(
+            DerivativesDataSink(
+                base_directory=output_dir,
+                desc='refmask',
+                ref=ref_name,
+                suffix='pet',
+                datatype='figures',
+                allowed_entities=('ref',),
+            ),
+            name='ds_pet_t1_refmask_report',
+        )
 
     # fmt:off
     workflow.connect([
@@ -315,12 +322,15 @@ def init_func_fit_reports_wf(
         (petref_wm, pet_t1_report, [('output_image', 'wm_seg')]),
         (inputnode, ds_pet_t1_report, [('source_file', 'source_file')]),
         (pet_t1_report, ds_pet_t1_report, [('out_report', 'in_file')]),
-        (inputnode, pet_t1_refmask_report, [('petref', 'after')]),
-        (t1w_petref, pet_t1_refmask_report, [('output_image', 'before')]),
-        (petref_refmask, pet_t1_refmask_report, [('output_image', 'wm_seg')]),
-        (inputnode, ds_pet_t1_refmask_report, [('source_file', 'source_file')]),
-        (pet_t1_refmask_report, ds_pet_t1_refmask_report, [('out_report', 'in_file')]),
     ])
+    if ref_name:
+        workflow.connect([
+            (inputnode, pet_t1_refmask_report, [('petref', 'after')]),
+            (t1w_petref, pet_t1_refmask_report, [('output_image', 'before')]),
+            (petref_refmask, pet_t1_refmask_report, [('output_image', 'wm_seg')]),
+            (inputnode, ds_pet_t1_refmask_report, [('source_file', 'source_file')]),
+            (pet_t1_refmask_report, ds_pet_t1_refmask_report, [('out_report', 'in_file')]),
+        ])
     # fmt:on
 
     return workflow

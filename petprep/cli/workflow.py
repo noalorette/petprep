@@ -151,7 +151,7 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
     missing = check_deps(retval['workflow'])
     if missing:
         build_log.critical(
-            'Cannot run fMRIPrep. Missing dependencies:%s',
+            'Cannot run PETPrep. Missing dependencies:%s',
             '\n\t* '.join([''] + [f'{cmd} (Interface: {iface})' for iface, cmd in missing]),
         )
         retval['return_code'] = 127  # 127 == command not found.
@@ -159,7 +159,7 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
 
     config.to_filename(config_file)
     build_log.info(
-        'fMRIPrep workflow graph with %d nodes built successfully.',
+        'PETPrep workflow graph with %d nodes built successfully.',
         len(retval['workflow']._get_all_nodes()),
     )
     retval['return_code'] = 0
@@ -194,7 +194,7 @@ def build_boilerplate(config_file, workflow):
 
         bib_text = data.load.readable('boilerplate.bib').read_text()
         citation_files['bib'].write_text(
-            bib_text.replace('fMRIPrep <version>', f'fMRIPrep {config.environment.version}')
+            bib_text.replace('PETPrep <version>', f'PETPrep {config.environment.version}')
         )
 
         # Generate HTML file resolving citations
@@ -205,7 +205,7 @@ def build_boilerplate(config_file, workflow):
             str(citation_files['bib']),
             '--citeproc',
             '--metadata',
-            'pagetitle="fMRIPrep citation boilerplate"',
+            'pagetitle="PETPrep citation boilerplate"',
             str(citation_files['md']),
             '-o',
             str(citation_files['html']),

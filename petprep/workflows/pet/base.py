@@ -51,7 +51,9 @@ from .outputs import (
     prepare_timing_parameters,
 )
 from .pvc import init_pet_pvc_wf
+from .ref_tacs import init_pet_ref_tacs_wf
 from .resampling import init_pet_surf_wf
+from .tacs import init_pet_tacs_wf
 
 
 def init_pet_wf(
@@ -611,6 +613,67 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.cifti_pet', 'in_file'),
                 (('outputnode.cifti_metadata', _read_json), 'meta_dict'),
             ]),
+        ])  # fmt:skip
+
+    pet_tacs_wf = init_pet_tacs_wf()
+    pet_tacs_wf.inputs.inputnode.metadata = str(
+        Path(pet_file).with_suffix('').with_suffix('.json')
+    )
+
+    ds_pet_tacs = pe.Node(
+        DerivativesDataSink(
+            base_directory=petprep_dir,
+            suffix='timeseries',
+            desc=config.workflow.seg,
+            TaskName=all_metadata[0].get('TaskName'),
+            **prepare_timing_parameters(all_metadata[0]),
+        ),
+        name='ds_pet_tacs',
+        run_without_submitting=True,
+        mem_gb=config.DEFAULT_MEMORY_MIN_GB,
+    )
+    ds_pet_tacs.inputs.source_file = pet_file
+    if pvc_method is not None:
+        ds_pet_tacs.inputs.pvc = pvc_method
+
+    workflow.connect([
+        (pet_t1w_src, pet_tacs_wf, [(pet_t1w_field, 'inputnode.pet_anat')]),
+        (pet_fit_wf, pet_tacs_wf, [
+            ('outputnode.segmentation', 'inputnode.segmentation'),
+            ('outputnode.dseg_tsv', 'inputnode.dseg_tsv'),
+        ]),
+        (pet_tacs_wf, ds_pet_tacs, [('outputnode.timeseries', 'in_file')]),
+    ])  # fmt:skip
+
+    if config.workflow.ref_mask_name:
+        pet_ref_tacs_wf = init_pet_ref_tacs_wf(name='pet_ref_tacs_wf')
+        pet_ref_tacs_wf.inputs.inputnode.metadata = str(
+            Path(pet_file).with_suffix('').with_suffix('.json')
+        )
+        pet_ref_tacs_wf.inputs.inputnode.ref_mask_name = config.workflow.ref_mask_name
+
+        ds_ref_tacs = pe.Node(
+            DerivativesDataSink(
+                base_directory=petprep_dir,
+                suffix='timeseries',
+                desc=config.workflow.seg,
+                ref=config.workflow.ref_mask_name,
+                allowed_entities=('ref',),
+                TaskName=all_metadata[0].get('TaskName'),
+                **prepare_timing_parameters(all_metadata[0]),
+            ),
+            name='ds_ref_tacs',
+            run_without_submitting=True,
+            mem_gb=config.DEFAULT_MEMORY_MIN_GB,
+        )
+        ds_ref_tacs.inputs.source_file = pet_file
+        if pvc_method is not None:
+            ds_ref_tacs.inputs.pvc = pvc_method
+
+        workflow.connect([
+            (pet_t1w_src, pet_ref_tacs_wf, [(pet_t1w_field, 'inputnode.pet_anat')]),
+            (pet_fit_wf, pet_ref_tacs_wf, [('outputnode.refmask', 'inputnode.mask_file')]),
+            (pet_ref_tacs_wf, ds_ref_tacs, [('outputnode.timeseries', 'in_file')]),
         ])  # fmt:skip
 
     pet_confounds_wf = init_pet_confs_wf(
