@@ -338,12 +338,18 @@ by one column per region::
     pet/
       sub-<subject_label>_[specifiers]_desc-preproc_timeseries.tsv
 
+If partial volume correction is applied, the filenames also include the
+``_pvc-<method>`` entity.
+
 If a reference mask is specified, a separate table contains the mean uptake
 within that region::
 
   sub-<subject_label>/
     pet/
       sub-<subject_label>_[specifiers]_desc-<seg>_ref-<ref>_timeseries.tsv
+
+When partial volume correction is performed, the ``_pvc-<method>`` entity is
+also included.
 
 Confounds
 ---------
