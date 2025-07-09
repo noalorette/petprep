@@ -104,7 +104,6 @@ def init_pet_pvc_wf(
             name=f'{tool_lower}_{safe_method}_pvc_node'
         )
 
-
         workflow.connect([
             (inputnode, split_frames, [('pet_file', 'in_file')]),
             (split_frames, resample_pet_to_anat, [('out_files', 'source_file')]),
@@ -206,6 +205,7 @@ def init_pet_pvc_wf(
             apply_config.pop('opt_brain', None)
             apply_config.pop('opt_seg_merge', None)
             apply_config.pop('opt_tol', None)
+            apply_config.pop('psf', None)
 
             pvc_node = pe.Node(
                 GTMPVC(**apply_config),
@@ -215,7 +215,7 @@ def init_pet_pvc_wf(
             get_fwhm = pe.Node(
                 niu.Function(
                     input_names=['opt_params'],
-                    output_names=['psf'],
+                    output_names=['psf_col', 'psf_row', 'psf_slice'],
                     function=get_opt_fwhm,
                 ),
                 name='get_opt_fwhm',
@@ -255,7 +255,15 @@ def init_pet_pvc_wf(
                     ('subjects_dir', 'subjects_dir'),
                 ]),
                 (gtmseg_path_node, pvc_node, [('gtmseg_path', 'segmentation')]),
-                (get_fwhm, pvc_node, [('psf', 'psf')]),
+                (
+                    get_fwhm,
+                    pvc_node,
+                    [
+                        ('psf_col', 'psf_col'),
+                        ('psf_row', 'psf_row'),
+                        ('psf_slice', 'psf_slice'),
+                    ],
+                ),
             ])
         else:
             workflow.connect([
