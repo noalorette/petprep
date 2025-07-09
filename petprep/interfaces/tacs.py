@@ -10,7 +10,6 @@ from nipype.interfaces.base import (
     TraitedSpec,
 )
 from nipype.utils.filemanip import fname_presuffix
-from niworkflows.utils.timeseries import _nifti_timeseries
 from nipype.interfaces.base import traits
 
 
