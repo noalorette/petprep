@@ -154,7 +154,7 @@ def init_pet_pvc_wf(
             (resample_pet_to_petref, outputnode, [('transformed_file', 'pet_pvc_file')]),
         ])
 
-    elif tool_lower == 'petsurfer' and method_key == 'GTM' or method_key == 'MG' or method_key == 'RBV':
+    elif tool_lower == 'petsurfer' and method_key in {'GTM', 'MG', 'RBV'}:
         # PETSurfer directly handles 4D data (no splitting needed)
         tkregister_node = pe.Node(
             Tkregister2(
