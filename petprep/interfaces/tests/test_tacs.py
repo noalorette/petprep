@@ -90,6 +90,42 @@ def test_ExtractTACs_mismatched_meta(tmp_path):
         node.run()
 
 
+def test_ExtractTACs_mismatched_frames(tmp_path):
+    pet_data = np.stack(
+        [
+            np.ones((2, 2, 2)),
+            np.ones((2, 2, 2)) * 2,
+        ],
+        axis=-1,
+    )
+    pet_file = tmp_path / 'pet.nii.gz'
+    nb.Nifti1Image(pet_data, np.eye(4)).to_filename(pet_file)
+
+    seg_data = np.tile([[1, 2], [1, 2]], (2, 1, 1)).astype('int16')
+    seg_file = tmp_path / 'seg.nii.gz'
+    nb.Nifti1Image(seg_data, np.eye(4)).to_filename(seg_file)
+
+    dseg_tsv = tmp_path / 'seg.tsv'
+    pd.DataFrame({'index': [1, 2], 'name': ['A', 'B']}).to_csv(dseg_tsv, sep='\t', index=False)
+
+    meta_json = tmp_path / 'pet.json'
+    meta_json.write_text(json.dumps({'FrameTimesStart': [0, 1, 2], 'FrameDuration': [1, 1, 1]}))
+
+    node = pe.Node(
+        ExtractTACs(
+            in_file=str(pet_file),
+            segmentation=str(seg_file),
+            dseg_tsv=str(dseg_tsv),
+            metadata=str(meta_json),
+        ),
+        name='tac',
+        base_dir=tmp_path,
+    )
+
+    with pytest.raises(NodeExecutionError):
+        node.run()
+
+
 def test_tacs_workflow(tmp_path):
     """Workflow passes resampled PET to ExtractTACs."""
     pet_data = np.stack(
@@ -187,6 +223,40 @@ def test_ExtractRefTAC_mismatched_meta(tmp_path):
 
     meta_json = tmp_path / 'pet.json'
     meta_json.write_text(json.dumps({'FrameTimesStart': [0], 'FrameDuration': [1, 1]}))
+
+    node = pe.Node(
+        ExtractRefTAC(
+            in_file=str(pet_file),
+            mask_file=str(mask_file),
+            ref_mask_name='ref',
+            metadata=str(meta_json),
+        ),
+        name='tac2',
+        base_dir=tmp_path,
+    )
+
+    with pytest.raises(NodeExecutionError):
+        node.run()
+
+
+def test_ExtractRefTAC_mismatched_frames(tmp_path):
+    pet_data = np.stack(
+        [
+            np.ones((2, 2, 2)),
+            np.ones((2, 2, 2)) * 2,
+        ],
+        axis=-1,
+    )
+    pet_file = tmp_path / 'pet.nii.gz'
+    nb.Nifti1Image(pet_data, np.eye(4)).to_filename(pet_file)
+
+    mask_data = np.zeros((2, 2, 2), dtype='int16')
+    mask_data[0] = 1
+    mask_file = tmp_path / 'mask.nii.gz'
+    nb.Nifti1Image(mask_data, np.eye(4)).to_filename(mask_file)
+
+    meta_json = tmp_path / 'pet.json'
+    meta_json.write_text(json.dumps({'FrameTimesStart': [0, 1, 2], 'FrameDuration': [1, 1, 1]}))
 
     node = pe.Node(
         ExtractRefTAC(

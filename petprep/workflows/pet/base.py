@@ -615,7 +615,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ]),
         ])  # fmt:skip
 
-    pet_tacs_wf = init_pet_tacs_wf()
+    pet_tacs_wf = init_pet_tacs_wf(
+        output_dir=petprep_dir,
+        metadata=all_metadata[0],
+    )
     pet_tacs_wf.inputs.inputnode.metadata = str(
         Path(pet_file).with_suffix('').with_suffix('.json')
     )
