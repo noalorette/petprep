@@ -1,5 +1,5 @@
 import numpy as np
-from skimage.morphology import binary_dilation, binary_erosion, ball
+from skimage.morphology import ball, binary_dilation, binary_erosion
 
 from petprep.utils.morphology import dialate, erode
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Thu Jun 19 10:16:13 2025
 
@@ -7,8 +6,10 @@ Created on Thu Jun 19 10:16:13 2025
 """
 
 from pathlib import Path
-import nipype.pipeline.engine as pe
+
 import nipype.interfaces.utility as niu
+import nipype.pipeline.engine as pe
+
 from petprep.workflows.pet_pvc import init_pet_pvc_wf
 
 

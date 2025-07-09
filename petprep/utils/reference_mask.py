@@ -1,7 +1,7 @@
 import nibabel as nib
 import numpy as np
 from scipy.ndimage import gaussian_filter
-from skimage.morphology import binary_dilation, binary_erosion, ball
+from skimage.morphology import ball, binary_dilation, binary_erosion
 
 
 def generate_reference_region(
@@ -29,25 +29,25 @@ def generate_reference_region(
     voxel_vol_mm3 = np.prod(zooms)
 
     # Step 1: Create binary target mask
-    mask = np.isin(data, config["refmask_indices"]).astype(np.uint8)
+    mask = np.isin(data, config['refmask_indices']).astype(np.uint8)
 
     # Step 2: Optional erosion
-    if "erode_by_voxels" in config and config["erode_by_voxels"] > 0:
-        mask = binary_erosion(mask, ball(config["erode_by_voxels"])).astype(np.uint8)
+    if 'erode_by_voxels' in config and config['erode_by_voxels'] > 0:
+        mask = binary_erosion(mask, ball(config['erode_by_voxels'])).astype(np.uint8)
 
     # Step 3: Optional exclusion
-    if "exclude_indices" in config and config["exclude_indices"]:
-        exclude = np.isin(data, config["exclude_indices"])  # bool mask
-        if "dilate_by_voxels" in config and config["dilate_by_voxels"] > 0:
-            exclude = binary_dilation(exclude, ball(config["dilate_by_voxels"]))
+    if 'exclude_indices' in config and config['exclude_indices']:
+        exclude = np.isin(data, config['exclude_indices'])  # bool mask
+        if 'dilate_by_voxels' in config and config['dilate_by_voxels'] > 0:
+            exclude = binary_dilation(exclude, ball(config['dilate_by_voxels']))
         mask[exclude] = 0
 
     # Step 4: Optional smoothing + volume constraint
-    if "smooth_fwhm_mm" in config and "target_volume_ml" in config:
-        sigma = config["smooth_fwhm_mm"] / (2.3548 * zooms[0])  # approximate sigma from FWHM
+    if 'smooth_fwhm_mm' in config and 'target_volume_ml' in config:
+        sigma = config['smooth_fwhm_mm'] / (2.3548 * zooms[0])  # approximate sigma from FWHM
         smoothed = gaussian_filter(mask.astype(np.float32), sigma=sigma)
 
-        target_voxels = int((config["target_volume_ml"] * 1000) / voxel_vol_mm3)
+        target_voxels = int((config['target_volume_ml'] * 1000) / voxel_vol_mm3)
         values = np.sort(smoothed[mask > 0].flatten())
         if target_voxels >= len(values):
             threshold = values[0]

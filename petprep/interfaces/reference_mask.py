@@ -1,19 +1,20 @@
-from nipype.interfaces.base import (
-    SimpleInterface,
-    BaseInterfaceInputSpec,
-    TraitedSpec,
-    File,
-    traits,
-    isdefined,
-)
-import os
-import nibabel as nib
 import json
+import os
+
+import nibabel as nib
+from nipype.interfaces.base import (
+    BaseInterfaceInputSpec,
+    File,
+    SimpleInterface,
+    TraitedSpec,
+    isdefined,
+    traits,
+)
 
 
 class ExtractRefRegionInputSpec(BaseInterfaceInputSpec):
-    seg_file = File(exists=True, mandatory=True, desc="Segmentation NIfTI file")
-    config_file = File(exists=True, mandatory=True, desc="Path to the config.json file")
+    seg_file = File(exists=True, mandatory=True, desc='Segmentation NIfTI file')
+    config_file = File(exists=True, mandatory=True, desc='Path to the config.json file')
     segmentation_type = traits.Str(mandatory=True, desc="Type of segmentation (e.g. 'gtm', 'wm')")
     region_name = traits.Str(
         mandatory=True, desc="Name of the reference region (e.g. 'cerebellum')"
@@ -22,7 +23,7 @@ class ExtractRefRegionInputSpec(BaseInterfaceInputSpec):
 
 
 class ExtractRefRegionOutputSpec(TraitedSpec):
-    refmask_file = File(exists=True, desc="Output reference mask NIfTI file")
+    refmask_file = File(exists=True, desc='Output reference mask NIfTI file')
 
 
 class ExtractRefRegion(SimpleInterface):
@@ -36,7 +37,7 @@ class ExtractRefRegion(SimpleInterface):
             cfg = {'refmask_indices': list(self.inputs.override_indices)}
         else:
             # Load the config
-            with open(self.inputs.config_file, 'r') as f:
+            with open(self.inputs.config_file) as f:
                 config = json.load(f)
 
             try:
@@ -51,7 +52,7 @@ class ExtractRefRegion(SimpleInterface):
 
         refmask_img = generate_reference_region(seg_img=seg_img, config=cfg)
 
-        out_file = os.path.abspath("refmask.nii.gz")
+        out_file = os.path.abspath('refmask.nii.gz')
         nib.save(refmask_img, out_file)
-        self._results["refmask_file"] = out_file
+        self._results['refmask_file'] = out_file
         return runtime

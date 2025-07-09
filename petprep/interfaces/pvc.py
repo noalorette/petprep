@@ -1,28 +1,28 @@
+import os
+
 import nibabel as nb
 import numpy as np
 import pandas as pd
 from nipype.interfaces.base import (
     BaseInterface,
     BaseInterfaceInputSpec,
-    TraitedSpec,
-    File,
-    traits,
-    InputMultiPath,
     Directory,
+    File,
+    InputMultiPath,
+    TraitedSpec,
     isdefined,
+    traits,
 )
-import os
-
 from nipype.interfaces.freesurfer.base import FSCommand, FSTraitedSpec
 
 
 class ClipValuesInputSpec(BaseInterfaceInputSpec):
-    in_file = File(exists=True, mandatory=True, desc="Input image file")
-    out_file = File("handled_volume.nii.gz", usedefault=True, desc="Output handled image file")
+    in_file = File(exists=True, mandatory=True, desc='Input image file')
+    out_file = File('handled_volume.nii.gz', usedefault=True, desc='Output handled image file')
 
 
 class ClipValuesOutputSpec(TraitedSpec):
-    out_file = File(exists=True, desc="Output handled image file")
+    out_file = File(exists=True, desc='Output handled image file')
 
 
 class ClipValues(BaseInterface):
@@ -43,19 +43,19 @@ class ClipValues(BaseInterface):
         return runtime
 
     def _list_outputs(self):
-        return {"out_file": os.path.abspath(self.inputs.out_file)}
+        return {'out_file': os.path.abspath(self.inputs.out_file)}
 
 
 class Binarise4DSegmentationInputSpec(BaseInterfaceInputSpec):
-    dseg_file = File(exists=True, mandatory=True, desc="Input segmentation file (_dseg.nii.gz)")
-    out_file = File("binarised_4d.nii.gz", usedefault=True, desc="Output 4D binary segmentation")
+    dseg_file = File(exists=True, mandatory=True, desc='Input segmentation file (_dseg.nii.gz)')
+    out_file = File('binarised_4d.nii.gz', usedefault=True, desc='Output 4D binary segmentation')
 
 
 class Binarise4DSegmentationOutputSpec(TraitedSpec):
-    out_file = File(exists=True, desc="Output 4D binary segmentation file")
+    out_file = File(exists=True, desc='Output 4D binary segmentation file')
     label_list = traits.List(
         traits.Int,
-        desc="List of labels corresponding to the segmentation regions, including background as the first label",
+        desc='List of labels corresponding to the segmentation regions, including background as the first label',
     )
 
 
@@ -83,18 +83,18 @@ class Binarise4DSegmentation(BaseInterface):
 
     def _list_outputs(self):
         return {
-            "out_file": os.path.abspath(self.inputs.out_file),
-            "label_list": self._label_list
+            'out_file': os.path.abspath(self.inputs.out_file),
+            'label_list': self._label_list
         }
 
 
 class StackTissueProbabilityMapsInputSpec(BaseInterfaceInputSpec):
-    t1w_tpms = traits.List(File(exists=True), mandatory=True, desc="List of T1w tissue probability maps")
-    out_file = File("stacked_probseg.nii.gz", usedefault=True, desc="Output stacked 4D probability map")
+    t1w_tpms = traits.List(File(exists=True), mandatory=True, desc='List of T1w tissue probability maps')
+    out_file = File('stacked_probseg.nii.gz', usedefault=True, desc='Output stacked 4D probability map')
 
 
 class StackTissueProbabilityMapsOutputSpec(TraitedSpec):
-    out_file = File(exists=True, desc="Output stacked 4D probability map")
+    out_file = File(exists=True, desc='Output stacked 4D probability map')
 
 
 class StackTissueProbabilityMaps(BaseInterface):
@@ -113,22 +113,22 @@ class StackTissueProbabilityMaps(BaseInterface):
         return runtime
 
     def _list_outputs(self):
-        return {"out_file": os.path.abspath(self.inputs.out_file)}
+        return {'out_file': os.path.abspath(self.inputs.out_file)}
 
 
 class CSVtoNiftiInputSpec(BaseInterfaceInputSpec):
-    csv_file = File(exists=True, mandatory=True, desc="Input CSV file with region means")
-    reference_nifti = File(exists=True, mandatory=True, desc="Reference NIfTI file for spatial information")
+    csv_file = File(exists=True, mandatory=True, desc='Input CSV file with region means')
+    reference_nifti = File(exists=True, mandatory=True, desc='Reference NIfTI file for spatial information')
     label_list = traits.List(
         traits.Int,
         mandatory=True,
-        desc="List of labels corresponding to regions, including background as the first label",
+        desc='List of labels corresponding to regions, including background as the first label',
     )
-    out_file = File("output_from_csv.nii.gz", usedefault=True, desc="Output NIfTI file")
+    out_file = File('output_from_csv.nii.gz', usedefault=True, desc='Output NIfTI file')
 
 
 class CSVtoNiftiOutputSpec(TraitedSpec):
-    out_file = File(exists=True, desc="Output NIfTI image file")
+    out_file = File(exists=True, desc='Output NIfTI image file')
 
 
 class CSVtoNifti(BaseInterface):
@@ -155,339 +155,339 @@ class CSVtoNifti(BaseInterface):
         return runtime
 
     def _list_outputs(self):
-        return {"out_file": os.path.abspath(self.inputs.out_file)}
-    
+        return {'out_file': os.path.abspath(self.inputs.out_file)}
+
 
 class GTMPVCInputSpec(FSTraitedSpec):
     in_file = File(
         exists=True,
-        argstr="--i %s",
+        argstr='--i %s',
         mandatory=True,
         copyfile=False,
-        desc="input volume - source data to pvc",
+        desc='input volume - source data to pvc',
     )
 
     frame = traits.Int(
-        argstr="--frame %i", desc="only process 0-based frame F from inputvol"
+        argstr='--frame %i', desc='only process 0-based frame F from inputvol'
     )
 
-    psf = traits.Float(argstr="--psf %f", desc="scanner PSF FWHM in mm")
+    psf = traits.Float(argstr='--psf %f', desc='scanner PSF FWHM in mm')
 
     segmentation = File(
-        argstr="--seg %s",
+        argstr='--seg %s',
         exists=True,
         mandatory=True,
-        desc="segfile : anatomical segmentation to define regions for GTM",
+        desc='segfile : anatomical segmentation to define regions for GTM',
     )
 
-    _reg_xor = ["reg_file", "regheader", "reg_identity"]
+    _reg_xor = ['reg_file', 'regheader', 'reg_identity']
     reg_file = File(
         exists=True,
-        argstr="--reg %s",
+        argstr='--reg %s',
         mandatory=True,
-        desc="LTA registration file that maps PET to anatomical",
+        desc='LTA registration file that maps PET to anatomical',
         xor=_reg_xor,
     )
 
     regheader = traits.Bool(
-        argstr="--regheader",
+        argstr='--regheader',
         mandatory=True,
-        desc="assume input and seg share scanner space",
+        desc='assume input and seg share scanner space',
         xor=_reg_xor,
     )
 
     reg_identity = traits.Bool(
-        argstr="--reg-identity",
+        argstr='--reg-identity',
         mandatory=True,
-        desc="assume that input is in anatomical space",
+        desc='assume that input is in anatomical space',
         xor=_reg_xor,
     )
 
-    pvc_dir = traits.Str(argstr="--o %s", desc="save outputs to dir", genfile=True)
+    pvc_dir = traits.Str(argstr='--o %s', desc='save outputs to dir', genfile=True)
 
     mask_file = File(
         exists=True,
-        argstr="--mask %s",
-        desc="ignore areas outside of the mask (in input vol space)",
+        argstr='--mask %s',
+        desc='ignore areas outside of the mask (in input vol space)',
     )
 
     auto_mask = traits.Tuple(
         traits.Float,
         traits.Float,
-        argstr="--auto-mask %f %f",
-        desc="FWHM thresh : automatically compute mask",
+        argstr='--auto-mask %f %f',
+        desc='FWHM thresh : automatically compute mask',
     )
 
     no_reduce_fov = traits.Bool(
-        argstr="--no-reduce-fov", desc="do not reduce FoV to encompass mask"
+        argstr='--no-reduce-fov', desc='do not reduce FoV to encompass mask'
     )
 
     reduce_fox_eqodd = traits.Bool(
-        argstr="--reduce-fox-eqodd",
-        desc="reduce FoV to encompass mask but force nc=nr and ns to be odd",
+        argstr='--reduce-fox-eqodd',
+        desc='reduce FoV to encompass mask but force nc=nr and ns to be odd',
     )
 
     contrast = InputMultiPath(
-        File(exists=True), argstr="--C %s...", desc="contrast file"
+        File(exists=True), argstr='--C %s...', desc='contrast file'
     )
 
     default_seg_merge = traits.Bool(
-        argstr="--default-seg-merge", desc="default schema for merging ROIs"
+        argstr='--default-seg-merge', desc='default schema for merging ROIs'
     )
 
     merge_hypos = traits.Bool(
-        argstr="--merge-hypos", desc="merge left and right hypointensites into to ROI"
+        argstr='--merge-hypos', desc='merge left and right hypointensites into to ROI'
     )
 
     merge_cblum_wm_gyri = traits.Bool(
-        argstr="--merge-cblum-wm-gyri",
-        desc="cerebellum WM gyri back into cerebellum WM",
+        argstr='--merge-cblum-wm-gyri',
+        desc='cerebellum WM gyri back into cerebellum WM',
     )
 
     tt_reduce = traits.Bool(
-        argstr="--tt-reduce", desc="reduce segmentation to that of a tissue type"
+        argstr='--tt-reduce', desc='reduce segmentation to that of a tissue type'
     )
 
     replace = traits.Tuple(
         traits.Int,
         traits.Int,
-        argstr="--replace %i %i",
-        desc="Id1 Id2 : replace seg Id1 with seg Id2",
+        argstr='--replace %i %i',
+        desc='Id1 Id2 : replace seg Id1 with seg Id2',
     )
 
     rescale = traits.List(
-        argstr="--rescale %s...",
-        desc="Id1 <Id2...>  : specify reference region(s) used to rescale (default is pons)",
+        argstr='--rescale %s...',
+        desc='Id1 <Id2...>  : specify reference region(s) used to rescale (default is pons)',
     )
 
     no_rescale = traits.Bool(
-        argstr="--no-rescale",
-        desc="do not global rescale such that mean of reference region is scaleref",
+        argstr='--no-rescale',
+        desc='do not global rescale such that mean of reference region is scaleref',
     )
 
     scale_refval = traits.Float(
-        argstr="--scale-refval %f",
-        desc="refval : scale such that mean in reference region is refval",
+        argstr='--scale-refval %f',
+        desc='refval : scale such that mean in reference region is refval',
     )
 
-    _ctab_inputs = ("color_table_file", "default_color_table")
+    _ctab_inputs = ('color_table_file', 'default_color_table')
     color_table_file = File(
         exists=True,
-        argstr="--ctab %s",
+        argstr='--ctab %s',
         xor=_ctab_inputs,
-        desc="color table file with seg id names",
+        desc='color table file with seg id names',
     )
 
     default_color_table = traits.Bool(
-        argstr="--ctab-default",
+        argstr='--ctab-default',
         xor=_ctab_inputs,
-        desc="use $FREESURFER_HOME/FreeSurferColorLUT.txt",
+        desc='use $FREESURFER_HOME/FreeSurferColorLUT.txt',
     )
 
     tt_update = traits.Bool(
-        argstr="--tt-update",
-        desc="changes tissue type of VentralDC, BrainStem, and Pons to be SubcortGM",
+        argstr='--tt-update',
+        desc='changes tissue type of VentralDC, BrainStem, and Pons to be SubcortGM',
     )
 
-    lat = traits.Bool(argstr="--lat", desc="lateralize tissue types")
+    lat = traits.Bool(argstr='--lat', desc='lateralize tissue types')
 
     no_tfe = traits.Bool(
-        argstr="--no-tfe",
-        desc="do not correct for tissue fraction effect (with --psf 0 turns off PVC entirely)",
+        argstr='--no-tfe',
+        desc='do not correct for tissue fraction effect (with --psf 0 turns off PVC entirely)',
     )
 
     no_pvc = traits.Bool(
-        argstr="--no-pvc",
-        desc="turns off PVC entirely (both PSF and TFE)",
+        argstr='--no-pvc',
+        desc='turns off PVC entirely (both PSF and TFE)',
     )
 
     tissue_fraction_resolution = traits.Float(
-        argstr="--segpvfres %f",
-        desc="set the tissue fraction resolution parameter (def is 0.5)",
+        argstr='--segpvfres %f',
+        desc='set the tissue fraction resolution parameter (def is 0.5)',
     )
 
     rbv = traits.Bool(
-        argstr="--rbv",
-        requires=["subjects_dir"],
-        desc="perform Region-based Voxelwise (RBV) PVC",
+        argstr='--rbv',
+        requires=['subjects_dir'],
+        desc='perform Region-based Voxelwise (RBV) PVC',
     )
 
     rbv_res = traits.Float(
-        argstr="--rbv-res %f",
-        desc="voxsize : set RBV voxel resolution (good for when standard res takes too much memory)",
+        argstr='--rbv-res %f',
+        desc='voxsize : set RBV voxel resolution (good for when standard res takes too much memory)',
     )
 
     mg = traits.Tuple(
         traits.Float,
         traits.List(traits.String),
-        argstr="--mg %g %s",
-        desc="gmthresh RefId1 RefId2 ...: perform Mueller-Gaertner PVC, gmthresh is min gm pvf bet 0 and 1",
+        argstr='--mg %g %s',
+        desc='gmthresh RefId1 RefId2 ...: perform Mueller-Gaertner PVC, gmthresh is min gm pvf bet 0 and 1',
     )
 
     mg_ref_cerebral_wm = traits.Bool(
-        argstr="--mg-ref-cerebral-wm", desc=" set MG RefIds to 2 and 41"
+        argstr='--mg-ref-cerebral-wm', desc=' set MG RefIds to 2 and 41'
     )
 
     mg_ref_lobes_wm = traits.Bool(
-        argstr="--mg-ref-lobes-wm",
-        desc="set MG RefIds to those for lobes when using wm subseg",
+        argstr='--mg-ref-lobes-wm',
+        desc='set MG RefIds to those for lobes when using wm subseg',
     )
 
     mgx = traits.Float(
-        argstr="--mgx %f",
-        desc="gmxthresh : GLM-based Mueller-Gaertner PVC, gmxthresh is min gm pvf bet 0 and 1",
+        argstr='--mgx %f',
+        desc='gmxthresh : GLM-based Mueller-Gaertner PVC, gmxthresh is min gm pvf bet 0 and 1',
     )
 
     km_ref = traits.List(
-        argstr="--km-ref %s...",
-        desc="RefId1 RefId2 ... : compute reference TAC for KM as mean of given RefIds",
+        argstr='--km-ref %s...',
+        desc='RefId1 RefId2 ... : compute reference TAC for KM as mean of given RefIds',
     )
 
     km_hb = traits.List(
-        argstr="--km-hb %s...",
-        desc="RefId1 RefId2 ... : compute HiBinding TAC for KM as mean of given RefIds",
+        argstr='--km-hb %s...',
+        desc='RefId1 RefId2 ... : compute HiBinding TAC for KM as mean of given RefIds',
     )
 
     steady_state_params = traits.Tuple(
         traits.Float,
         traits.Float,
         traits.Float,
-        argstr="--ss %f %f %f",
-        desc="bpc scale dcf : steady-state analysis spec blood plasma concentration, unit scale and decay correction factor. You must also spec --km-ref. Turns off rescaling",
+        argstr='--ss %f %f %f',
+        desc='bpc scale dcf : steady-state analysis spec blood plasma concentration, unit scale and decay correction factor. You must also spec --km-ref. Turns off rescaling',
     )
 
     X = traits.Bool(
-        argstr="--X", desc="save X matrix in matlab4 format as X.mat (it will be big)"
+        argstr='--X', desc='save X matrix in matlab4 format as X.mat (it will be big)'
     )
 
-    y = traits.Bool(argstr="--y", desc="save y matrix in matlab4 format as y.mat")
+    y = traits.Bool(argstr='--y', desc='save y matrix in matlab4 format as y.mat')
 
     beta = traits.Bool(
-        argstr="--beta", desc="save beta matrix in matlab4 format as beta.mat"
+        argstr='--beta', desc='save beta matrix in matlab4 format as beta.mat'
     )
 
     X0 = traits.Bool(
-        argstr="--X0",
-        desc="save X0 matrix in matlab4 format as X0.mat (it will be big)",
+        argstr='--X0',
+        desc='save X0 matrix in matlab4 format as X0.mat (it will be big)',
     )
 
     save_input = traits.Bool(
-        argstr="--save-input", desc="saves rescaled input as input.rescaled.nii.gz"
+        argstr='--save-input', desc='saves rescaled input as input.rescaled.nii.gz'
     )
 
-    save_eres = traits.Bool(argstr="--save-eres", desc="saves residual error")
+    save_eres = traits.Bool(argstr='--save-eres', desc='saves residual error')
 
     save_yhat = traits.Bool(
-        argstr="--save-yhat",
-        xor=["save_yhat_with_noise"],
-        desc="save signal estimate (yhat) smoothed with the PSF",
+        argstr='--save-yhat',
+        xor=['save_yhat_with_noise'],
+        desc='save signal estimate (yhat) smoothed with the PSF',
     )
 
     save_yhat_with_noise = traits.Tuple(
         traits.Int,
         traits.Int,
-        argstr="--save-yhat-with-noise %i %i",
-        xor=["save_yhat"],
-        desc="seed nreps : save signal estimate (yhat) with noise",
+        argstr='--save-yhat-with-noise %i %i',
+        xor=['save_yhat'],
+        desc='seed nreps : save signal estimate (yhat) with noise',
     )
 
     save_yhat_full_fov = traits.Bool(
-        argstr="--save-yhat-full-fov", desc="save signal estimate (yhat)"
+        argstr='--save-yhat-full-fov', desc='save signal estimate (yhat)'
     )
 
-    save_yhat0 = traits.Bool(argstr="--save-yhat0", desc="save signal estimate (yhat)")
+    save_yhat0 = traits.Bool(argstr='--save-yhat0', desc='save signal estimate (yhat)')
 
     optimization_schema = traits.Enum(
-        "3D",
-        "2D",
-        "1D",
-        "3D_MB",
-        "2D_MB",
-        "1D_MB",
-        "MBZ",
-        "MB3",
-        argstr="--opt %s",
-        desc="opt : optimization schema for applying adaptive GTM",
+        '3D',
+        '2D',
+        '1D',
+        '3D_MB',
+        '2D_MB',
+        '1D_MB',
+        'MBZ',
+        'MB3',
+        argstr='--opt %s',
+        desc='opt : optimization schema for applying adaptive GTM',
     )
 
     opt_tol = traits.Tuple(
         traits.Int,
         traits.Float,
         traits.Float,
-        argstr="--opt-tol %i %f %f",
-        desc="n_iters_max ftol lin_min_tol : optimization parameters for adaptive gtm using fminsearch",
+        argstr='--opt-tol %i %f %f',
+        desc='n_iters_max ftol lin_min_tol : optimization parameters for adaptive gtm using fminsearch',
     )
 
-    opt_brain = traits.Bool(argstr="--opt-brain", desc="apply adaptive GTM")
+    opt_brain = traits.Bool(argstr='--opt-brain', desc='apply adaptive GTM')
 
     opt_seg_merge = traits.Bool(
-        argstr="--opt-seg-merge",
-        desc="optimal schema for merging ROIs when applying adaptive GTM",
+        argstr='--opt-seg-merge',
+        desc='optimal schema for merging ROIs when applying adaptive GTM',
     )
 
     num_threads = traits.Int(
-        argstr="--threads %i", desc="threads : number of threads to use"
+        argstr='--threads %i', desc='threads : number of threads to use'
     )
 
     psf_col = traits.Float(
-        argstr="--psf-col %f", desc="xFWHM : full-width-half-maximum in the x-direction"
+        argstr='--psf-col %f', desc='xFWHM : full-width-half-maximum in the x-direction'
     )
 
     psf_row = traits.Float(
-        argstr="--psf-row %f", desc="yFWHM : full-width-half-maximum in the y-direction"
+        argstr='--psf-row %f', desc='yFWHM : full-width-half-maximum in the y-direction'
     )
 
     psf_slice = traits.Float(
-        argstr="--psf-slice %f",
-        desc="zFWHM : full-width-half-maximum in the z-direction",
+        argstr='--psf-slice %f',
+        desc='zFWHM : full-width-half-maximum in the z-direction',
     )
 
 
 class GTMPVCOutputSpec(TraitedSpec):
-    pvc_dir = Directory(desc="output directory")
-    ref_file = File(desc="Reference TAC in .dat")
-    hb_nifti = File(desc="High-binding TAC in nifti")
-    hb_dat = File(desc="High-binding TAC in .dat")
-    nopvc_file = File(desc="TACs for all regions with no PVC")
-    gtm_file = File(desc="TACs for all regions with GTM PVC")
-    gtm_stats = File(desc="Statistics for the GTM PVC")
-    input_file = File(desc="4D PET file in native volume space")
+    pvc_dir = Directory(desc='output directory')
+    ref_file = File(desc='Reference TAC in .dat')
+    hb_nifti = File(desc='High-binding TAC in nifti')
+    hb_dat = File(desc='High-binding TAC in .dat')
+    nopvc_file = File(desc='TACs for all regions with no PVC')
+    gtm_file = File(desc='TACs for all regions with GTM PVC')
+    gtm_stats = File(desc='Statistics for the GTM PVC')
+    input_file = File(desc='4D PET file in native volume space')
     tissue_fraction = File(
-        desc="Tissue fraction map in native volume space"
+        desc='Tissue fraction map in native volume space'
     )
-    reg_pet2anat = File(desc="Registration file to go from PET to anat")
-    reg_anat2pet = File(desc="Registration file to go from anat to PET")
+    reg_pet2anat = File(desc='Registration file to go from PET to anat')
+    reg_anat2pet = File(desc='Registration file to go from anat to PET')
     reg_rbvpet2anat = File(
-        desc="Registration file to go from RBV corrected PET to anat"
+        desc='Registration file to go from RBV corrected PET to anat'
     )
     reg_anat2rbvpet = File(
-        desc="Registration file to go from anat to RBV corrected PET"
+        desc='Registration file to go from anat to RBV corrected PET'
     )
     mgx_ctxgm = File(
-        desc="Cortical GM voxel-wise values corrected using the extended Muller-Gartner method",
+        desc='Cortical GM voxel-wise values corrected using the extended Muller-Gartner method',
     )
     mgx_subctxgm = File(
-        desc="Subcortical GM voxel-wise values corrected using the extended Muller-Gartner method",
+        desc='Subcortical GM voxel-wise values corrected using the extended Muller-Gartner method',
     )
     mgx_gm = File(
-        desc="All GM voxel-wise values corrected using the extended Muller-Gartner method",
+        desc='All GM voxel-wise values corrected using the extended Muller-Gartner method',
     )
     mg = File(
-        desc="All voxel-wise values corrected using the Muller-Gartner method",
+        desc='All voxel-wise values corrected using the Muller-Gartner method',
     )
-    rbv = File(desc="All GM voxel-wise values corrected using the RBV method")
+    rbv = File(desc='All GM voxel-wise values corrected using the RBV method')
     opt_params = File(
-        desc="Optimal parameter estimates for the FWHM using adaptive GTM"
+        desc='Optimal parameter estimates for the FWHM using adaptive GTM'
     )
-    yhat0 = File(desc="4D PET file of signal estimate (yhat) after PVC (unsmoothed)")
+    yhat0 = File(desc='4D PET file of signal estimate (yhat) after PVC (unsmoothed)')
     yhat = File(
-        desc="4D PET file of signal estimate (yhat) after PVC (smoothed with PSF)",
+        desc='4D PET file of signal estimate (yhat) after PVC (smoothed with PSF)',
     )
     yhat_full_fov = File(
-        desc="4D PET file with full FOV of signal estimate (yhat) after PVC (smoothed with PSF)",
+        desc='4D PET file with full FOV of signal estimate (yhat) after PVC (smoothed with PSF)',
     )
     yhat_with_noise = File(
-        desc="4D PET file with full FOV of signal estimate (yhat) with noise after PVC (smoothed with PSF)",
+        desc='4D PET file with full FOV of signal estimate (yhat) with noise after PVC (smoothed with PSF)',
     )
 
 
@@ -524,29 +524,29 @@ class GTMPVC(FSCommand):
     'mri_gtmpvc --i sub-01_ses-baseline_pet.nii.gz --mg 0.5 ROI1 ROI2 --o pvc --regheader --seg gtmseg.mgz'
     """
 
-    _cmd = "mri_gtmpvc"
+    _cmd = 'mri_gtmpvc'
     input_spec = GTMPVCInputSpec
     output_spec = GTMPVCOutputSpec
 
     def _format_arg(self, name, spec, val):
         # Values taken from
         # https://github.com/freesurfer/freesurfer/blob/fs-7.2/mri_gtmpvc/mri_gtmpvc.cpp#L115-L122
-        if name == "optimization_schema":
+        if name == 'optimization_schema':
             return (
                 spec.argstr
                 % {
-                    "3D": 1,
-                    "2D": 2,
-                    "1D": 3,
-                    "3D_MB": 4,
-                    "2D_MB": 5,
-                    "1D_MB": 6,
-                    "MBZ": 7,
-                    "MB3": 8,
+                    '3D': 1,
+                    '2D': 2,
+                    '1D': 3,
+                    '3D_MB': 4,
+                    '2D_MB': 5,
+                    '1D_MB': 6,
+                    'MBZ': 7,
+                    'MB3': 8,
                 }[val]
             )
-        if name == "mg":
-            return spec.argstr % (val[0], " ".join(val[1]))
+        if name == 'mg':
+            return spec.argstr % (val[0], ' '.join(val[1]))
         return super(GTMPVC, self)._format_arg(name, spec, val)
 
     def _list_outputs(self):
@@ -556,42 +556,42 @@ class GTMPVC(FSCommand):
             pvcdir = os.getcwd()
         else:
             pvcdir = os.path.abspath(self.inputs.pvc_dir)
-        outputs["pvc_dir"] = pvcdir
+        outputs['pvc_dir'] = pvcdir
 
         # Assign the output files that always get created
-        outputs["ref_file"] = os.path.join(pvcdir, "km.ref.tac.dat")
-        outputs["hb_nifti"] = os.path.join(pvcdir, "km.hb.tac.nii.gz")
-        outputs["hb_dat"] = os.path.join(pvcdir, "km.hb.tac.dat")
-        outputs["nopvc_file"] = os.path.join(pvcdir, "nopvc.nii.gz")
-        outputs["gtm_file"] = os.path.join(pvcdir, "gtm.nii.gz")
-        outputs["gtm_stats"] = os.path.join(pvcdir, "gtm.stats.dat")
-        outputs["reg_pet2anat"] = os.path.join(pvcdir, "aux", "bbpet2anat.lta")
-        outputs["reg_anat2pet"] = os.path.join(pvcdir, "aux", "anat2bbpet.lta")
-        outputs["tissue_fraction"] = os.path.join(pvcdir, "aux", "tissue.fraction.nii.gz")
+        outputs['ref_file'] = os.path.join(pvcdir, 'km.ref.tac.dat')
+        outputs['hb_nifti'] = os.path.join(pvcdir, 'km.hb.tac.nii.gz')
+        outputs['hb_dat'] = os.path.join(pvcdir, 'km.hb.tac.dat')
+        outputs['nopvc_file'] = os.path.join(pvcdir, 'nopvc.nii.gz')
+        outputs['gtm_file'] = os.path.join(pvcdir, 'gtm.nii.gz')
+        outputs['gtm_stats'] = os.path.join(pvcdir, 'gtm.stats.dat')
+        outputs['reg_pet2anat'] = os.path.join(pvcdir, 'aux', 'bbpet2anat.lta')
+        outputs['reg_anat2pet'] = os.path.join(pvcdir, 'aux', 'anat2bbpet.lta')
+        outputs['tissue_fraction'] = os.path.join(pvcdir, 'aux', 'tissue.fraction.nii.gz')
 
         # Assign the conditional outputs
         if self.inputs.save_input:
-            outputs["input_file"] = os.path.join(pvcdir, "input.nii.gz")
+            outputs['input_file'] = os.path.join(pvcdir, 'input.nii.gz')
         if self.inputs.save_yhat0:
-            outputs["yhat0"] = os.path.join(pvcdir, "yhat0.nii.gz")
+            outputs['yhat0'] = os.path.join(pvcdir, 'yhat0.nii.gz')
         if self.inputs.save_yhat:
-            outputs["yhat"] = os.path.join(pvcdir, "yhat.nii.gz")
+            outputs['yhat'] = os.path.join(pvcdir, 'yhat.nii.gz')
         if self.inputs.save_yhat_full_fov:
-            outputs["yhat_full_fov"] = os.path.join(pvcdir, "yhat.fullfov.nii.gz")
+            outputs['yhat_full_fov'] = os.path.join(pvcdir, 'yhat.fullfov.nii.gz')
         if self.inputs.save_yhat_with_noise:
-            outputs["yhat_with_noise"] = os.path.join(pvcdir, "yhat.nii.gz")
+            outputs['yhat_with_noise'] = os.path.join(pvcdir, 'yhat.nii.gz')
         if self.inputs.mgx:
-            outputs["mgx_ctxgm"] = os.path.join(pvcdir, "mgx.ctxgm.nii.gz")
-            outputs["mgx_subctxgm"] = os.path.join(pvcdir, "mgx.subctxgm.nii.gz")
-            outputs["mgx_gm"] = os.path.join(pvcdir, "mgx.gm.nii.gz")
+            outputs['mgx_ctxgm'] = os.path.join(pvcdir, 'mgx.ctxgm.nii.gz')
+            outputs['mgx_subctxgm'] = os.path.join(pvcdir, 'mgx.subctxgm.nii.gz')
+            outputs['mgx_gm'] = os.path.join(pvcdir, 'mgx.gm.nii.gz')
         if self.inputs.mg:
-            outputs["mg"] = os.path.join(pvcdir, "mg.nii.gz")
+            outputs['mg'] = os.path.join(pvcdir, 'mg.nii.gz')
         if self.inputs.rbv:
-            outputs["rbv"] = os.path.join(pvcdir, "rbv.nii.gz")
-            outputs["reg_rbvpet2anat"] = os.path.join(pvcdir, "aux", "rbv2anat.lta")
-            outputs["reg_anat2rbvpet"] = os.path.join(pvcdir, "aux", "anat2rbv.lta")
+            outputs['rbv'] = os.path.join(pvcdir, 'rbv.nii.gz')
+            outputs['reg_rbvpet2anat'] = os.path.join(pvcdir, 'aux', 'rbv2anat.lta')
+            outputs['reg_anat2rbvpet'] = os.path.join(pvcdir, 'aux', 'anat2rbv.lta')
         if self.inputs.optimization_schema:
-            outputs["opt_params"] = os.path.join(pvcdir, "aux", "opt.params.dat")
+            outputs['opt_params'] = os.path.join(pvcdir, 'aux', 'opt.params.dat')
 
         return outputs
 
@@ -619,7 +619,7 @@ class GTMStatsTo4DNifti(BaseInterface):
         # Load GTM data
         gtm_img = nb.load(self.inputs.gtm_file)
         gtm_data = gtm_img.get_fdata()
-        
+
         # Load GTM stats
         gtm_stats = pd.read_csv(
             self.inputs.gtm_stats, delim_whitespace=True, header=None, usecols=[1], names=['index']
@@ -642,4 +642,4 @@ class GTMStatsTo4DNifti(BaseInterface):
         return runtime
 
     def _list_outputs(self):
-        return {"out_file": os.path.abspath(self.inputs.out_file)}
+        return {'out_file': os.path.abspath(self.inputs.out_file)}

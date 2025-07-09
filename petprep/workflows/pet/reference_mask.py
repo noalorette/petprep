@@ -24,10 +24,6 @@
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
-import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
 
 from petprep.interfaces.reference_mask import ExtractRefRegion
@@ -39,17 +35,17 @@ def init_pet_refmask_wf(
     ref_mask_name: str,
     ref_mask_index: list[int] | None = None,
     config_path: str,
-    name: str = "pet_refmask_wf"
+    name: str = 'pet_refmask_wf'
 ) -> pe.Workflow:
-    from nipype.interfaces.utility import IdentityInterface
     import nipype.pipeline.engine as pe
+    from nipype.interfaces.utility import IdentityInterface
 
     workflow = pe.Workflow(name=name)
 
-    inputnode = pe.Node(IdentityInterface(fields=["seg_file"]), name="inputnode")
-    outputnode = pe.Node(IdentityInterface(fields=["refmask_file"]), name="outputnode")
+    inputnode = pe.Node(IdentityInterface(fields=['seg_file']), name='inputnode')
+    outputnode = pe.Node(IdentityInterface(fields=['refmask_file']), name='outputnode')
 
-    extract_mask = pe.Node(ExtractRefRegion(), name="extract_refregion")
+    extract_mask = pe.Node(ExtractRefRegion(), name='extract_refregion')
     extract_mask.inputs.segmentation_type = segmentation
     extract_mask.inputs.region_name = ref_mask_name
     extract_mask.inputs.config_file = config_path
@@ -59,8 +55,8 @@ def init_pet_refmask_wf(
         extract_mask.inputs.override_indices = ref_mask_index
 
     workflow.connect([
-        (inputnode, extract_mask, [("seg_file", "seg_file")]),
-        (extract_mask, outputnode, [("refmask_file", "refmask_file")])
+        (inputnode, extract_mask, [('seg_file', 'seg_file')]),
+        (extract_mask, outputnode, [('refmask_file', 'refmask_file')])
     ])
 
     return workflow

@@ -1,4 +1,4 @@
-from ..hmc import get_start_frame, update_list_transforms, init_pet_hmc_wf
+from ..hmc import get_start_frame, init_pet_hmc_wf, update_list_transforms
 
 
 def test_get_start_frame_basic():

@@ -249,17 +249,17 @@ def test_refmask_report_connections(bids_root: Path, tmp_path: Path):
     ds_refmask = wf.get_node('ds_refmask_wf')
     seg_edge = wf._graph.get_edge_data(seg_node, ds_refmask)
     assert (
-        "outputnode.segmentation",
-        "inputnode.source_files",
-    ) in seg_edge["connect"]
+        'outputnode.segmentation',
+        'inputnode.source_files',
+    ) in seg_edge['connect']
 
-    assert "pet_ref_tacs_wf" in wf.list_node_names()
-    assert "ds_ref_tacs" in wf.list_node_names()
-    ds_tacs = wf.get_node("ds_ref_tacs")
-    assert ds_tacs.inputs.ref == "cerebellum"
+    assert 'pet_ref_tacs_wf' in wf.list_node_names()
+    assert 'ds_ref_tacs' in wf.list_node_names()
+    ds_tacs = wf.get_node('ds_ref_tacs')
+    assert ds_tacs.inputs.ref == 'cerebellum'
     assert ds_tacs.inputs.desc == config.workflow.seg
-    edge_tacs = wf._graph.get_edge_data(wf.get_node("pet_ref_tacs_wf"), ds_tacs)
-    assert ("outputnode.timeseries", "in_file") in edge_tacs["connect"]
+    edge_tacs = wf._graph.get_edge_data(wf.get_node('pet_ref_tacs_wf'), ds_tacs)
+    assert ('outputnode.timeseries', 'in_file') in edge_tacs['connect']
 
 
 def test_pet_fit_stage1_inclusion(bids_root: Path, tmp_path: Path):

@@ -13,16 +13,16 @@ def _create_seg(tmp_path: Path) -> Path:
     data[1, 1, 1] = 1
     data[2, 2, 2] = 2
     img = nb.Nifti1Image(data, np.eye(4))
-    seg_file = tmp_path / "seg.nii.gz"
+    seg_file = tmp_path / 'seg.nii.gz'
     img.to_filename(seg_file)
     return seg_file
 
 
 def _create_config(tmp_path: Path, indices, extra=None):
-    cfg = {"testseg": {"region": {"refmask_indices": indices}}}
+    cfg = {'testseg': {'region': {'refmask_indices': indices}}}
     if extra:
-        cfg["testseg"]["region"].update(extra)
-    cfg_file = tmp_path / "config.json"
+        cfg['testseg']['region'].update(extra)
+    cfg_file = tmp_path / 'config.json'
     cfg_file.write_text(json.dumps(cfg))
     return cfg_file
 
@@ -35,10 +35,10 @@ def test_extract_refregion(tmp_path):
         ExtractRefRegion(
             seg_file=str(seg),
             config_file=str(cfg),
-            segmentation_type="testseg",
-            region_name="region",
+            segmentation_type='testseg',
+            region_name='region',
         ),
-        name="er", base_dir=str(tmp_path)
+        name='er', base_dir=str(tmp_path)
     )
     res = node.run()
     out = nb.load(res.outputs.refmask_file).get_fdata()
@@ -54,11 +54,11 @@ def test_extract_refregion_override(tmp_path):
         ExtractRefRegion(
             seg_file=str(seg),
             config_file=str(cfg),
-            segmentation_type="testseg",
-            region_name="region",
+            segmentation_type='testseg',
+            region_name='region',
             override_indices=[2],
         ),
-        name="er2", base_dir=str(tmp_path)
+        name='er2', base_dir=str(tmp_path)
     )
     res = node.run()
     out = nb.load(res.outputs.refmask_file).get_fdata()
@@ -72,8 +72,8 @@ def test_extract_refregion_override_ignores_config(tmp_path):
         tmp_path,
         [1],
         {
-            "exclude_indices": [2],
-            "erode_by_voxels": 1,
+            'exclude_indices': [2],
+            'erode_by_voxels': 1,
         },
     )
 
@@ -81,8 +81,8 @@ def test_extract_refregion_override_ignores_config(tmp_path):
         ExtractRefRegion(
             seg_file=str(seg),
             config_file=str(cfg),
-            segmentation_type="testseg",
-            region_name="region",
+            segmentation_type='testseg',
+            region_name='region',
             override_indices=[2],
         ),
         name='er3',

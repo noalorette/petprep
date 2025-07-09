@@ -3,18 +3,25 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
+
 import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
+from nipype.interfaces.freesurfer import ApplyVolTransform, Tkregister2
+from nipype.interfaces.fsl import Merge, Split
 from nipype.interfaces.petpvc import PETPVC
-from nipype.interfaces.fsl import Split, Merge
-import nibabel as nb
-from nipype.interfaces.freesurfer import ApplyVolTransform, Tkregister2, MRICoreg
 
-from petprep.interfaces.pvc import CSVtoNifti, StackTissueProbabilityMaps, Binarise4DSegmentation, GTMPVC, GTMStatsTo4DNifti, ClipValues
+from petprep.interfaces.pvc import (
+    GTMPVC,
+    Binarise4DSegmentation,
+    ClipValues,
+    CSVtoNifti,
+    GTMStatsTo4DNifti,
+    StackTissueProbabilityMaps,
+)
 
 
 def load_pvc_config(config_path: Path) -> dict:
-    with open(config_path, 'r') as f:
+    with open(config_path) as f:
         return json.load(f)
 
 
@@ -240,6 +247,6 @@ def init_pet_pvc_wf(
         workflow.connect([(pvc_node, outputnode, [('tissue_fraction', 'pet_pvc_mask')])])
 
     else:
-        raise ValueError(f"Unsupported method PVC ({method}) for PVC tool: {tool}")
+        raise ValueError(f'Unsupported method PVC ({method}) for PVC tool: {tool}')
 
     return workflow

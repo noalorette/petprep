@@ -4,7 +4,6 @@
 from nipype import Function
 from nipype.interfaces import utility as niu
 from nipype.interfaces.freesurfer import MRIConvert
-from nipype.interfaces.freesurfer.petsurfer import GTMSeg
 from nipype.pipeline import engine as pe
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 

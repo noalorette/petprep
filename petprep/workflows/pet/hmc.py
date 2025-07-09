@@ -66,7 +66,6 @@ def get_start_frame(
         If omitted, cumulative ``durations`` will be used.
     """
 
-    from collections.abc import Sequence
     import numpy as np
 
     if durations is None:
@@ -90,14 +89,14 @@ def update_list_transforms(xforms: list[str], idx: int) -> list[str]:
     Left-pad `xforms` by repeating the first transform `idx` times at the beginning.
     """
     if not xforms:
-        raise ValueError("The input xforms list cannot be empty.")
-    
+        raise ValueError('The input xforms list cannot be empty.')
+
     padded_xforms = [xforms[0]] * idx + xforms
     return padded_xforms
 
 
 def lta_list(in_file):
-    lta_list = [ext.replace(".nii.gz", ".lta") for ext in in_file]
+    lta_list = [ext.replace('.nii.gz', '.lta') for ext in in_file]
     return lta_list
 
 
@@ -142,7 +141,7 @@ def init_pet_hmc_wf(
     frame_start_times: Sequence[float] | None = None,
     name: str = 'pet_hmc_wf',
 ):
-    """
+    r"""
     Build a workflow to estimate head-motion parameters.
 
     This workflow estimates the motion parameters to perform
@@ -268,11 +267,11 @@ FreeSurfer's ``mri_robust_template``.
 
     make_lta_list = pe.Node(
         niu.Function(
-            input_names=["in_file"],
-            output_names=["lta_list"],
+            input_names=['in_file'],
+            output_names=['lta_list'],
             function=lta_list,
         ),
-        name="create_lta_list",
+        name='create_lta_list',
     )
 
     # Motion estimation

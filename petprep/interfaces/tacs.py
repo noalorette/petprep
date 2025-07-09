@@ -8,9 +8,9 @@ from nipype.interfaces.base import (
     File,
     SimpleInterface,
     TraitedSpec,
+    traits,
 )
 from nipype.utils.filemanip import fname_presuffix
-from nipype.interfaces.base import traits
 
 
 class _ExtractTACsInputSpec(BaseInterfaceInputSpec):
@@ -38,7 +38,7 @@ class ExtractTACs(SimpleInterface):
             )
 
         seginfo = pd.read_csv(self.inputs.dseg_tsv, sep='\t', dtype={0: str, 1: str})
-        label_mapping = dict(zip(seginfo.iloc[:, 0], seginfo.iloc[:, 1]))
+        label_mapping = dict(zip(seginfo.iloc[:, 0], seginfo.iloc[:, 1], strict=False))
 
         with open(self.inputs.metadata) as f:
             metadata = json.load(f)
@@ -87,16 +87,16 @@ class ExtractTACs(SimpleInterface):
 
 
 class _ExtractRefTACInputSpec(BaseInterfaceInputSpec):
-    in_file = File(exists=True, mandatory=True, desc="PET file in anatomical space")
+    in_file = File(exists=True, mandatory=True, desc='PET file in anatomical space')
     mask_file = File(
-        exists=True, mandatory=True, desc="Reference mask in anatomical space"
+        exists=True, mandatory=True, desc='Reference mask in anatomical space'
     )
-    ref_mask_name = traits.Str(mandatory=True, desc="Name of reference region")
-    metadata = File(exists=True, mandatory=True, desc="PET JSON metadata file")
+    ref_mask_name = traits.Str(mandatory=True, desc='Name of reference region')
+    metadata = File(exists=True, mandatory=True, desc='PET JSON metadata file')
 
 
 class _ExtractRefTACOutputSpec(TraitedSpec):
-    out_file = File(exists=True, desc="Reference region time activity curve")
+    out_file = File(exists=True, desc='Reference region time activity curve')
 
 
 class ExtractRefTAC(SimpleInterface):
@@ -116,28 +116,28 @@ class ExtractRefTAC(SimpleInterface):
         with open(self.inputs.metadata) as f:
             metadata = json.load(f)
 
-        frame_times = metadata.get("FrameTimesStart", [])
-        frame_durations = metadata.get("FrameDuration", [])
+        frame_times = metadata.get('FrameTimesStart', [])
+        frame_durations = metadata.get('FrameDuration', [])
 
         if len(frame_times) != len(frame_durations):
-            raise ValueError("FrameTimesStart and FrameDuration must have equal length")
+            raise ValueError('FrameTimesStart and FrameDuration must have equal length')
 
         timeseries = pet_data[mask, :].mean(axis=0)
         frame_times_end = np.add(frame_times, frame_durations).tolist()
         df = pd.DataFrame({self.inputs.ref_mask_name: timeseries})
-        df.insert(0, "FrameTimesEnd", frame_times_end)
-        df.insert(0, "FrameTimesStart", list(frame_times))
+        df.insert(0, 'FrameTimesEnd', frame_times_end)
+        df.insert(0, 'FrameTimesStart', list(frame_times))
 
         out_file = fname_presuffix(
             self.inputs.in_file,
-            suffix="_timeseries.tsv",
+            suffix='_timeseries.tsv',
             newpath=runtime.cwd,
             use_ext=False,
         )
-        df.to_csv(out_file, sep="\t", index=False, na_rep="n/a")
+        df.to_csv(out_file, sep='\t', index=False, na_rep='n/a')
 
-        self._results["out_file"] = out_file
+        self._results['out_file'] = out_file
         return runtime
 
 
-__all__ = ("ExtractTACs", "ExtractRefTAC")
+__all__ = ('ExtractTACs', 'ExtractRefTAC')
