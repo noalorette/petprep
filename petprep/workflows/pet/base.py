@@ -636,6 +636,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         mem_gb=config.DEFAULT_MEMORY_MIN_GB,
     )
     ds_pet_tacs.inputs.source_file = pet_file
+    if pvc_method is not None:
+        ds_pet_tacs.inputs.pvc = pvc_method
 
     workflow.connect([
         (pet_t1w_src, pet_tacs_wf, [(pet_t1w_field, 'inputnode.pet_anat')]),
@@ -668,6 +670,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             mem_gb=config.DEFAULT_MEMORY_MIN_GB,
         )
         ds_ref_tacs.inputs.source_file = pet_file
+        if pvc_method is not None:
+            ds_ref_tacs.inputs.pvc = pvc_method
 
         workflow.connect([
             (pet_t1w_src, pet_ref_tacs_wf, [(pet_t1w_field, 'inputnode.pet_anat')]),

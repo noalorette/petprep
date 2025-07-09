@@ -95,6 +95,7 @@ def test_pet_wf_with_pvc(bids_root: Path):
         config.workflow.pvc_tool = 'PETPVC'
         config.workflow.pvc_method = 'GTM'
         config.workflow.pvc_psf = (1.0, 1.0, 1.0)
+        config.workflow.ref_mask_name = 'cerebellum'
 
         wf = init_pet_wf(pet_series=pet_series, precomputed={})
 
@@ -119,6 +120,7 @@ def test_pvc_entity_added(bids_root: Path):
         config.workflow.pvc_tool = 'PETPVC'
         config.workflow.pvc_method = 'GTM'
         config.workflow.pvc_psf = (1.0, 1.0, 1.0)
+        config.workflow.ref_mask_name = 'cerebellum'
 
         wf = init_pet_wf(pet_series=pet_series, precomputed={})
 
@@ -127,6 +129,8 @@ def test_pvc_entity_added(bids_root: Path):
     assert wf.get_node('ds_pet_std_wf.ds_pet').inputs.pvc == pvc_method
     assert wf.get_node('pet_surf_wf.ds_pet_surfs').inputs.pvc == pvc_method
     assert wf.get_node('ds_pet_cifti').inputs.pvc == pvc_method
+    assert wf.get_node('ds_pet_tacs').inputs.pvc == pvc_method
+    assert wf.get_node('ds_ref_tacs').inputs.pvc == pvc_method
 
 
 def test_pvc_used_in_std_space(bids_root: Path):
