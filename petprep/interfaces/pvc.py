@@ -643,3 +643,16 @@ class GTMStatsTo4DNifti(BaseInterface):
 
     def _list_outputs(self):
         return {'out_file': os.path.abspath(self.inputs.out_file)}
+
+
+def get_opt_fwhm(opt_params: str) -> tuple[float, float, float]:
+    """Parse ``opt.params.dat`` and return the estimated FWHM tuple."""
+    with open(opt_params) as f:
+        values = [float(v) for v in f.read().split()]
+    if not values:
+        raise ValueError('No values found in opt.params.dat')
+    if len(values) == 1:
+        values = values * 3
+    elif len(values) == 2:
+        values.append(values[-1])
+    return tuple(values[:3])

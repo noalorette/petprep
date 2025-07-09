@@ -7,7 +7,7 @@ from pathlib import Path
 import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
 from nipype.interfaces.freesurfer import ApplyVolTransform, Tkregister2
-from nipype.interfaces.fsl import Merge, Split
+from nipype.interfaces.fsl import MeanImage, Merge, Split
 from nipype.interfaces.petpvc import PETPVC
 
 from petprep.interfaces.pvc import (
@@ -17,6 +17,7 @@ from petprep.interfaces.pvc import (
     CSVtoNifti,
     GTMStatsTo4DNifti,
     StackTissueProbabilityMaps,
+    get_opt_fwhm,
 )
 
 
@@ -154,7 +155,7 @@ def init_pet_pvc_wf(
             (resample_pet_to_petref, outputnode, [('transformed_file', 'pet_pvc_file')]),
         ])
 
-    elif tool_lower == 'petsurfer' and method_key in {'GTM', 'MG', 'RBV'}:
+    elif tool_lower == 'petsurfer' and method_key in ('GTM', 'MG', 'RBV', 'AGTM'):
         # PETSurfer directly handles 4D data (no splitting needed)
         tkregister_node = pe.Node(
             Tkregister2(
@@ -189,10 +190,41 @@ def init_pet_pvc_wf(
         if 'mg' in method_config:
             method_config['mg'] = tuple(method_config['mg'])
 
-        pvc_node = pe.Node(
-            GTMPVC(**method_config),
-            name=f'{tool_lower}_{method_key.lower()}_pvc_node',
-        )
+        if 'opt_tol' in method_config:
+            method_config['opt_tol'] = tuple(method_config['opt_tol'])
+
+        if method_key == 'AGTM':
+            mean_pet = pe.Node(MeanImage(dimension='T'), name='mean_pet')
+
+            est_node = pe.Node(
+                GTMPVC(**method_config),
+                name=f'{tool_lower}_{method_key.lower()}_estimate_psf',
+            )
+
+            apply_config = method_config.copy()
+            apply_config.pop('optimization_schema', None)
+            apply_config.pop('opt_brain', None)
+            apply_config.pop('opt_seg_merge', None)
+            apply_config.pop('opt_tol', None)
+
+            pvc_node = pe.Node(
+                GTMPVC(**apply_config),
+                name=f'{tool_lower}_{method_key.lower()}_pvc_node',
+            )
+
+            get_fwhm = pe.Node(
+                niu.Function(
+                    input_names=['opt_params'],
+                    output_names=['psf'],
+                    function=get_opt_fwhm,
+                ),
+                name='get_opt_fwhm',
+            )
+        else:
+            pvc_node = pe.Node(
+                GTMPVC(**method_config),
+                name=f'{tool_lower}_{method_key.lower()}_pvc_node',
+            )
 
         workflow.connect([
             (inputnode, nu_path_node, [
@@ -202,21 +234,44 @@ def init_pet_pvc_wf(
             (inputnode, tkregister_node, [('pet_file', 'moving_image')]),
             (nu_path_node, tkregister_node, [('nu_path', 'target_image')]),
             (inputnode, tkregister_node, [('subjects_dir', 'subjects_dir'), ('subject_id', 'subject_id')]),
-            (tkregister_node, pvc_node, [('lta_file', 'reg_file')]),
-            (inputnode, gtmseg_path_node, [
-                ('subjects_dir', 'subjects_dir'),
-                ('subject_id', 'subject_id'),
-                ('segmentation', 'seg_ready'),
-            ]),
-            (inputnode, pvc_node, [
-                ('pet_file', 'in_file'),
-                ('subjects_dir', 'subjects_dir'),
-            ]),
-            (gtmseg_path_node, pvc_node, [('gtmseg_path', 'segmentation')]),
-        ])
+            if method_key == 'AGTM':
+            workflow.connect([
+                (tkregister_node, est_node, [('lta_file', 'reg_file')]),
+                (inputnode, gtmseg_path_node, [
+                    ('subjects_dir', 'subjects_dir'),
+                    ('subject_id', 'subject_id'),
+                    ('segmentation', 'seg_ready'),
+                ]),
+                (inputnode, mean_pet, [('pet_file', 'in_file')]),
+                (mean_pet, est_node, [('out_file', 'in_file')]),
+                (inputnode, est_node, [('subjects_dir', 'subjects_dir')]),
+                (gtmseg_path_node, est_node, [('gtmseg_path', 'segmentation')]),
+                (est_node, get_fwhm, [('opt_params', 'opt_params')]),
+                (tkregister_node, pvc_node, [('lta_file', 'reg_file')]),
+                (inputnode, pvc_node, [
+                    ('pet_file', 'in_file'),
+                    ('subjects_dir', 'subjects_dir'),
+                ]),
+                (gtmseg_path_node, pvc_node, [('gtmseg_path', 'segmentation')]),
+                (get_fwhm, pvc_node, [('psf', 'psf')]),
+            ])
+        else:
+            workflow.connect([
+                (tkregister_node, pvc_node, [('lta_file', 'reg_file')]),
+                (inputnode, gtmseg_path_node, [
+                    ('subjects_dir', 'subjects_dir'),
+                    ('subject_id', 'subject_id'),
+                    ('segmentation', 'seg_ready'),
+                ]),
+                (inputnode, pvc_node, [
+                    ('pet_file', 'in_file'),
+                    ('subjects_dir', 'subjects_dir'),
+                ]),
+                (gtmseg_path_node, pvc_node, [('gtmseg_path', 'segmentation')]),
+            ])
 
         # Conditional output based on method
-        if method_key == 'GTM':
+        if method_key in ('GTM', 'AGTM'):
 
             gtm_stats_node = pe.Node(
                 GTMStatsTo4DNifti(),
