@@ -1,5 +1,5 @@
-import json
 import gzip
+import json
 import pickle
 from pathlib import Path
 
@@ -10,15 +10,19 @@ import pytest
 from nipype.pipeline import engine as pe
 from nipype.pipeline.engine.nodes import NodeExecutionError
 
-from petprep.interfaces.tacs import ExtractTACs, ExtractRefTAC
+from petprep.interfaces.tacs import ExtractRefTAC, ExtractTACs
+from petprep.workflows.pet.ref_tacs import init_pet_ref_tacs_wf
 from petprep.workflows.pet.tacs import init_pet_tacs_wf
 
 
 def test_ExtractTACs(tmp_path):
-    pet_data = np.stack([
-        np.ones((2, 2, 2)),
-        np.ones((2, 2, 2)) * 2,
-    ], axis=-1)
+    pet_data = np.stack(
+        [
+            np.ones((2, 2, 2)),
+            np.ones((2, 2, 2)) * 2,
+        ],
+        axis=-1,
+    )
     pet_file = tmp_path / 'pet.nii.gz'
     nb.Nifti1Image(pet_data, np.eye(4)).to_filename(pet_file)
 
@@ -51,10 +55,13 @@ def test_ExtractTACs(tmp_path):
 
 
 def test_ExtractTACs_mismatched_meta(tmp_path):
-    pet_data = np.stack([
-        np.ones((2, 2, 2)),
-        np.ones((2, 2, 2)) * 2,
-    ], axis=-1)
+    pet_data = np.stack(
+        [
+            np.ones((2, 2, 2)),
+            np.ones((2, 2, 2)) * 2,
+        ],
+        axis=-1,
+    )
     pet_file = tmp_path / 'pet.nii.gz'
     nb.Nifti1Image(pet_data, np.eye(4)).to_filename(pet_file)
 
@@ -85,10 +92,13 @@ def test_ExtractTACs_mismatched_meta(tmp_path):
 
 def test_tacs_workflow(tmp_path):
     """Workflow passes resampled PET to ExtractTACs."""
-    pet_data = np.stack([
-        np.ones((2, 2, 2)),
-        np.ones((2, 2, 2)) * 2,
-    ], axis=-1)
+    pet_data = np.stack(
+        [
+            np.ones((2, 2, 2)),
+            np.ones((2, 2, 2)) * 2,
+        ],
+        axis=-1,
+    )
     pet_file = tmp_path / 'pet.nii.gz'
     nb.Nifti1Image(pet_data, np.eye(4)).to_filename(pet_file)
 
@@ -102,7 +112,7 @@ def test_tacs_workflow(tmp_path):
     meta_json = tmp_path / 'pet.json'
     meta_json.write_text(json.dumps({'FrameTimesStart': [0, 1], 'FrameDuration': [1, 1]}))
 
-    wf = init_pet_tacs_wf(output_dir=str(tmp_path), metadata={})
+    wf = init_pet_tacs_wf()
     wf.base_dir = str(tmp_path)
     wf.config['execution']['remove_unnecessary_outputs'] = False
     wf.inputs.inputnode.pet_anat = str(pet_file)
@@ -191,3 +201,35 @@ def test_ExtractRefTAC_mismatched_meta(tmp_path):
 
     with pytest.raises(NodeExecutionError):
         node.run()
+
+
+def test_ref_tacs_workflow_mismatched_meta(tmp_path):
+    """Workflow should fail with inconsistent metadata."""
+    pet_data = np.stack(
+        [
+            np.ones((2, 2, 2)),
+            np.ones((2, 2, 2)) * 2,
+        ],
+        axis=-1,
+    )
+    pet_file = tmp_path / 'pet.nii.gz'
+    nb.Nifti1Image(pet_data, np.eye(4)).to_filename(pet_file)
+
+    mask_data = np.zeros((2, 2, 2), dtype='int16')
+    mask_data[0] = 1
+    mask_file = tmp_path / 'mask.nii.gz'
+    nb.Nifti1Image(mask_data, np.eye(4)).to_filename(mask_file)
+
+    meta_json = tmp_path / 'pet.json'
+    meta_json.write_text(json.dumps({'FrameTimesStart': [0], 'FrameDuration': [1, 1]}))
+
+    wf = init_pet_ref_tacs_wf()
+    wf.base_dir = str(tmp_path)
+    wf.config['execution']['remove_unnecessary_outputs'] = False
+    wf.inputs.inputnode.pet_anat = str(pet_file)
+    wf.inputs.inputnode.mask_file = str(mask_file)
+    wf.inputs.inputnode.metadata = str(meta_json)
+    wf.inputs.inputnode.ref_mask_name = 'ref'
+
+    with pytest.raises(NodeExecutionError):
+        wf.run()
