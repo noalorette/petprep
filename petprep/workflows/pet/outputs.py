@@ -33,7 +33,6 @@ from petprep import config
 from petprep.config import DEFAULT_MEMORY_MIN_GB
 from petprep.interfaces import DerivativesDataSink
 from petprep.interfaces.bids import BIDSURI
-from nipype.interfaces.base import Undefined
 
 
 def prepare_timing_parameters(metadata: dict):
@@ -76,12 +75,17 @@ def prepare_timing_parameters(metadata: dict):
     return timing_parameters
 
 
-def build_psf_dict(fwhm_x=Undefined, fwhm_y=Undefined, fwhm_z=Undefined):
+def build_psf_dict(fwhm_x=None, fwhm_y=None, fwhm_z=None):
     """Construct a metadata dictionary for PSF parameters."""
+    from nipype.interfaces.base import Undefined as _Undefined
+
     if (
-        fwhm_x is Undefined
-        or fwhm_y is Undefined
-        or fwhm_z is Undefined
+        fwhm_x is None
+        or fwhm_y is None
+        or fwhm_z is None
+        or fwhm_x is _Undefined
+        or fwhm_y is _Undefined
+        or fwhm_z is _Undefined
     ):
         return {}
     return {
@@ -721,6 +725,7 @@ def init_ds_volumes_wf(
                 'resolution',
                 # Transforms previously used to generate the outputs
                 'motion_xfm',
+                # PSF parameters from PVC
                 'fwhm_x',
                 'fwhm_y',
                 'fwhm_z',
@@ -738,6 +743,17 @@ def init_ds_volumes_wf(
         name='sources',
     )
     petref2target = pe.Node(niu.Merge(2), name='petref2target')
+
+    psf_meta = pe.Node(
+        niu.Function(
+            input_names=['fwhm_x', 'fwhm_y', 'fwhm_z'],
+            output_names=['meta_dict'],
+            function=build_psf_dict,
+        ),
+        name='psf_meta',
+        run_without_submitting=True,
+        mem_gb=DEFAULT_MEMORY_MIN_GB,
+    )
 
     # PET is pre-resampled
     ds_pet = pe.Node(
@@ -821,16 +837,6 @@ def init_ds_volumes_wf(
     )
     datasinks = [ds_ref, ds_mask]
 
-    psf_meta = pe.Node(
-        niu.Function(
-            input_names=['fwhm_x', 'fwhm_y', 'fwhm_z'],
-            output_names=['meta_dict'],
-            function=build_psf_dict,
-        ),
-        name='psf_meta',
-        run_without_submitting=True,
-        mem_gb=DEFAULT_MEMORY_MIN_GB,
-    )
     workflow.connect([
         (inputnode, psf_meta, [
             ('fwhm_x', 'fwhm_x'),
