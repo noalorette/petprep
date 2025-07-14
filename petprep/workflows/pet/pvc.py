@@ -342,13 +342,6 @@ def init_pet_pvc_wf(
                               ])
 
         workflow.connect([(pvc_node, outputnode, [('tissue_fraction', 'pet_pvc_mask')])])
-        workflow.connect([
-            (const_psf, outputnode, [
-                ('fwhm_x', 'fwhm_x'),
-                ('fwhm_y', 'fwhm_y'),
-                ('fwhm_z', 'fwhm_z'),
-            ])
-        ])
 
     else:
         raise ValueError(f'Unsupported method PVC ({method}) for PVC tool: {tool}')
