@@ -35,6 +35,7 @@ from pathlib import Path
 from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
+from niworkflows.interfaces.utility import DictMerge
 from niworkflows.utils.connections import listify
 
 from ... import config
@@ -385,6 +386,10 @@ configured with cubic B-spline interpolation.
             run_without_submitting=True,
         )
 
+        merge_cifti_meta = pe.Node(
+            DictMerge(), name='merge_cifti_meta', run_without_submitting=True
+        )
+
         workflow.connect([
             (pet_fit_wf, petref_t1w, [
                 ('outputnode.petref', 'input_image'),
@@ -452,13 +457,19 @@ configured with cubic B-spline interpolation.
         ])  # fmt:skip
 
         if run_pvc:
-            workflow.connect([
-                (pet_pvc_wf, ds_pet_t1_wf, [
-                    ('outputnode.fwhm_x', 'inputnode.fwhm_x'),
-                    ('outputnode.fwhm_y', 'inputnode.fwhm_y'),
-                    ('outputnode.fwhm_z', 'inputnode.fwhm_z'),
-                ]),
-            ])
+            workflow.connect(
+                [
+                    (
+                        pet_pvc_wf,
+                        ds_pet_t1_wf,
+                        [
+                            ('outputnode.fwhm_x', 'inputnode.fwhm_x'),
+                            ('outputnode.fwhm_y', 'inputnode.fwhm_y'),
+                            ('outputnode.fwhm_z', 'inputnode.fwhm_z'),
+                        ],
+                    ),
+                ]
+            )
 
     if spaces.cached.get_spaces(nonstandard=False, dim=(3,)):
         # Missing:
@@ -509,13 +520,19 @@ configured with cubic B-spline interpolation.
         ])  # fmt:skip
 
         if run_pvc:
-            workflow.connect([
-                (pet_pvc_wf, ds_pet_std_wf, [
-                    ('outputnode.fwhm_x', 'inputnode.fwhm_x'),
-                    ('outputnode.fwhm_y', 'inputnode.fwhm_y'),
-                    ('outputnode.fwhm_z', 'inputnode.fwhm_z'),
-                ]),
-            ])
+            workflow.connect(
+                [
+                    (
+                        pet_pvc_wf,
+                        ds_pet_std_wf,
+                        [
+                            ('outputnode.fwhm_x', 'inputnode.fwhm_x'),
+                            ('outputnode.fwhm_y', 'inputnode.fwhm_y'),
+                            ('outputnode.fwhm_z', 'inputnode.fwhm_z'),
+                        ],
+                    ),
+                ]
+            )
 
         if not run_pvc:
             workflow.connect([
@@ -553,13 +570,19 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         ])  # fmt:skip
 
         if run_pvc:
-            workflow.connect([
-                (pet_pvc_wf, pet_surf_wf, [
-                    ('outputnode.fwhm_x', 'inputnode.fwhm_x'),
-                    ('outputnode.fwhm_y', 'inputnode.fwhm_y'),
-                    ('outputnode.fwhm_z', 'inputnode.fwhm_z'),
-                ]),
-            ])
+            workflow.connect(
+                [
+                    (
+                        pet_pvc_wf,
+                        pet_surf_wf,
+                        [
+                            ('outputnode.fwhm_x', 'inputnode.fwhm_x'),
+                            ('outputnode.fwhm_y', 'inputnode.fwhm_y'),
+                            ('outputnode.fwhm_z', 'inputnode.fwhm_z'),
+                        ],
+                    ),
+                ]
+            )
 
         # sources are pet_file, motion_xfm, petref2anat_xfm, fsnative2t1w_xfm
         merge_surface_sources = pe.Node(
@@ -654,9 +677,12 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ]),
             (pet_grayords_wf, ds_pet_cifti, [
                 ('outputnode.cifti_pet', 'in_file'),
-                (('outputnode.cifti_metadata', _read_json), 'meta_dict'),
             ]),
-            (psf_meta, ds_pet_cifti, [('meta_dict', 'meta_dict')]),
+            (pet_grayords_wf, merge_cifti_meta, [
+                (('outputnode.cifti_metadata', _read_json), 'in1'),
+            ]),
+            (psf_meta, merge_cifti_meta, [('meta_dict', 'in2')]),
+            (merge_cifti_meta, ds_pet_cifti, [('out_dict', 'meta_dict')]),
         ])  # fmt:skip
 
     pet_tacs_wf = init_pet_tacs_wf(
