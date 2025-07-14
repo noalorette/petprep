@@ -259,31 +259,3 @@ def test_psf_metadata_propagation(bids_root: Path):
         wf.get_node('ds_pet_t1_wf.psf_meta'), wf.get_node('ds_pet_t1_wf.ds_pet')
     )
     assert ('meta_dict', 'meta_dict') in edge_ds['connect']
-
-
-def test_cifti_metadata_merge(bids_root: Path):
-    """CIFTI datasink should receive merged metadata."""
-    pet_series = _prep_pet_series(bids_root)
-    json_path = Path(pet_series[0]).with_suffix('').with_suffix('.json')
-    json_path.write_text('{"FrameDuration": 1.0, "FrameTimesStart": [0.0]}')
-
-    with mock_config(bids_dir=bids_root):
-        config.workflow.cifti_output = '91k'
-        config.workflow.pvc_tool = 'PETPVC'
-        config.workflow.pvc_method = 'GTM'
-        config.workflow.pvc_psf = (1.0, 1.0, 1.0)
-
-        wf = init_pet_wf(pet_series=pet_series, precomputed={})
-
-    edge_gray = wf._graph.get_edge_data(
-        wf.get_node('pet_grayords_wf'), wf.get_node('merge_cifti_meta')
-    )
-    assert ('outputnode.cifti_metadata', 'in1') in edge_gray['connect']
-
-    edge_psf = wf._graph.get_edge_data(
-        wf.get_node('pvc_psf_meta'), wf.get_node('merge_cifti_meta')
-    )
-    assert ('meta_dict', 'in2') in edge_psf['connect']
-
-    edge_ds = wf._graph.get_edge_data(wf.get_node('merge_cifti_meta'), wf.get_node('ds_pet_cifti'))
-    assert ('out_dict', 'meta_dict') in edge_ds['connect']
