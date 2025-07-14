@@ -47,9 +47,9 @@ protocols and that requires minimal user input, while providing easily
 interpretable and comprehensive error and output reporting.
 It performs comprehensive processing steps—such as motion correction,
 segmentation, registration, partial volume correction, and extraction of time
-activity curves for pharmacokinetic modelling—providing outputs that can be
-easily submitted to a variety of group level analyses, including PET imaging
-studies, graph theory measures, and surface or volume-based statistics.
+activity curves, providing outputs that can be
+easily submitted to a variety of group level analyses, pharmacokinetic modelling, 
+graph theory measures, and surface or volume-based statistics.
 
 .. note::
 
@@ -83,6 +83,11 @@ This tool allows you to easily do the following:
   subject, including meaningful errors.
 - Automate and parallelize processing steps, which provides a significant
   speed-up from manual processing or shell-scripted pipelines.
+
+PETPrep also extracts regional time-activity curves as tabular files with frame
+timings and uptake values. These tables can be fed directly into
+pharmacokinetic modeling tools such as `kinfitr <https://github.com/mathesong/kinfitr>`__
+or PMOD to estimate tracer kinetics or compute binding metrics.
 
 More information and documentation can be found at
 https://petprep.readthedocs.io/
@@ -124,30 +129,9 @@ plagiarism detection, please refer them to the *NiPreps* community and/or the no
 effect in the `boilerplate documentation page <https://www.nipreps.org/intro/transparency/#citation-boilerplates>`__.
 
 **Papers**.
-*PETPrep* contributors have published two relevant papers:
-`Esteban et al. (2019) <https://doi.org/10.1038/s41592-018-0235-4>`__
-[`preprint <https://doi.org/10.1101/306951>`__], and
-`Esteban et al. (2020) <https://doi.org/10.1038/s41596-020-0327-3>`__
-[`preprint <https://doi.org/10.1101/694364>`__].
+*PETPrep* contributors have published the relevant papers:
 
 **Other**.
-Other materials that have been generated over time include the
-`OHBM 2018 software demonstration <https://effigies.github.io/petprep-demo/>`__
-and some conference posters:
-
-* Organization for Human Brain Mapping 2018
-  (`Abstract <https://ww5.aievolution.com/hbm1801/index.cfm?do=abs.viewAbs&abs=1321>`__;
-  `PDF <https://files.aievolution.com/hbm1801/abstracts/31779/2035_Markiewicz.pdf>`__)
-
-.. image:: _static/OHBM2018-poster_thumb.png
-   :target: _static/OHBM2018-poster.png
-
-* Organization for Human Brain Mapping 2017
-  (`Abstract <https://ww5.aievolution.com/hbm1701/index.cfm?do=abs.viewAbs&abs=4111>`__;
-  `PDF <https://f1000research.com/posters/6-1129>`__)
-
-.. image:: _static/OHBM2017-poster_thumb.png
-   :target: _static/OHBM2017-poster.png
 
 License information
 -------------------
