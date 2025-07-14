@@ -45,11 +45,11 @@ preprocessing pipeline that is designed to provide an easily accessible,
 state-of-the-art interface that is robust to variations in scan acquisition
 protocols and that requires minimal user input, while providing easily
 interpretable and comprehensive error and output reporting.
-It performs basic processing steps (coregistration, normalization, unwarping,
-noise component extraction, segmentation, skull-stripping, etc.) providing
-outputs that can be easily submitted to a variety of group level analyses,
-including PET imaging studies, graph theory measures, and surface
-or volume-based statistics.
+It performs comprehensive processing steps—such as motion correction,
+segmentation, registration, partial volume correction, and extraction of time
+activity curves for pharmacokinetic modelling—providing outputs that can be
+easily submitted to a variety of group level analyses, including PET imaging
+studies, graph theory measures, and surface or volume-based statistics.
 
 .. note::
 
@@ -70,6 +70,11 @@ software become available.
 This tool allows you to easily do the following:
 
 - Take PET data from raw to fully preprocessed form.
+- Apply motion correction to minimize artifacts from subject movement.
+- Segment anatomy for improved regional characterization.
+- Register data within and across subjects, and to template spaces.
+- Perform partial volume correction.
+- Extract time activity curves for pharmacokinetic modelling.
 - Implement tools from different software packages.
 - Achieve optimal data processing quality by using the best tools available.
 - Generate preprocessing quality reports, with which the user can easily
