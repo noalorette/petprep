@@ -67,13 +67,32 @@ def init_pet_pvc_wf(
     )
 
     outputnode = pe.Node(
-        niu.IdentityInterface(fields=['pet_pvc_file', 'pet_pvc_mask']),
+        niu.IdentityInterface(
+            fields=[
+                'pet_pvc_file',
+                'pet_pvc_mask',
+                'fwhm_x',
+                'fwhm_y',
+                'fwhm_z',
+            ]
+        ),
         name='outputnode'
     )
 
     pvc_params = pvc_params or {}
     method_config = config[tool_lower][method_key].copy()
     method_config.update(pvc_params)
+
+    const_psf = pe.Node(
+        niu.IdentityInterface(fields=['fwhm_x', 'fwhm_y', 'fwhm_z']),
+        name='const_psf',
+    )
+    if 'psf' in method_config:
+        const_psf.inputs.fwhm_x = const_psf.inputs.fwhm_y = const_psf.inputs.fwhm_z = method_config['psf']
+    else:
+        const_psf.inputs.fwhm_x = method_config.get('fwhm_x')
+        const_psf.inputs.fwhm_y = method_config.get('fwhm_y')
+        const_psf.inputs.fwhm_z = method_config.get('fwhm_z')
 
     resample_pet_to_petref = pe.Node(
             ApplyVolTransform(interp='nearest', reg_header=True),
@@ -264,6 +283,11 @@ def init_pet_pvc_wf(
                         ('psf_slice', 'psf_slice'),
                     ],
                 ),
+                (get_fwhm, outputnode, [
+                    ('psf_col', 'fwhm_x'),
+                    ('psf_row', 'fwhm_y'),
+                    ('psf_slice', 'fwhm_z'),
+                ]),
             ])
         else:
             workflow.connect([
@@ -278,6 +302,14 @@ def init_pet_pvc_wf(
                     ('subjects_dir', 'subjects_dir'),
                 ]),
                 (gtmseg_path_node, pvc_node, [('gtmseg_path', 'segmentation')]),
+            ])
+
+            workflow.connect([
+                (const_psf, outputnode, [
+                    ('fwhm_x', 'fwhm_x'),
+                    ('fwhm_y', 'fwhm_y'),
+                    ('fwhm_z', 'fwhm_z'),
+                ])
             ])
 
         # Conditional output based on method
@@ -310,6 +342,13 @@ def init_pet_pvc_wf(
                               ])
 
         workflow.connect([(pvc_node, outputnode, [('tissue_fraction', 'pet_pvc_mask')])])
+        workflow.connect([
+            (const_psf, outputnode, [
+                ('fwhm_x', 'fwhm_x'),
+                ('fwhm_y', 'fwhm_y'),
+                ('fwhm_z', 'fwhm_z'),
+            ])
+        ])
 
     else:
         raise ValueError(f'Unsupported method PVC ({method}) for PVC tool: {tool}')

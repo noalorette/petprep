@@ -49,6 +49,7 @@ from .outputs import (
     init_ds_pet_native_wf,
     init_ds_volumes_wf,
     prepare_timing_parameters,
+    build_psf_dict,
 )
 from .pvc import init_pet_pvc_wf
 from .ref_tacs import init_pet_ref_tacs_wf
@@ -374,6 +375,16 @@ configured with cubic B-spline interpolation.
             name='petref_t1w',
         )
 
+        psf_meta = pe.Node(
+            niu.Function(
+                input_names=['fwhm_x', 'fwhm_y', 'fwhm_z'],
+                output_names=['meta_dict'],
+                function=build_psf_dict,
+            ),
+            name='pvc_psf_meta',
+            run_without_submitting=True,
+        )
+
         workflow.connect([
             (pet_fit_wf, petref_t1w, [
                 ('outputnode.petref', 'input_image'),
@@ -390,6 +401,11 @@ configured with cubic B-spline interpolation.
                 ('outputnode.segmentation', 'inputnode.segmentation'),
             ]),
             (petref_t1w, pet_pvc_wf, [('output_image', 'inputnode.petref')]),
+            (pet_pvc_wf, psf_meta, [
+                ('outputnode.fwhm_x', 'fwhm_x'),
+                ('outputnode.fwhm_y', 'fwhm_y'),
+                ('outputnode.fwhm_z', 'fwhm_z'),
+            ]),
         ])  # fmt:skip
 
         pet_t1w_src = pet_pvc_wf
@@ -434,6 +450,15 @@ configured with cubic B-spline interpolation.
                 [('outputnode.resampling_reference', 'inputnode.ref_file')],
             ),
         ])  # fmt:skip
+
+        if run_pvc:
+            workflow.connect([
+                (pet_pvc_wf, ds_pet_t1_wf, [
+                    ('outputnode.fwhm_x', 'inputnode.fwhm_x'),
+                    ('outputnode.fwhm_y', 'inputnode.fwhm_y'),
+                    ('outputnode.fwhm_z', 'inputnode.fwhm_z'),
+                ]),
+            ])
 
     if spaces.cached.get_spaces(nonstandard=False, dim=(3,)):
         # Missing:
@@ -483,6 +508,15 @@ configured with cubic B-spline interpolation.
             ]),
         ])  # fmt:skip
 
+        if run_pvc:
+            workflow.connect([
+                (pet_pvc_wf, ds_pet_std_wf, [
+                    ('outputnode.fwhm_x', 'inputnode.fwhm_x'),
+                    ('outputnode.fwhm_y', 'inputnode.fwhm_y'),
+                    ('outputnode.fwhm_z', 'inputnode.fwhm_z'),
+                ]),
+            ])
+
         if not run_pvc:
             workflow.connect([
                 (pet_fit_wf, pet_std_wf, [
@@ -517,6 +551,15 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ]),
             (pet_t1w_src, pet_surf_wf, [(pet_t1w_field, 'inputnode.pet_t1w')]),
         ])  # fmt:skip
+
+        if run_pvc:
+            workflow.connect([
+                (pet_pvc_wf, pet_surf_wf, [
+                    ('outputnode.fwhm_x', 'inputnode.fwhm_x'),
+                    ('outputnode.fwhm_y', 'inputnode.fwhm_y'),
+                    ('outputnode.fwhm_z', 'inputnode.fwhm_z'),
+                ]),
+            ])
 
         # sources are pet_file, motion_xfm, petref2anat_xfm, fsnative2t1w_xfm
         merge_surface_sources = pe.Node(
@@ -613,6 +656,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.cifti_pet', 'in_file'),
                 (('outputnode.cifti_metadata', _read_json), 'meta_dict'),
             ]),
+            (psf_meta, ds_pet_cifti, [('meta_dict', 'meta_dict')]),
         ])  # fmt:skip
 
     pet_tacs_wf = init_pet_tacs_wf(
@@ -646,6 +690,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.dseg_tsv', 'inputnode.dseg_tsv'),
         ]),
         (pet_tacs_wf, ds_pet_tacs, [('outputnode.timeseries', 'in_file')]),
+        (psf_meta, ds_pet_tacs, [('meta_dict', 'meta_dict')]),
     ])  # fmt:skip
 
     if config.workflow.ref_mask_name:
@@ -677,6 +722,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (pet_t1w_src, pet_ref_tacs_wf, [(pet_t1w_field, 'inputnode.pet_anat')]),
             (pet_fit_wf, pet_ref_tacs_wf, [('outputnode.refmask', 'inputnode.mask_file')]),
             (pet_ref_tacs_wf, ds_ref_tacs, [('outputnode.timeseries', 'in_file')]),
+            (psf_meta, ds_ref_tacs, [('meta_dict', 'meta_dict')]),
         ])  # fmt:skip
 
     pet_confounds_wf = init_pet_confs_wf(

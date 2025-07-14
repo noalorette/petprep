@@ -237,3 +237,25 @@ def test_pet_ref_tacs_wf_connections(bids_root: Path):
         wf.get_node('pet_ref_tacs_wf'), wf.get_node('ds_ref_tacs')
     )
     assert ('outputnode.timeseries', 'in_file') in edge_ds['connect']
+
+
+def test_psf_metadata_propagation(bids_root: Path):
+    """PSF values should be passed to datasinks when using AGTM."""
+    pet_series = _prep_pet_series(bids_root)
+
+    with mock_config(bids_dir=bids_root):
+        config.workflow.pvc_tool = 'petsurfer'
+        config.workflow.pvc_method = 'AGTM'
+        config.workflow.pvc_psf = (1.0,)
+
+        wf = init_pet_wf(pet_series=pet_series, precomputed={})
+
+    edge = wf._graph.get_edge_data(
+        wf.get_node('pet_pvc_wf'), wf.get_node('ds_pet_t1_wf.psf_meta')
+    )
+    assert ('outputnode.fwhm_x', 'fwhm_x') in edge['connect']
+
+    edge_ds = wf._graph.get_edge_data(
+        wf.get_node('ds_pet_t1_wf.psf_meta'), wf.get_node('ds_pet_t1_wf.ds_pet')
+    )
+    assert ('meta_dict', 'meta_dict') in edge_ds['connect']

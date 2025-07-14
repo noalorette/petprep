@@ -33,6 +33,7 @@ from petprep import config
 from petprep.config import DEFAULT_MEMORY_MIN_GB
 from petprep.interfaces import DerivativesDataSink
 from petprep.interfaces.bids import BIDSURI
+from nipype.interfaces.base import Undefined
 
 
 def prepare_timing_parameters(metadata: dict):
@@ -73,6 +74,21 @@ def prepare_timing_parameters(metadata: dict):
     timing_parameters['SliceTimingCorrected'] = False
 
     return timing_parameters
+
+
+def build_psf_dict(fwhm_x=Undefined, fwhm_y=Undefined, fwhm_z=Undefined):
+    """Construct a metadata dictionary for PSF parameters."""
+    if (
+        fwhm_x is Undefined
+        or fwhm_y is Undefined
+        or fwhm_z is Undefined
+    ):
+        return {}
+    return {
+        'fwhm_x': float(fwhm_x),
+        'fwhm_y': float(fwhm_y),
+        'fwhm_z': float(fwhm_z),
+    }
 
 
 def init_func_fit_reports_wf(
@@ -705,6 +721,9 @@ def init_ds_volumes_wf(
                 'resolution',
                 # Transforms previously used to generate the outputs
                 'motion_xfm',
+                'fwhm_x',
+                'fwhm_y',
+                'fwhm_z',
             ]
         ),
         name='inputnode',
@@ -757,6 +776,7 @@ def init_ds_volumes_wf(
             ('resolution', 'resolution'),
         ]),
         (sources, ds_pet, [('out', 'Sources')]),
+        (psf_meta, ds_pet, [('meta_dict', 'meta_dict')]),
     ])  # fmt:skip
 
     resample_ref = pe.Node(
@@ -801,6 +821,24 @@ def init_ds_volumes_wf(
     )
     datasinks = [ds_ref, ds_mask]
 
+    psf_meta = pe.Node(
+        niu.Function(
+            input_names=['fwhm_x', 'fwhm_y', 'fwhm_z'],
+            output_names=['meta_dict'],
+            function=build_psf_dict,
+        ),
+        name='psf_meta',
+        run_without_submitting=True,
+        mem_gb=DEFAULT_MEMORY_MIN_GB,
+    )
+    workflow.connect([
+        (inputnode, psf_meta, [
+            ('fwhm_x', 'fwhm_x'),
+            ('fwhm_y', 'fwhm_y'),
+            ('fwhm_z', 'fwhm_z'),
+        ])
+    ])
+
     workflow.connect(
         [
             (inputnode, resampler, [('ref_file', 'reference_image')])
@@ -822,6 +860,9 @@ def init_ds_volumes_wf(
         ] + [
             (resampler, datasink, [('output_image', 'in_file')])
             for resampler, datasink in zip(resamplers, datasinks, strict=False)
+        ] + [
+            (psf_meta, datasink, [('meta_dict', 'meta_dict')])
+            for datasink in datasinks
         ]
     )  # fmt:skip
 
