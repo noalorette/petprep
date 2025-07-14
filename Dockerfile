@@ -77,6 +77,30 @@ RUN mkdir -p /opt/afni-latest \
         -name "3dAutomask" -or \
         -name "3dvolreg" \) -delete
 
+# PETPVC
+FROM downloader AS petpvc
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        git \
+        ca-certificates && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN mkdir -p /opt/ITK/BUILD && cd /opt/ITK && \
+    git clone -b 'release' --single-branch --depth=1 https://github.com/InsightSoftwareConsortium/ITK.git && \
+    cd /opt/ITK/BUILD && \
+    cmake -DBUILD_TESTING:BOOL=OFF -DModule_ITKReview:BOOL=ON -DCMAKE_BUILD_TYPE:STRING=Release /opt/ITK/ITK && \
+    make -j$(nproc)
+
+RUN mkdir -p /opt/PETPVC/BUILD && cd /opt/PETPVC && \
+    git clone https://github.com/UCL/PETPVC && \
+    cd BUILD && cmake -DCMAKE_BUILD_TYPE:STRING=Release -DITK_DIR=/opt/ITK/BUILD /opt/PETPVC/PETPVC && \
+    make -j$(nproc) && make install && ctest && cd / && \
+    rm -rf /opt/PETPVC /opt/ITK && \
+    apt-get purge -y --auto-remove build-essential cmake git && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 # Micromamba
 FROM downloader AS micromamba
 
@@ -165,6 +189,7 @@ RUN apt-get update -qq \
 # Install files from stages
 COPY --from=freesurfer /opt/freesurfer /opt/freesurfer
 COPY --from=afni /opt/afni-latest /opt/afni-latest
+COPY --from=petpvc /usr/local /usr/local
 
 # Simulate SetUpFreeSurfer.sh
 ENV OS="Linux" \
