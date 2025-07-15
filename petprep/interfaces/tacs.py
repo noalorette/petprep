@@ -54,6 +54,10 @@ class ExtractTACs(SimpleInterface):
 
         unique_labels = np.unique(segmentation_data)
         n_tp = pet_data.shape[-1]
+        if len(frame_times) != n_tp:
+            raise ValueError(
+                'Number of PET frames does not match FrameTimesStart/FrameDuration length'
+            )
 
         curves = {}
 
@@ -121,6 +125,12 @@ class ExtractRefTAC(SimpleInterface):
 
         if len(frame_times) != len(frame_durations):
             raise ValueError('FrameTimesStart and FrameDuration must have equal length')
+
+        n_tp = pet_data.shape[-1]
+        if len(frame_times) != n_tp:
+            raise ValueError(
+                'Number of PET frames does not match FrameTimesStart/FrameDuration length'
+            )
 
         timeseries = pet_data[mask, :].mean(axis=0)
         frame_times_end = np.add(frame_times, frame_durations).tolist()

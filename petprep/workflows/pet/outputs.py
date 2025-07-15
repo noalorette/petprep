@@ -75,6 +75,26 @@ def prepare_timing_parameters(metadata: dict):
     return timing_parameters
 
 
+def build_psf_dict(fwhm_x=None, fwhm_y=None, fwhm_z=None):
+    """Construct a metadata dictionary for PSF parameters."""
+    from nipype.interfaces.base import Undefined as _Undefined
+
+    if (
+        fwhm_x is None
+        or fwhm_y is None
+        or fwhm_z is None
+        or fwhm_x is _Undefined
+        or fwhm_y is _Undefined
+        or fwhm_z is _Undefined
+    ):
+        return {}
+    return {
+        'fwhm_x': float(fwhm_x),
+        'fwhm_y': float(fwhm_y),
+        'fwhm_z': float(fwhm_z),
+    }
+
+
 def init_func_fit_reports_wf(
     *,
     freesurfer: bool,
@@ -705,6 +725,10 @@ def init_ds_volumes_wf(
                 'resolution',
                 # Transforms previously used to generate the outputs
                 'motion_xfm',
+                # PSF parameters from PVC
+                'fwhm_x',
+                'fwhm_y',
+                'fwhm_z',
             ]
         ),
         name='inputnode',
@@ -719,6 +743,17 @@ def init_ds_volumes_wf(
         name='sources',
     )
     petref2target = pe.Node(niu.Merge(2), name='petref2target')
+
+    psf_meta = pe.Node(
+        niu.Function(
+            input_names=['fwhm_x', 'fwhm_y', 'fwhm_z'],
+            output_names=['meta_dict'],
+            function=build_psf_dict,
+        ),
+        name='psf_meta',
+        run_without_submitting=True,
+        mem_gb=DEFAULT_MEMORY_MIN_GB,
+    )
 
     # PET is pre-resampled
     ds_pet = pe.Node(
@@ -757,6 +792,7 @@ def init_ds_volumes_wf(
             ('resolution', 'resolution'),
         ]),
         (sources, ds_pet, [('out', 'Sources')]),
+        (psf_meta, ds_pet, [('meta_dict', 'meta_dict')]),
     ])  # fmt:skip
 
     resample_ref = pe.Node(
@@ -801,6 +837,14 @@ def init_ds_volumes_wf(
     )
     datasinks = [ds_ref, ds_mask]
 
+    workflow.connect([
+        (inputnode, psf_meta, [
+            ('fwhm_x', 'fwhm_x'),
+            ('fwhm_y', 'fwhm_y'),
+            ('fwhm_z', 'fwhm_z'),
+        ])
+    ])
+
     workflow.connect(
         [
             (inputnode, resampler, [('ref_file', 'reference_image')])
@@ -822,6 +866,9 @@ def init_ds_volumes_wf(
         ] + [
             (resampler, datasink, [('output_image', 'in_file')])
             for resampler, datasink in zip(resamplers, datasinks, strict=False)
+        ] + [
+            (psf_meta, datasink, [('meta_dict', 'meta_dict')])
+            for datasink in datasinks
         ]
     )  # fmt:skip
 
