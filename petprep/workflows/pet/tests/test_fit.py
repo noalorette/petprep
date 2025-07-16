@@ -250,7 +250,7 @@ def test_refmask_report_connections(bids_root: Path, tmp_path: Path):
         'inputnode.source_files',
     ) in seg_edge['connect']
 
-    assert 'pet_ref_tacs_wf' in wf.list_node_names()
+    assert any(name.startswith('pet_ref_tacs_wf') for name in wf.list_node_names())
     assert 'ds_ref_tacs' in wf.list_node_names()
     ds_tacs = wf.get_node('ds_ref_tacs')
     assert ds_tacs.inputs.ref == 'cerebellum'

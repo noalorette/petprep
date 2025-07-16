@@ -103,7 +103,7 @@ def test_pet_wf_with_pvc(bids_root: Path):
 
         wf = init_pet_wf(pet_series=pet_series, precomputed={})
 
-    assert 'pet_pvc_wf' in [n.split('.')[-1] for n in wf.list_node_names()]
+    assert any(n.startswith('pet_pvc_wf') for n in wf.list_node_names())
 
 
 def test_pet_wf_without_pvc(bids_root: Path):
@@ -113,7 +113,7 @@ def test_pet_wf_without_pvc(bids_root: Path):
     with mock_config(bids_dir=bids_root):
         wf = init_pet_wf(pet_series=pet_series, precomputed={})
 
-    assert 'pet_pvc_wf' not in [n.split('.')[-1] for n in wf.list_node_names()]
+    assert not any(n.startswith('pet_pvc_wf') for n in wf.list_node_names())
 
 
 def test_pvc_entity_added(bids_root: Path):
@@ -198,7 +198,7 @@ def test_pet_tacs_wf_connections(bids_root: Path):
     with mock_config(bids_dir=bids_root):
         wf = init_pet_wf(pet_series=pet_series, precomputed={})
 
-    assert 'pet_tacs_wf' in [n.split('.')[-1] for n in wf.list_node_names()]
+    assert any(n.startswith('pet_tacs_wf') for n in wf.list_node_names())
 
     edge_anat = wf._graph.get_edge_data(
         wf.get_node('pet_anat_wf'), wf.get_node('pet_tacs_wf')
@@ -225,7 +225,7 @@ def test_pet_ref_tacs_wf_connections(bids_root: Path):
         config.workflow.ref_mask_name = 'cerebellum'
         wf = init_pet_wf(pet_series=pet_series, precomputed={})
 
-    assert 'pet_ref_tacs_wf' in [n.split('.')[-1] for n in wf.list_node_names()]
+    assert any(n.startswith('pet_ref_tacs_wf') for n in wf.list_node_names())
 
     edge_anat = wf._graph.get_edge_data(
         wf.get_node('pet_anat_wf'), wf.get_node('pet_ref_tacs_wf')
