@@ -276,6 +276,8 @@ def test_psf_metadata_propagation(bids_root: Path):
     pet_series = _prep_pet_series(bids_root)
 
     with mock_config(bids_dir=bids_root):
+        config.execution.output_spaces = 'T1w'
+        config.init_spaces()
         config.workflow.pvc_tool = 'petsurfer'
         config.workflow.pvc_method = 'AGTM'
         config.workflow.pvc_psf = (1.0,)
