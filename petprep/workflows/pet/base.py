@@ -468,6 +468,15 @@ configured with cubic B-spline interpolation.
                             ('outputnode.fwhm_z', 'inputnode.fwhm_z'),
                         ],
                     ),
+                    (
+                        pet_pvc_wf,
+                        ds_pet_t1_wf.get_node('psf_meta'),
+                        [
+                            ('outputnode.fwhm_x', 'fwhm_x'),
+                            ('outputnode.fwhm_y', 'fwhm_y'),
+                            ('outputnode.fwhm_z', 'fwhm_z'),
+                        ],
+                    ),
                 ]
             )
 
