@@ -26,6 +26,9 @@ def test_pet_mask_flow(bids_root: Path, tmp_path: Path):
 
     for path in pet_series:
         img.to_filename(path)
+        Path(path).with_suffix('').with_suffix('.json').write_text(
+            '{"FrameTimesStart": [0], "FrameDuration": [1]}'
+        )
 
     with mock_config(bids_dir=bids_root):
         wf = init_pet_wf(
