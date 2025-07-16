@@ -177,7 +177,7 @@ def ctab_to_dsegtsv(ctab_file: str) -> str:
 
     ctab_file = Path(ctab_file)
     df = pd.read_csv(
-        ctab_file, header=None, delim_whitespace=True, usecols=[0, 1], names=['index', 'name']
+        ctab_file, header=None, sep=r'\s+', usecols=[0, 1], names=['index', 'name']
     )
     out_file = ctab_file.with_suffix('.tsv')
     df.to_csv(out_file, sep='\t', index=False)
