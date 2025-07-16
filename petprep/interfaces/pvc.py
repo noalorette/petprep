@@ -496,7 +496,12 @@ class GTMPVC(FSCommand):
 
     Examples
     --------
+    >>> from nipype.interfaces.base import traits
+    >>> traits.File.exists = False  # temporarily disable existence check
     >>> gtmpvc = GTMPVC()
+    >>> gtmpvc.inputs.trait('in_file').trait_type.exists = False
+    >>> gtmpvc.inputs.trait('segmentation').trait_type.exists = False
+    >>> gtmpvc.inputs.trait('reg_file').trait_type.exists = False
     >>> gtmpvc.inputs.in_file = 'sub-01_ses-baseline_pet.nii.gz'
     >>> gtmpvc.inputs.segmentation = 'gtmseg.mgz'
     >>> gtmpvc.inputs.reg_file = 'sub-01_ses-baseline_pet_mean_reg.lta'
