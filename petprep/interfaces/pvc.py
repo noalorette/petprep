@@ -82,15 +82,16 @@ class Binarise4DSegmentation(BaseInterface):
         return runtime
 
     def _list_outputs(self):
-        return {
-            'out_file': os.path.abspath(self.inputs.out_file),
-            'label_list': self._label_list
-        }
+        return {'out_file': os.path.abspath(self.inputs.out_file), 'label_list': self._label_list}
 
 
 class StackTissueProbabilityMapsInputSpec(BaseInterfaceInputSpec):
-    t1w_tpms = traits.List(File(exists=True), mandatory=True, desc='List of T1w tissue probability maps')
-    out_file = File('stacked_probseg.nii.gz', usedefault=True, desc='Output stacked 4D probability map')
+    t1w_tpms = traits.List(
+        File(exists=True), mandatory=True, desc='List of T1w tissue probability maps'
+    )
+    out_file = File(
+        'stacked_probseg.nii.gz', usedefault=True, desc='Output stacked 4D probability map'
+    )
 
 
 class StackTissueProbabilityMapsOutputSpec(TraitedSpec):
@@ -118,7 +119,9 @@ class StackTissueProbabilityMaps(BaseInterface):
 
 class CSVtoNiftiInputSpec(BaseInterfaceInputSpec):
     csv_file = File(exists=True, mandatory=True, desc='Input CSV file with region means')
-    reference_nifti = File(exists=True, mandatory=True, desc='Reference NIfTI file for spatial information')
+    reference_nifti = File(
+        exists=True, mandatory=True, desc='Reference NIfTI file for spatial information'
+    )
     label_list = traits.List(
         traits.Int,
         mandatory=True,
@@ -149,7 +152,9 @@ class CSVtoNifti(BaseInterface):
             mean_value = csv_data.iloc[idx + 1]['MEAN']  # skip background
             output_data[reference_data == label] = mean_value
 
-        output_img = nb.Nifti1Image(output_data, affine=reference_img.affine, header=reference_img.header)
+        output_img = nb.Nifti1Image(
+            output_data, affine=reference_img.affine, header=reference_img.header
+        )
         nb.save(output_img, os.path.abspath(self.inputs.out_file))
 
         return runtime
@@ -167,9 +172,7 @@ class GTMPVCInputSpec(FSTraitedSpec):
         desc='input volume - source data to pvc',
     )
 
-    frame = traits.Int(
-        argstr='--frame %i', desc='only process 0-based frame F from inputvol'
-    )
+    frame = traits.Int(argstr='--frame %i', desc='only process 0-based frame F from inputvol')
 
     psf = traits.Float(argstr='--psf %f', desc='scanner PSF FWHM in mm')
 
@@ -227,9 +230,7 @@ class GTMPVCInputSpec(FSTraitedSpec):
         desc='reduce FoV to encompass mask but force nc=nr and ns to be odd',
     )
 
-    contrast = InputMultiPath(
-        File(exists=True), argstr='--C %s...', desc='contrast file'
-    )
+    contrast = InputMultiPath(File(exists=True), argstr='--C %s...', desc='contrast file')
 
     default_seg_merge = traits.Bool(
         argstr='--default-seg-merge', desc='default schema for merging ROIs'
@@ -356,15 +357,11 @@ class GTMPVCInputSpec(FSTraitedSpec):
         desc='bpc scale dcf : steady-state analysis spec blood plasma concentration, unit scale and decay correction factor. You must also spec --km-ref. Turns off rescaling',
     )
 
-    X = traits.Bool(
-        argstr='--X', desc='save X matrix in matlab4 format as X.mat (it will be big)'
-    )
+    X = traits.Bool(argstr='--X', desc='save X matrix in matlab4 format as X.mat (it will be big)')
 
     y = traits.Bool(argstr='--y', desc='save y matrix in matlab4 format as y.mat')
 
-    beta = traits.Bool(
-        argstr='--beta', desc='save beta matrix in matlab4 format as beta.mat'
-    )
+    beta = traits.Bool(argstr='--beta', desc='save beta matrix in matlab4 format as beta.mat')
 
     X0 = traits.Bool(
         argstr='--X0',
@@ -425,9 +422,7 @@ class GTMPVCInputSpec(FSTraitedSpec):
         desc='optimal schema for merging ROIs when applying adaptive GTM',
     )
 
-    num_threads = traits.Int(
-        argstr='--threads %i', desc='threads : number of threads to use'
-    )
+    num_threads = traits.Int(argstr='--threads %i', desc='threads : number of threads to use')
 
     psf_col = traits.Float(
         argstr='--psf-col %f', desc='xFWHM : full-width-half-maximum in the x-direction'
@@ -452,17 +447,11 @@ class GTMPVCOutputSpec(TraitedSpec):
     gtm_file = File(desc='TACs for all regions with GTM PVC')
     gtm_stats = File(desc='Statistics for the GTM PVC')
     input_file = File(desc='4D PET file in native volume space')
-    tissue_fraction = File(
-        desc='Tissue fraction map in native volume space'
-    )
+    tissue_fraction = File(desc='Tissue fraction map in native volume space')
     reg_pet2anat = File(desc='Registration file to go from PET to anat')
     reg_anat2pet = File(desc='Registration file to go from anat to PET')
-    reg_rbvpet2anat = File(
-        desc='Registration file to go from RBV corrected PET to anat'
-    )
-    reg_anat2rbvpet = File(
-        desc='Registration file to go from anat to RBV corrected PET'
-    )
+    reg_rbvpet2anat = File(desc='Registration file to go from RBV corrected PET to anat')
+    reg_anat2rbvpet = File(desc='Registration file to go from anat to RBV corrected PET')
     mgx_ctxgm = File(
         desc='Cortical GM voxel-wise values corrected using the extended Muller-Gartner method',
     )
@@ -476,9 +465,7 @@ class GTMPVCOutputSpec(TraitedSpec):
         desc='All voxel-wise values corrected using the Muller-Gartner method',
     )
     rbv = File(desc='All GM voxel-wise values corrected using the RBV method')
-    opt_params = File(
-        desc='Optimal parameter estimates for the FWHM using adaptive GTM'
-    )
+    opt_params = File(desc='Optimal parameter estimates for the FWHM using adaptive GTM')
     yhat0 = File(desc='4D PET file of signal estimate (yhat) after PVC (unsmoothed)')
     yhat = File(
         desc='4D PET file of signal estimate (yhat) after PVC (smoothed with PSF)',

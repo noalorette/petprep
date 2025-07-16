@@ -4,10 +4,7 @@ from scipy.ndimage import gaussian_filter
 from skimage.morphology import ball, binary_dilation, binary_erosion
 
 
-def generate_reference_region(
-    seg_img: nib.Nifti1Image,
-    config: dict
-) -> nib.Nifti1Image:
+def generate_reference_region(seg_img: nib.Nifti1Image, config: dict) -> nib.Nifti1Image:
     """Generate a reference region using a flexible config.
 
     Config keys:

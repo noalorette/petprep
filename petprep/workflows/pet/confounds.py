@@ -343,9 +343,7 @@ the edge of the brain, as proposed by [@patriat_improved_2017].
         name='conf_corr_plot',
     )
     ds_report_conf_corr = pe.Node(
-        DerivativesDataSink(
-            desc='confoundcorr', datatype='figures'
-        ),
+        DerivativesDataSink(desc='confoundcorr', datatype='figures'),
         name='ds_report_conf_corr',
         run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB,
@@ -499,9 +497,7 @@ def init_carpetplot_wf(
         mem_gb=mem_gb,
     )
     ds_report_pet_conf = pe.Node(
-        DerivativesDataSink(
-            desc='carpetplot', datatype='figures', extension='svg'
-        ),
+        DerivativesDataSink(desc='carpetplot', datatype='figures', extension='svg'),
         name='ds_report_pet_conf',
         run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB,
@@ -655,6 +651,7 @@ def _second(inlist):
     """Return the second element of a list."""
 
     return inlist[1]
+
 
 def _select_cols(table):
     """Return confound columns excluding a/tCompCor and std_dvars."""

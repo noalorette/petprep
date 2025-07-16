@@ -24,14 +24,10 @@ def init_pet_ref_tacs_wf(*, name: str = 'pet_ref_tacs_wf') -> pe.Workflow:
     workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(
-        niu.IdentityInterface(
-            fields=['pet_anat', 'mask_file', 'metadata', 'ref_mask_name']
-        ),
+        niu.IdentityInterface(fields=['pet_anat', 'mask_file', 'metadata', 'ref_mask_name']),
         name='inputnode',
     )
-    outputnode = pe.Node(
-        niu.IdentityInterface(fields=['timeseries']), name='outputnode'
-    )
+    outputnode = pe.Node(niu.IdentityInterface(fields=['timeseries']), name='outputnode')
 
     resample_pet = pe.Node(
         Function(

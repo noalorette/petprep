@@ -79,6 +79,7 @@ def get_world_pedir(orientation: str, pe_dir: str) -> str:
 
     return f'{_ORI_TO_NAME[start]}-{_ORI_TO_NAME[end]}'
 
+
 SUBJECT_TEMPLATE = """\
 \t<ul class="elem-desc">
 \t\t<li>Subject ID: {subject_id}</li>

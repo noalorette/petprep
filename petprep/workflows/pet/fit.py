@@ -388,7 +388,6 @@ def init_pet_fit_wf(
     ds_petmask_wf.inputs.inputnode.source_files = [pet_file]
     workflow.connect([(merge_mask, ds_petmask_wf, [('out', 'inputnode.petmask')])])
 
-
     # Stage 4: Segmentation
     config.loggers.workflow.info(
         'PET Stage 4: Adding segmentation workflow using the segmentation: %s', config.workflow.seg

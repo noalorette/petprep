@@ -328,11 +328,7 @@ configured with cubic B-spline interpolation.
     pvc_tool = getattr(config.workflow, 'pvc_tool', None)
     pvc_method = getattr(config.workflow, 'pvc_method', None)
     pvc_psf = getattr(config.workflow, 'pvc_psf', None)
-    run_pvc = (
-        pvc_tool is not None
-        and pvc_method is not None
-        and pvc_psf is not None
-    )
+    run_pvc = pvc_tool is not None and pvc_method is not None and pvc_psf is not None
 
     if run_pvc:
         try:
@@ -347,9 +343,7 @@ configured with cubic B-spline interpolation.
             if len(psf_vals) == 1:
                 psf_vals = psf_vals * 3
             if len(psf_vals) != 3:
-                raise ValueError(
-                    'PETPVC requires one or three PSF values (FWHM x/y/z).'
-                )
+                raise ValueError('PETPVC requires one or three PSF values (FWHM x/y/z).')
             pvc_kwargs = {
                 'fwhm_x': psf_vals[0],
                 'fwhm_y': psf_vals[1],

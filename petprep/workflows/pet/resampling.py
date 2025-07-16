@@ -220,13 +220,19 @@ The PET time-series were resampled onto the following surfaces
         mem_gb=DEFAULT_MEMORY_MIN_GB,
     )
 
-    workflow.connect([
-        (inputnode, psf_meta, [
-            ('fwhm_x', 'fwhm_x'),
-            ('fwhm_y', 'fwhm_y'),
-            ('fwhm_z', 'fwhm_z'),
-        ])
-    ])
+    workflow.connect(
+        [
+            (
+                inputnode,
+                psf_meta,
+                [
+                    ('fwhm_x', 'fwhm_x'),
+                    ('fwhm_y', 'fwhm_y'),
+                    ('fwhm_z', 'fwhm_z'),
+                ],
+            )
+        ]
+    )
 
     workflow.connect([
         (inputnode, get_fsnative, [

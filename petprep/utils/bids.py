@@ -42,9 +42,7 @@ from ..data import load as load_data
 def _get_layout(derivatives_dir: Path) -> BIDSLayout:
     from petprep.data import load as load_data
 
-    return BIDSLayout(
-        derivatives_dir, config=[load_data('nipreps.json')], validate=False
-    )
+    return BIDSLayout(derivatives_dir, config=[load_data('nipreps.json')], validate=False)
 
 
 def collect_derivatives(

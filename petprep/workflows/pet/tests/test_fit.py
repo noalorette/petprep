@@ -77,9 +77,7 @@ def test_pet_fit_precomputes(
     img = nb.Nifti1Image(np.zeros((10, 10, 10, 10)), np.eye(4))
 
     if task == 'rest':
-        pet_series = [
-            str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')
-        ]
+        pet_series = [str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')]
 
     # The workflow will attempt to read file headers
     for path in pet_series:
@@ -123,7 +121,6 @@ def test_pet_fit_precomputes(
 
 
 @pytest.mark.parametrize('task', ['rest'])
-
 def test_pet_native_precomputes(
     bids_root: Path,
     tmp_path: Path,
@@ -137,9 +134,7 @@ def test_pet_native_precomputes(
     img = nb.Nifti1Image(np.zeros((10, 10, 10, 10)), np.eye(4))
 
     if task == 'rest':
-        pet_series = [
-            str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')
-        ]
+        pet_series = [str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')]
 
     # The workflow will attempt to read file headers
     for path in pet_series:
@@ -160,19 +155,14 @@ def test_pet_native_precomputes(
 
 def test_pet_fit_mask_connections(bids_root: Path, tmp_path: Path):
     """Ensure the PET mask is generated and connected correctly."""
-    pet_series = [
-        str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')
-    ]
+    pet_series = [str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')]
     img = nb.Nifti1Image(np.zeros((2, 2, 2, 1)), np.eye(4))
 
     for path in pet_series:
         img.to_filename(path)
 
     with mock_config(bids_dir=bids_root):
-        wf = init_pet_fit_wf(
-            pet_series=pet_series,
-            precomputed={},
-            omp_nthreads=1)
+        wf = init_pet_fit_wf(pet_series=pet_series, precomputed={}, omp_nthreads=1)
 
     assert 'merge_mask' in wf.list_node_names()
     assert 'ds_petmask_wf.ds_petmask' in wf.list_node_names()
@@ -187,19 +177,14 @@ def test_pet_fit_mask_connections(bids_root: Path, tmp_path: Path):
 
 def test_petref_report_connections(bids_root: Path, tmp_path: Path):
     """Ensure the PET reference is passed to the reports workflow."""
-    pet_series = [
-        str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')
-    ]
+    pet_series = [str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')]
     img = nb.Nifti1Image(np.zeros((2, 2, 2, 1)), np.eye(4))
 
     for path in pet_series:
         img.to_filename(path)
 
     with mock_config(bids_dir=bids_root):
-        wf = init_pet_fit_wf(
-            pet_series=pet_series,
-            precomputed={},
-            omp_nthreads=1)
+        wf = init_pet_fit_wf(pet_series=pet_series, precomputed={}, omp_nthreads=1)
 
     petref_buffer = wf.get_node('petref_buffer')
     edge = wf._graph.get_edge_data(petref_buffer, wf.get_node('func_fit_reports_wf'))
@@ -358,14 +343,9 @@ def test_init_refmask_report_wf(tmp_path: Path):
 def test_reports_spec_contains_refmask():
     """Check that the report specification includes the refmask reportlet."""
     for fname in ('reports-spec.yml', 'reports-spec-pet.yml'):
-        spec = yaml.safe_load(
-            (data.load.readable(fname)).read_text()
-        )
+        spec = yaml.safe_load((data.load.readable(fname)).read_text())
         pet_section = next(s for s in spec['sections'] if s['name'] == 'PET')
-        assert any(
-            r.get('bids', {}).get('desc') == 'refmask'
-            for r in pet_section['reportlets']
-        )
+        assert any(r.get('bids', {}).get('desc') == 'refmask' for r in pet_section['reportlets'])
 
 
 def test_refmask_reports_omitted(bids_root: Path, tmp_path: Path):

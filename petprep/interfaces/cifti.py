@@ -26,9 +26,7 @@ class _GeneratePetCiftiInputSpec(BaseInterfaceInputSpec):
         usedefault=True,
         desc='CIFTI surface target space',
     )
-    grayordinates = traits.Enum(
-        '91k', '170k', usedefault=True, desc='Final CIFTI grayordinates'
-    )
+    grayordinates = traits.Enum('91k', '170k', usedefault=True, desc='Final CIFTI grayordinates')
     surface_pets = traits.List(
         File(exists=True),
         mandatory=True,

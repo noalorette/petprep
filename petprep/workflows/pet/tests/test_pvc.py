@@ -20,7 +20,6 @@ def test_pvc_agtm_nodes(bids_root: Path):
     assert 'petsurfer_agtm_pvc_node' in names
 
 
-
 @pytest.fixture(scope='module')
 def bids_root(tmp_path_factory):
     base = tmp_path_factory.mktemp('pvc')

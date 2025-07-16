@@ -837,13 +837,19 @@ def init_ds_volumes_wf(
     )
     datasinks = [ds_ref, ds_mask]
 
-    workflow.connect([
-        (inputnode, psf_meta, [
-            ('fwhm_x', 'fwhm_x'),
-            ('fwhm_y', 'fwhm_y'),
-            ('fwhm_z', 'fwhm_z'),
-        ])
-    ])
+    workflow.connect(
+        [
+            (
+                inputnode,
+                psf_meta,
+                [
+                    ('fwhm_x', 'fwhm_x'),
+                    ('fwhm_y', 'fwhm_y'),
+                    ('fwhm_z', 'fwhm_z'),
+                ],
+            )
+        ]
+    )
 
     workflow.connect(
         [
@@ -994,11 +1000,13 @@ def init_refmask_report_wf(
         mem_gb=config.DEFAULT_MEMORY_MIN_GB,
     )
 
-    workflow.connect([
-        (inputnode, mask_report, [('petref', 'background_file'), ('refmask', 'mask_file')]),
-        (inputnode, ds_mask_report, [('source_file', 'source_file')]),
-        (mask_report, ds_mask_report, [('out_report', 'in_file')]),
-        (mask_report, outputnode, [('out_report', 'refmask_report')]),
-    ])
+    workflow.connect(
+        [
+            (inputnode, mask_report, [('petref', 'background_file'), ('refmask', 'mask_file')]),
+            (inputnode, ds_mask_report, [('source_file', 'source_file')]),
+            (mask_report, ds_mask_report, [('out_report', 'in_file')]),
+            (mask_report, outputnode, [('out_report', 'refmask_report')]),
+        ]
+    )
 
     return workflow

@@ -25,9 +25,9 @@ output_dir = Path('test_refmask_output')  # output directory
 output_dir.mkdir(exist_ok=True)
 
 # Workflow configuration
-segmentation = 'gtm'                             # matches top-level key in config.json
-ref_mask_name = 'cerebellum'                     # matches inner key under segmentation
-ref_mask_index = [8, 47]                            # OR: ref_mask_index = [3, 42]
+segmentation = 'gtm'  # matches top-level key in config.json
+ref_mask_name = 'cerebellum'  # matches inner key under segmentation
+ref_mask_index = [8, 47]  # OR: ref_mask_index = [3, 42]
 
 # Initialize workflow
 wf = init_pet_refmask_wf(
@@ -35,7 +35,7 @@ wf = init_pet_refmask_wf(
     ref_mask_name=ref_mask_name,
     ref_mask_index=ref_mask_index,
     config_path=config_file,
-    name='test_refmask_wf'
+    name='test_refmask_wf',
 )
 
 # Provide the segmentation file as input

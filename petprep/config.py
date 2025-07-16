@@ -205,7 +205,7 @@ except Exception:  # noqa: S110, BLE001
 
 # Debug modes are names that influence the exposure of internal details to
 # the user, either through additional derivatives or increased verbosity
-DEBUG_MODES = ('pdb','debug')
+DEBUG_MODES = ('pdb', 'debug')
 
 
 class _Config:
@@ -612,6 +612,7 @@ class workflow(_Config):
 
     ref_mask_index: tuple | None = None
     """Tuple of label indices used to build the reference mask."""
+
 
 class loggers:
     """Keep loggers easily accessible (see :py:func:`init`)."""

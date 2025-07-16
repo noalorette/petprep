@@ -26,9 +26,7 @@ def init_pet_tacs_wf(*, name: str = 'pet_tacs_wf') -> pe.Workflow:
     workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(
-        niu.IdentityInterface(
-            fields=['pet_anat', 'segmentation', 'dseg_tsv', 'metadata']
-        ),
+        niu.IdentityInterface(fields=['pet_anat', 'segmentation', 'dseg_tsv', 'metadata']),
         name='inputnode',
     )
     outputnode = pe.Node(niu.IdentityInterface(fields=['timeseries']), name='outputnode')

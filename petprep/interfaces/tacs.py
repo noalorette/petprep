@@ -92,9 +92,7 @@ class ExtractTACs(SimpleInterface):
 
 class _ExtractRefTACInputSpec(BaseInterfaceInputSpec):
     in_file = File(exists=True, mandatory=True, desc='PET file in anatomical space')
-    mask_file = File(
-        exists=True, mandatory=True, desc='Reference mask in anatomical space'
-    )
+    mask_file = File(exists=True, mandatory=True, desc='Reference mask in anatomical space')
     ref_mask_name = traits.Str(mandatory=True, desc='Name of reference region')
     metadata = File(exists=True, mandatory=True, desc='PET JSON metadata file')
 

@@ -184,9 +184,7 @@ def test_ExtractRefTAC(tmp_path):
     nb.Nifti1Image(mask_data, np.eye(4)).to_filename(mask_file)
 
     meta_json = tmp_path / 'pet.json'
-    meta_json.write_text(
-        json.dumps({'FrameTimesStart': [0, 1], 'FrameDuration': [1, 1]})
-    )
+    meta_json.write_text(json.dumps({'FrameTimesStart': [0, 1], 'FrameDuration': [1, 1]}))
 
     node = pe.Node(
         ExtractRefTAC(
