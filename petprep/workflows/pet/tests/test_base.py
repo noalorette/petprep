@@ -48,17 +48,8 @@ def test_pet_wf(
     output_dir = tmp_path / 'output'
     output_dir.mkdir()
 
-    img = nb.Nifti1Image(np.zeros((10, 10, 10, 10)), np.eye(4))
-
     if task == 'rest':
-        pet_series = [
-            str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz'),
-        ]
-
-
-    # The workflow will attempt to read file headers
-    for path in pet_series:
-        img.to_filename(path)
+        pet_series = _prep_pet_series(bids_root)
 
     # Toggle running recon-all
     freesurfer = bool(freesurfer)
