@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from nilearn.image import resample_to_img
 from nipype.interfaces import utility as niu
 from nipype.interfaces.utility import Function
 from nipype.pipeline import engine as pe
@@ -11,8 +10,9 @@ from ...interfaces import ExtractTACs
 def resample_pet_to_segmentation(pet_file, segmentation_file):
     """Resample the PET image to the segmentation space."""
 
-    from nilearn.image import resample_to_img
     import os
+
+    from nilearn.image import resample_to_img
 
     resampled_pet = resample_to_img(pet_file, segmentation_file, interpolation='continuous')
     out_file = os.path.abspath('pet_resampled.nii.gz')
