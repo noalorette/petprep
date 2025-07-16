@@ -219,6 +219,11 @@ def test_pet_tacs_wf_connections(bids_root: Path):
     pet_series = _prep_pet_series(bids_root)
 
     with mock_config(bids_dir=bids_root):
+        config.execution.output_spaces = 'T1w'
+        config.init_spaces()
+        config.workflow.pvc_tool = None
+        config.workflow.pvc_method = None
+        config.workflow.pvc_psf = None
         wf = init_pet_wf(pet_series=pet_series, precomputed={})
 
     assert any(n.startswith('pet_tacs_wf') for n in wf.list_node_names())
