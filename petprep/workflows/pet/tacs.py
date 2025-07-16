@@ -20,7 +20,7 @@ def resample_pet_to_segmentation(pet_file, segmentation_file):
     return out_file
 
 
-def init_pet_tacs_wf(*, output_dir: str, metadata: dict, name: str = 'pet_tacs_wf') -> pe.Workflow:
+def init_pet_tacs_wf(*, name: str = 'pet_tacs_wf') -> pe.Workflow:
     """Extract time activity curves from a segmentation."""
 
     workflow = pe.Workflow(name=name)
