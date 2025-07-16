@@ -84,6 +84,8 @@ def _prep_pet_series(bids_root: Path) -> list[str]:
     img = nb.Nifti1Image(np.zeros((10, 10, 10, 10)), np.eye(4))
     for path in pet_series:
         img.to_filename(path)
+        sidecar = Path(path).with_suffix('').with_suffix('.json')
+        sidecar.write_text('{"FrameTimesStart": [0], "FrameDuration": [1]}')
     return pet_series
 
 

@@ -87,9 +87,6 @@ def test_pet_fit_precomputes(
         Path(path).with_suffix('').with_suffix('.json').write_text(
             '{"FrameTimesStart": [0], "FrameDuration": [1]}'
         )
-        Path(path).with_suffix('').with_suffix('.json').write_text(
-            '{"FrameTimesStart": [0], "FrameDuration": [1]}'
-        )
 
     dummy_nifti = str(tmp_path / 'dummy.nii')
     dummy_affine = str(tmp_path / 'dummy.txt')
