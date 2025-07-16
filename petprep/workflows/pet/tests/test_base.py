@@ -111,6 +111,9 @@ def test_pet_wf_without_pvc(bids_root: Path):
     pet_series = _prep_pet_series(bids_root)
 
     with mock_config(bids_dir=bids_root):
+        config.workflow.pvc_tool = None
+        config.workflow.pvc_method = None
+        config.workflow.pvc_psf = None
         wf = init_pet_wf(pet_series=pet_series, precomputed={})
 
     assert not any(n.startswith('pet_pvc_wf') for n in wf.list_node_names())
