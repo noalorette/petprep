@@ -77,7 +77,10 @@ def bids_root(tmp_path_factory):
     img.to_filename(pet_path)
 
     # Add metadata explicitly
-    metadata = {}
+    metadata = {
+        'FrameTimesStart': [0],
+        'FrameDuration': [1],
+    }
     json_path = pet_dir / 'sub-01_pet.json'
     json_path.write_text(json.dumps(metadata))
 
