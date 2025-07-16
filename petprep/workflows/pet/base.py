@@ -479,6 +479,12 @@ configured with cubic B-spline interpolation.
                     ),
                 ]
             )
+            workflow.connect(
+                ds_pet_t1_wf.get_node('psf_meta'),
+                'meta_dict',
+                ds_pet_t1_wf.get_node('ds_pet'),
+                'meta_dict',
+            )
 
     if spaces.cached.get_spaces(nonstandard=False, dim=(3,)):
         # Missing:
