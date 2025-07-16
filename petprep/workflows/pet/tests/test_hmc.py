@@ -37,6 +37,6 @@ def test_update_list_transforms_empty():
 def test_init_pet_hmc_wf_nodes():
     wf = init_pet_hmc_wf(mem_gb=1, omp_nthreads=1)
     names = wf.list_node_names()
-    assert 'pet_hmc_wf.split_frames' in names
-    assert 'pet_hmc_wf.est_robust_hmc' in names
-    assert 'pet_hmc_wf.convert_ref' in names
+    assert 'split_frames' in names
+    assert 'est_robust_hmc' in names
+    assert 'convert_ref' in names
