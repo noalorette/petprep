@@ -1,4 +1,5 @@
 import copy
+import inspect
 import json
 from pathlib import Path
 from unittest.mock import patch
@@ -185,12 +186,18 @@ def test_init_petprep_wf(
         with patch.dict('petprep.config.execution.bids_filters', bids_filters):
             # Patch the correct function with the correct return value explicitly
             with patch('niworkflows.utils.bids.collect_data') as mock_collect_data:
+                params = inspect.signature(original_collect_data).parameters
+                kwargs = {
+                    'bids_filters': bids_filters,
+                    'queries': custom_queries,
+                }
+                if 'require_pet' in params:
+                    kwargs['require_pet'] = True
+
                 mock_collect_data.return_value = original_collect_data(
                     bids_root,
                     '01',
-                    require_pet=True,
-                    bids_filters=bids_filters,
-                    queries=custom_queries,
+                    **kwargs,
                 )
 
                 wf = init_petprep_wf()
