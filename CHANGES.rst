@@ -958,7 +958,7 @@ A full list of changes can be found below.
       11. Department of Psychology, University of California, Berkeley
       12. Child Mind Institute
       13. Department of Psychology, Columbia University
-      14. Department of Radiology, Weill Cornell Medicine
+      14. Department of Radiology, Cornell Medicine
       15. McLean Hospital Brain Imaging Center, MA, USA
       16. Consolidated Department of Psychiatry, Harvard Medical School, MA, USA
       17. CENIR, INSERM U1127, CNRS UMR 7225, UPMC Univ Paris 06 UMR S 1127, Institut du Cerveau et de la Moelle épinière, ICM, F-75013, Paris, France
