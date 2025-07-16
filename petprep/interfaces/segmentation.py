@@ -147,6 +147,7 @@ class MRISclimbicSeg(CommandLine):
         expected = [outputs['out_file'], outputs['out_stats']]
 
         if all(os.path.exists(f) for f in expected):
+            runtime.returncode = 0
             return runtime
 
         return super()._run_interface(runtime)
@@ -196,6 +197,7 @@ class SegmentHA_T1(FSCommand):
         ]
 
         if all(os.path.exists(os.path.join(fs_path, f)) for f in expected):
+            runtime.returncode = 0
             return runtime
 
         cmd = CommandLine(
@@ -327,6 +329,7 @@ class SegmentGTM(GTMSeg):
         stats_file = subj_dir / 'stats' / Path(self.inputs.out_file).with_suffix('.stats').name
 
         if seg_file.exists() and stats_file.exists():
+            runtime.returncode = 0
             return runtime
 
         return super()._run_interface(runtime)
