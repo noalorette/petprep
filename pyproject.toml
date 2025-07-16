@@ -149,6 +149,7 @@ junit_family = "xunit2"
 
 [tool.ruff]
 line-length = 99
+exclude = ["notebooks/*"]
 
 [tool.ruff.lint]
 extend-select = [
