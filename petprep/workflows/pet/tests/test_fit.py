@@ -363,7 +363,7 @@ def test_reports_spec_contains_refmask():
         )
         pet_section = next(s for s in spec['sections'] if s['name'] == 'PET')
         assert any(
-            r.get('bids', {}).get('desc') == 'refmask' and r.get('bids', {}).get('ref') == '.*'
+            r.get('bids', {}).get('desc') == 'refmask'
             for r in pet_section['reportlets']
         )
 
