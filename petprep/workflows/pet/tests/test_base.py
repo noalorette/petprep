@@ -124,6 +124,7 @@ def test_pvc_entity_added(bids_root: Path):
     pet_series = _prep_pet_series(bids_root)
 
     with mock_config(bids_dir=bids_root):
+        config.workflow.spaces = 'T1w'
         config.workflow.pvc_tool = 'PETPVC'
         config.workflow.pvc_method = 'GTM'
         config.workflow.pvc_psf = (1.0, 1.0, 1.0)
