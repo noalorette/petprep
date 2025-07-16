@@ -5,22 +5,23 @@ Created on Thu Jun 26 15:52:39 2025
 @author: martinnorgaard
 """
 
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jun 24 09:45:55 2025
-
-@author: martinnorgaard
-"""
+# Created on Tue Jun 24 09:45:55 2025
+# @author: martinnorgaard
 
 from pathlib import Path
 
 from petprep.workflows.reference_mask import init_pet_refmask_wf
 
 # Test input paths
-seg_file = '/Users/martinnorgaard/Dropbox/Mac/Desktop/ses-baseline/test_pvc/sub-010_ses-baseline_desc-gtm_dseg.nii.gz'      # <-- update this path
-config_file = '/Users/martinnorgaard/Dropbox/Mac/Documents/GitHub/petprep/petprep/data/reference_mask/config.json'            # <-- update this path
-output_dir = Path('test_refmask_output')        # output directory
+seg_file = (
+    '/Users/martinnorgaard/Dropbox/Mac/Desktop/ses-baseline/test_pvc/'
+    'sub-010_ses-baseline_desc-gtm_dseg.nii.gz'
+)  # <-- update this path
+config_file = (
+    '/Users/martinnorgaard/Dropbox/Mac/Documents/GitHub/'
+    'petprep/petprep/data/reference_mask/config.json'
+)  # <-- update this path
+output_dir = Path('test_refmask_output')  # output directory
 output_dir.mkdir(exist_ok=True)
 
 # Workflow configuration
