@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "petprep"
-description = "A robust and easy-to-use pipeline for preprocessing of diverse fMRI data"
+description = "A robust and easy-to-use pipeline for preprocessing of PET data"
 readme = "long_description.rst"
 authors = [{name = "The NiPreps Developers", email = "nipreps@gmail.com"}]
 classifiers = [
