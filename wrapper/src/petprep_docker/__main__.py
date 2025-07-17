@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 """
-The *fMRIPrep* on Docker wrapper
+The *PETPrep* on Docker wrapper
 
-This is a lightweight Python wrapper to run *fMRIPrep*.
+This is a lightweight Python wrapper to run *PETPrep*.
 Docker must be installed and running. This can be checked
 running ::
 
   docker info
 
-Please acknowledge this work using the citation boilerplate that *fMRIPrep* includes
+Please acknowledge this work using the citation boilerplate that *PETPrep* includes
 in the visual report generated for every subject processed.
 For a more detailed description of the citation boilerplate and its relevance,
 please check out the
 `NiPreps documentation <https://www.nipreps.org/intro/transparency/#citation-boilerplates>`__.
-Please report any feedback to our `GitHub repository <https://github.com/nipreps/fmriprep>`__.
+Please report any feedback to our `GitHub repository <https://github.com/nipreps/petprep>`__.
 """
 
 import os
@@ -26,13 +26,13 @@ try:
 except ImportError:
     __version__ = '0+unknown'
 
-__bugreports__ = 'https://github.com/nipreps/fmriprep/issues'
+__bugreports__ = 'https://github.com/nipreps/petprep/issues'
 
 
 MISSING = """
 Image '{}' is missing
 Would you like to download? [Y/n] """
-PKG_PATH = '/opt/conda/envs/fmriprep/lib/python3.10/site-packages'
+PKG_PATH = '/opt/conda/envs/petprep/lib/python3.10/site-packages'
 TF_TEMPLATES = (
     'MNI152Lin',
     'MNI152NLin2009cAsym',
@@ -137,8 +137,8 @@ def merge_help(wrapper_help, target_help):
         """
         Extract positional arguments from usage string.
 
-        This function can be used by both native fmriprep (`fmriprep -h`)
-        and the docker wrapper (`fmriprep-docker -h`).
+        This function can be used by both native petprep (`petprep -h`)
+        and the docker wrapper (`petprep-docker -h`).
         """
         posargs = []
         for targ in usage.split('\n')[-3:]:
@@ -271,7 +271,7 @@ def get_parser():
 
     IsFile = partial(_is_file, parser=parser)
 
-    # Standard FMRIPREP arguments
+    # Standard PETPrep arguments
     parser.add_argument('bids_dir', nargs='?', type=os.path.abspath, default='')
     parser.add_argument('output_dir', nargs='?', type=os.path.abspath, default='')
     parser.add_argument(
@@ -291,7 +291,7 @@ def get_parser():
         '--image',
         metavar='IMG',
         type=str,
-        default='nipreps/fmriprep:{}'.format(__version__),
+        default='nipreps/petprep:{}'.format(__version__),
         help='image name',
     )
 
@@ -299,7 +299,7 @@ def get_parser():
     # Update `expected_overlap` variable in merge_help() when adding to this
     g_wrap = parser.add_argument_group(
         'Wrapper options',
-        'Standard options that require mapping files into the container; see fmriprep '
+        'Standard options that require mapping files into the container; see petprep '
         'usage for complete descriptions',
     )
     g_wrap.add_argument(
@@ -357,7 +357,7 @@ def get_parser():
 
     # Developer patch/shell options
     g_dev = parser.add_argument_group(
-        'Developer options', 'Tools for testing and debugging FMRIPREP'
+        'Developer options', 'Tools for testing and debugging PETPrep'
     )
     g_dev.add_argument(
         '--patch',
@@ -368,7 +368,7 @@ def get_parser():
         'container Python environment.',
     )
     g_dev.add_argument(
-        '--shell', action='store_true', help='Open shell in image instead of running FMRIPREP'
+        '--shell', action='store_true', help='Open shell in image instead of running PETPrep'
     )
     g_dev.add_argument(
         '--config',
@@ -418,20 +418,20 @@ def main():
     check = check_docker()
     if check < 1:
         if opts.version:
-            print('fmriprep wrapper {!s}'.format(__version__))
+            print('petprep wrapper {!s}'.format(__version__))
         if opts.help:
             parser.print_help()
         if check == -1:
-            print('fmriprep: Could not find docker command... Is it installed?')
+            print('petprep: Could not find docker command... Is it installed?')
         else:
-            print("fmriprep: Make sure you have permission to run 'docker'")
+            print("petprep: Make sure you have permission to run 'docker'")
         return 1
 
     # For --help or --version, ask before downloading an image
     if not check_image(opts.image):
         resp = 'Y'
         if opts.version:
-            print('fmriprep wrapper {!s}'.format(__version__))
+            print('petprep wrapper {!s}'.format(__version__))
         if opts.help:
             parser.print_help()
         if opts.version or opts.help:
@@ -455,7 +455,7 @@ def main():
     if not (opts.help or opts.version or '--reports-only' in unknown_args) and mem_total < 8000:
         print(
             'Warning: <8GB of RAM is available within your Docker '
-            'environment.\nSome parts of fMRIPrep may fail to complete.'
+            'environment.\nSome parts of PETPrep may fail to complete.'
         )
         if '--mem_mb' not in unknown_args:
             resp = 'N'
@@ -537,7 +537,7 @@ def main():
             return 1
 
     if opts.config:
-        command.extend(['-v', ':'.join((opts.config, '/home/fmriprep/.nipype/nipype.cfg', 'ro'))])
+        command.extend(['-v', ':'.join((opts.config, '/home/petprep/.nipype/nipype.cfg', 'ro'))])
 
     if opts.use_plugin:
         command.extend(['-v', ':'.join((opts.use_plugin, '/tmp/plugin.yml', 'ro'))])
@@ -558,7 +558,7 @@ def main():
                 tpl = os.path.basename(space)
                 if not tpl.startswith('tpl-'):
                     raise RuntimeError('Custom template %s requires a `tpl-` prefix' % tpl)
-                target = '/home/fmriprep/.cache/templateflow/' + tpl
+                target = '/home/petprep/.cache/templateflow/' + tpl
                 command.extend(['-v', ':'.join((os.path.abspath(space), target, 'ro'))])
                 spaces.append(tpl[4:])
             else:
@@ -593,7 +593,7 @@ def main():
     print('RUNNING: ' + ' '.join(command))
     ret = subprocess.run(command)
     if ret.returncode:
-        print('fMRIPrep: Please report errors to {}'.format(__bugreports__))
+        print('PETPrep: Please report errors to {}'.format(__bugreports__))
     return ret.returncode
 
 
