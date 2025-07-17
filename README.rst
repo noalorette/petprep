@@ -33,7 +33,7 @@ graph theory measures, and surface or volume-based statistics.
 .. note::
 
    *PETPrep* performs minimal preprocessing.
-   Here we define 'minimal preprocessing'  as motion correction, generation of PET reference image, 
+   Here we define 'minimal preprocessing'  as motion correction, generation of a 3D PET reference image, 
    normalization, and brain mask extraction.
    See the `workflows section of our documentation
    <https://petprep.readthedocs.io/en/latest/workflows.html>`__ for more details.
