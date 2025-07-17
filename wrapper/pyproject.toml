@@ -34,7 +34,7 @@ Paper = "https://doi.org/10.1038/s41592-018-0235-4"
 NiPreps = "https://www.nipreps.org/"
 
 [project.scripts]
-fmriprep-docker = "fmriprep_docker.__main__:main"
+petprep-docker = "petprep_docker.__main__:main"
 
 #
 # Build tool configurations
@@ -101,7 +101,7 @@ inline-quotes = "single"
 
 [tool.ruff.lint.extend-per-file-ignores]
 "*/test_*.py" = ["S101"]
-"fmriprep/utils/debug.py" = ["A002", "T100"]
+"petprep/utils/debug.py" = ["A002", "T100"]
 "docs/conf.py" = ["A001"]
 
 [tool.ruff.format]
