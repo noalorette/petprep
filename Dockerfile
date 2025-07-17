@@ -1,4 +1,4 @@
-# fMRIPrep Docker Container Image distribution
+# PETPrep Docker Container Image distribution
 #
 # MIT License
 #
@@ -132,7 +132,7 @@ RUN npm install -g svgo@^3.2.0 bids-validator@1.14.10 && \
 #
 # Main stage
 #
-FROM ${BASE_IMAGE} AS fmriprep
+FROM ${BASE_IMAGE} AS petprep
 
 # Configure apt
 ENV DEBIAN_FRONTEND="noninteractive" \
@@ -168,9 +168,8 @@ RUN apt-get update -qq \
            libglw1-mesa \
            libgomp1 \
            libjpeg62 \
-           libpng12-0 \
+           libpng16-16 \
            libxm4 \
-           libxp6 \
            netpbm \
            tcsh \
            xfonts-base \
