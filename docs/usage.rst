@@ -5,7 +5,7 @@
 Usage Notes
 ===========
 .. warning::
-   As of *PETPrep* 1.0.12, the software includes a tracking system
+   As of *PETPrep* 0.0.1, the software includes a tracking system
    to report usage statistics and errors. Users can opt-out using
    the ``--notrack`` command line argument.
 
@@ -16,7 +16,7 @@ The *PETPrep* workflow takes as principal input the path of the dataset
 that is to be processed.
 The input dataset is required to be in valid :abbr:`BIDS (Brain Imaging Data
 Structure)` format, and it must include at least one T1w structural image and
-(unless disabled with a flag) a BOLD series.
+(unless disabled with a flag) a PET scan.
 We highly recommend that you validate your dataset with the free, online
 `BIDS Validator <https://bids-standard.github.io/bids-validator/>`_.
 
