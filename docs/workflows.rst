@@ -321,9 +321,9 @@ subgraph:
     from petprep import config
     from petprep.workflows.pet.fit import init_pet_fit_wf
     with mock_config():
-        bold_file = config.execution.bids_dir / 'sub-01' / 'func' \
-            / 'sub-01_task-mixedgamblestask_run-01_bold.nii.gz'
-        wf = init_pet_fit_wf(bold_series=[str(bold_file)], fieldmap_id="fmap")
+        pet_file = config.execution.bids_dir / 'sub-01' / 'pet' \
+            / 'sub-01_task-mixedgamblestask_pet.nii.gz'
+        wf = init_pet_fit_wf(pet_series=[str(pet_file)])
 
 Preprocessing of :abbr:`PET (positron emission tomography)` files is
 split into multiple sub-workflows described below.
