@@ -227,13 +227,13 @@ def test_refmask_report_connections(bids_root: Path, tmp_path: Path):
     edge = wf._graph.get_edge_data(wf.get_node('outputnode'), reports_node)
     assert ('refmask', 'inputnode.refmask') in edge['connect']
 
-    seg_node = wf.get_node(f'pet_{config.workflow.seg}_seg_wf')
+    petref_buffer_node = wf.get_node('petref_buffer')
     ds_refmask = wf.get_node('ds_refmask_wf')
-    seg_edge = wf._graph.get_edge_data(seg_node, ds_refmask)
+    petref_edge = wf._graph.get_edge_data(petref_buffer_node, ds_refmask)
     assert (
-        'outputnode.segmentation',
+        'pet_file',
         'inputnode.source_files',
-    ) in seg_edge['connect']
+    ) in petref_edge['connect']
 
     assert any(name.startswith('pet_ref_tacs_wf') for name in wf.list_node_names())
     assert 'ds_ref_tacs' in wf.list_node_names()
