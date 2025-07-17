@@ -20,9 +20,9 @@ upcoming `BEP 011`_ and `BEP 012`_).
    have been applied.
    For example, :abbr:`INU (intensity non-uniformity)`-corrected versions
    of the T1-weighted image (per subject), the brain mask,
-   or :abbr:`BOLD (blood-oxygen level dependent)`
-   images after head-motion correction, slice-timing correction and aligned into
-   the same-subject's T1w space or in some standard space.
+   or dynamic PET series after motion correction (and optional partial volume
+   correction) aligned into the same-subject's T1w space or in some
+   standard space.
 
 3. **Confounds**: this is a special family of derivatives that can be utilized
    to inform subsequent denoising steps.
@@ -356,21 +356,16 @@ also included.
 
 Confounds
 ---------
-The :abbr:`BOLD (blood-oxygen level dependent)` signal measured with fMRI is a mixture of fluctuations
-of both neuronal and non-neuronal origin.
-Neuronal signals are measured indirectly as changes in the local concentration of oxygenated hemoglobin.
-Non-neuronal fluctuations in fMRI data may appear as a result of head motion, scanner noise,
-or physiological fluctuations (related to cardiac or respiratory effects).
-For a detailed review of the possible sources of noise in the BOLD signal, refer to [Greve2013]_.
+The PET signal is a mixture of fluctuations of both neuronal and non-neuronal origin.
+Non-neuronal fluctuations in PET data may appear as a result of head motion or scanner noise.
 
 *Confounds* (or nuisance regressors) are variables representing fluctuations with a potential
 non-neuronal origin.
-Such non-neuronal fluctuations may drive spurious results in fMRI data analysis,
-including standard activation :abbr:`GLM (General Linear Model)` and functional connectivity analyses.
+Such non-neuronal fluctuations may drive spurious results in PET data analysis.
 It is possible to minimize confounding effects of non-neuronal signals by including
 them as nuisance regressors in the GLM design matrix or regressing them out from
-the fMRI data - a procedure known as *denoising*.
-There is currently no consensus on an optimal denoising strategy in the fMRI community.
+the PET data - a procedure known as *denoising*.
+There is currently no consensus on an optimal denoising strategy in the PET community.
 Rather, different strategies have been proposed, which achieve different compromises between
 how much of the non-neuronal fluctuations are effectively removed, and how much of neuronal fluctuations
 are damaged in the process.
@@ -378,8 +373,8 @@ The *PETPrep* pipeline generates a large array of possible confounds.
 
 The most well established confounding variables in neuroimaging are the six head-motion parameters
 (three rotations and three translations) - the common output of the head-motion correction
-(also known as *realignment*) of popular fMRI preprocessing software
-such as SPM_ or FSL_.
+(also known as *realignment*) of popular PET preprocessing software
+such as SPM_ or FreeSurfer_.
 Beyond the standard head-motion parameters, the PETPrep pipeline generates a large array
 of possible confounds, which enable researchers to choose the most suitable denoising
 strategy for their downstream analyses.
@@ -392,7 +387,7 @@ Such tabular files may include over 100 columns of potential confound regressors
    Do not include all columns of ``~_desc-confounds_timeseries.tsv`` table
    into your design matrix or denoising procedure.
    Filter the table first, to include only the confounds (or components thereof)
-   you want to remove from your fMRI signal.
+   you want to remove from your PET signal.
    The choice of confounding variables may depend on the analysis you want to perform,
    and may be not straightforward as no gold standard procedure exists.
    For a detailed description of various denoising strategies and their performance,
