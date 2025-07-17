@@ -494,10 +494,10 @@ def init_pet_fit_wf(
                     ],
                 ),
                 (
-                    segmentation_wf,
+                    petref_buffer,
                     ds_refmask_wf,
                     [
-                        ('outputnode.segmentation', 'inputnode.source_files'),
+                        ('pet_file', 'inputnode.source_files'),
                     ],
                 ),
                 (

@@ -507,7 +507,7 @@ def init_ds_refmask_wf(
     ds_refmask = pe.Node(
         DerivativesDataSink(
             base_directory=output_dir,
-            datatype='anat',
+            datatype='pet',
             suffix='mask',
             desc='refmask',
             ref=ref_name,
