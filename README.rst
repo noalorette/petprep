@@ -64,7 +64,7 @@ This tool allows you to easily do the following:
 PETPrep also extracts regional time-activity curves as tabular files with frame
 timings and uptake values. These tables can be fed directly into
 pharmacokinetic modeling tools such as `kinfitr <https://github.com/mathesong/kinfitr>`__
-or PMOD to estimate tracer kinetics or compute binding metrics.
+or PMOD to estimate tracer kinetics or compute binding estimates.
 
 More information and documentation can be found at
 https://petprep.readthedocs.io/
@@ -120,7 +120,7 @@ License
 ~~~~~~~
 Copyright (c) the *NiPreps* Developers.
 
-As of the 21.0.x pre-release and release series, *PETPrep* is
+As of the 0.0.1 release series, *PETPrep* is
 licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -136,6 +136,7 @@ limitations under the License.
 Acknowledgements
 ----------------
 This work is steered and maintained by the `NiPreps Community <https://www.nipreps.org>`__.
-This work was supported by the Laura and John Arnold Foundation,
-the NIH (grant NBIB R01EB020740, PI: Ghosh),
+This was supported by the BRAIN Initiative
+grant (OpenNeuroPET, grant ID 1R24MH120004-01A1); the Novo Nordisk Foundation (OpenNeuroPET, grant ID NN20OC0063277); the Laura and John Arnold Foundation,
+the NIH (grant NBIB R01EB020740, PI: Ghosh);
 and NIMH (R24MH114705, R24MH117179, R01MH121867, PI: Poldrack)
