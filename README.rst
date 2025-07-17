@@ -63,8 +63,7 @@ This tool allows you to easily do the following:
 
 PETPrep also extracts regional time-activity curves as tabular files with frame
 timings and uptake values. These tables can be fed directly into
-pharmacokinetic modeling tools such as `kinfitr <https://github.com/mathesong/kinfitr>`__
-or PMOD to estimate tracer kinetics or compute binding estimates.
+pharmacokinetic modeling tools such as kinfitr_ or PMOD_ to estimate tracer kinetics or compute binding estimates.
 
 More information and documentation can be found at
 https://petprep.readthedocs.io/
@@ -76,7 +75,7 @@ Principles
 1. **Robustness** - The pipeline adapts the preprocessing steps depending on
    the input dataset and should provide results as good as possible
    independently of scanner make and scanning parameters.
-2. **Ease of use** - Thanks to dependence on the BIDS standard, manual
+2. **Ease of use** - Thanks to dependence on the BIDS standard (BIDS_), manual
    parameter input is reduced to a minimum, allowing the pipeline to run in an
    automatic fashion.
 3. **"Glass box"** philosophy - Automation should not mean that one should not
@@ -139,3 +138,13 @@ This was supported by the BRAIN Initiative
 grant (OpenNeuroPET, grant ID 1R24MH120004-01A1); the Novo Nordisk Foundation (OpenNeuroPET, grant ID NN20OC0063277); the Laura and John Arnold Foundation,
 the NIH (grant NBIB R01EB020740, PI: Ghosh);
 and NIMH (R24MH114705, R24MH117179, R01MH121867, PI: Poldrack)
+
+.. _FSL: https://fsl.fmrib.ox.ac.uk/fsl/fslwiki
+.. _ANTs: http://stnava.github.io/ANTs/
+.. _FreeSurfer: https://surfer.nmr.mgh.harvard.edu/
+.. _AFNI: https://afni.nimh.nih.gov/
+.. _PETSurfer: https://surfer.nmr.mgh.harvard.edu/fswiki/PetSurfer
+.. _PETPVC: https://github.com/UCL/PETPVC
+.. _kinfitr: https://github.com/mathesong/kinfitr
+.. _PMOD: https://www.pmod.com/
+.. _BIDS: https://bids.neuroimaging.io/
