@@ -4,17 +4,6 @@
 (`www.nipreps.org <https://www.nipreps.org>`__) for the preprocessing of
 positron emission tomography (PET) imaging.
 
-.. image:: https://img.shields.io/badge/RRID-SCR__016216-blue.svg
-  :target: https://doi.org/10.1038/s41592-018-0235-4
-  :alt: RRID:SCR_016216
-
-.. image:: https://img.shields.io/pypi/v/petprep.svg
-  :target: https://pypi.python.org/pypi/petprep/
-  :alt: Latest Version
-
-.. image:: https://circleci.com/gh/nipreps/petprep/tree/master.svg?style=shield
-  :target: https://circleci.com/gh/nipreps/petprep/tree/master
-
 .. image:: https://github.com/nipreps/petprep/actions/workflows/tests.yml/badge.svg
   :target: https://github.com/nipreps/petprep/actions/workflows/tests.yml
   :alt: Stable tests
@@ -22,18 +11,6 @@ positron emission tomography (PET) imaging.
 .. image:: https://readthedocs.org/projects/petprep/badge/?version=latest
   :target: https://petprep.org/en/latest/?badge=latest
   :alt: Documentation Status
-
-.. image:: https://img.shields.io/badge/doi-10.1038%2Fs41592--018--0235--4-blue.svg
-  :target: https://doi.org/10.1038/s41592-018-0235-4
-  :alt: Published in Nature Methods
-
-.. image:: https://img.shields.io/badge/docker-nipreps/petprep-brightgreen.svg?logo=docker&style=flat
-  :target: https://hub.docker.com/r/nipreps/petprep/tags/
-  :alt: Docker image available!
-
-.. image:: https://codeocean.com/codeocean-assets/badge/open-in-code-ocean.svg
-  :target: https://doi.org/10.24433/CO.ed5ddfef-76a3-4996-b298-e3200f69141b
-  :alt: Available in CodeOcean!
 
 .. image:: https://chanzuckerberg.github.io/open-science/badges/CZI-EOSS.svg
   :target: https://czi.co/EOSS
@@ -58,15 +35,13 @@ graph theory measures, and surface or volume-based statistics.
 .. note::
 
    *PETPrep* performs minimal preprocessing.
-   Here we define 'minimal preprocessing'  as motion correction, field
-   unwarping, normalization, bias field correction, and brain extraction.
+   Here we define 'minimal preprocessing'  as motion correction, generation of PET reference image, 
+   normalization, and brain mask extraction.
    See the `workflows section of our documentation
    <https://petprep.readthedocs.io/en/latest/workflows.html>`__ for more details.
-   The documentation also describes available *segmentation workflows*
-   and how to enable them with the ``--seg`` command-line option.
 
 The *PETPrep* pipeline uses a combination of tools from well-known software
-packages, including FSL_, ANTs_, FreeSurfer_ and AFNI_.
+packages, including FSL_, ANTs_, FreeSurfer_, AFNI_, PETSurfer_ and PETPVC_.
 This pipeline was designed to provide the best software implementation for each
 state of preprocessing, and will be updated as newer and better neuroimaging
 software become available.
