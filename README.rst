@@ -75,8 +75,7 @@ Principles
 
 1. **Robustness** - The pipeline adapts the preprocessing steps depending on
    the input dataset and should provide results as good as possible
-   independently of scanner make, scanning parameters or presence of additional
-   correction scans (such as fieldmaps).
+   independently of scanner make and scanning parameters.
 2. **Ease of use** - Thanks to dependence on the BIDS standard, manual
    parameter input is reduced to a minimum, allowing the pipeline to run in an
    automatic fashion.
