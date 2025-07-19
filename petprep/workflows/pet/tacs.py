@@ -13,6 +13,8 @@ from ...interfaces import ExtractTACs
 def resample_pet_to_segmentation(pet_file: str, segmentation_file: str) -> str:
     """Resample the PET image to the segmentation space."""
 
+    from nilearn.image import resample_to_img
+
     resampled_pet = resample_to_img(
         pet_file,
         segmentation_file,
