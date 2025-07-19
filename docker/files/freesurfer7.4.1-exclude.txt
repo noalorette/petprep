@@ -734,7 +734,6 @@ freesurfer/bin/wfilemask
 freesurfer/bin/wm-anat-snr
 freesurfer/bin/wmedits2surf
 freesurfer/bin/wmsaseg
-freesurfer/bin/xcerebralseg
 freesurfer/bin/xcorr
 freesurfer/bin/xfmrot
 freesurfer/bin/xhemireg
