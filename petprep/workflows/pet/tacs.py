@@ -14,6 +14,7 @@ def resample_pet_to_segmentation(pet_file: str, segmentation_file: str) -> str:
     """Resample the PET image to the segmentation space."""
 
     from nilearn.image import resample_to_img
+    from pathlib import Path
 
     resampled_pet = resample_to_img(
         pet_file,
