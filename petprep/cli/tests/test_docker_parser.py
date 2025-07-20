@@ -1,7 +1,8 @@
 import importlib
+import subprocess
 import sys
 from pathlib import Path
-import subprocess
+
 
 # Add wrapper package to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'wrapper' / 'src'))
@@ -108,4 +109,3 @@ def test_docker_command_options(monkeypatch, tmp_path):
     assert f'{work_dir}:/scratch' in joined
     assert '--output-spaces' in cmd
     assert 'MNI152Lin' in cmd
-    
