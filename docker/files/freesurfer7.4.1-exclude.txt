@@ -707,7 +707,6 @@ freesurfer/bin/test_tutorials.sh
 freesurfer/bin/thickdiffmap
 freesurfer/bin/tkmedit
 freesurfer/bin/tkmeditfv
-freesurfer/bin/tkregister2
 freesurfer/bin/tkregisterfv
 freesurfer/bin/tksurfer
 freesurfer/bin/tksurferfv
