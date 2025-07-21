@@ -3,7 +3,7 @@
 .. _`BIDS Derivatives`: https://bids-specification.readthedocs.io/en/stable/05-derivatives/01-introduction.html
 .. _`BEP 011`: https://bids-specification.readthedocs.io/en/bep011/05-derivatives/04-structural-derivatives.html
 .. _`BEP 012`: https://bids-specification.readthedocs.io/en/bep012/05-derivatives/05-functional-derivatives.html
-.. _`BEP 023`: https://docs.google.com/document/d/1yzsd1J9GT-aA0DWhdlgNr5LCu6_gvbjLyfvYq2FuxlY/edit?tab=t.0#heading=h.uz8i6t4ja4s1
+.. _`BEP 023`: https://docs.google.com/document/d/1yzsd1J9GT-aA0DWhdlgNr5LCu6_gvbjLyfvYq2FuxlY/edit?tab=t.0#heading=h.mqkmyp254xh6
 .. _Installation: installation.html
 .. _workflows: workflows.html
 .. _FSL: https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/
