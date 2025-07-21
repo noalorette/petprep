@@ -31,12 +31,15 @@ from tempfile import mkdtemp
 from toml import loads
 
 from ... import data
+from ...tests.test_config import _reset_config
 
 
 @contextmanager
 def mock_config(bids_dir=None):
     """Create a mock config for documentation and testing purposes."""
     from ... import config
+
+    _reset_config()
 
     _old_fs = os.getenv('FREESURFER_HOME')
     if not _old_fs:

@@ -11,9 +11,7 @@ from ..segmentation import (
 
 def test_read_stats_table(tmp_path):
     stats = tmp_path / 'test.stats'
-    stats.write_text(
-        """# ColHeaders Index Name Volume\n1 region1 10\n2 region2 5\n"""
-    )
+    stats.write_text("""# ColHeaders Index Name Volume\n1 region1 10\n2 region2 5\n""")
     df = _read_stats_table(stats)
     assert list(df.columns) == ['Index', 'Name', 'Volume']
     assert len(df) == 2

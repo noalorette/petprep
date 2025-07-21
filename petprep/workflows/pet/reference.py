@@ -159,12 +159,18 @@ def init_validation_and_dummies_wf(
 
     val_pet = pe.Node(ValidateImage(), name='val_pet', mem_gb=DEFAULT_MEMORY_MIN_GB)
 
-    workflow.connect([
-        (inputnode, val_pet, [('pet_file', 'in_file')]),
-        (val_pet, outputnode, [
-            ('out_file', 'pet_file'),
-            ('out_report', 'validation_report'),
-        ]),
-    ])
+    workflow.connect(
+        [
+            (inputnode, val_pet, [('pet_file', 'in_file')]),
+            (
+                val_pet,
+                outputnode,
+                [
+                    ('out_file', 'pet_file'),
+                    ('out_report', 'validation_report'),
+                ],
+            ),
+        ]
+    )
 
     return workflow

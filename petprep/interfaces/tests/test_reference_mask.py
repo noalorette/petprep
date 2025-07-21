@@ -38,7 +38,8 @@ def test_extract_refregion(tmp_path):
             segmentation_type='testseg',
             region_name='region',
         ),
-        name='er', base_dir=str(tmp_path)
+        name='er',
+        base_dir=str(tmp_path),
     )
     res = node.run()
     out = nb.load(res.outputs.refmask_file).get_fdata()
@@ -58,7 +59,8 @@ def test_extract_refregion_override(tmp_path):
             region_name='region',
             override_indices=[2],
         ),
-        name='er2', base_dir=str(tmp_path)
+        name='er2',
+        base_dir=str(tmp_path),
     )
     res = node.run()
     out = nb.load(res.outputs.refmask_file).get_fdata()

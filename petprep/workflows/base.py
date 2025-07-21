@@ -210,7 +210,6 @@ It is released under the [CC0]\
         queries=queries,
     )[0]
 
-
     if 'flair' in config.workflow.ignore:
         subject_data['flair'] = []
     if 't2w' in config.workflow.ignore:
@@ -220,8 +219,7 @@ It is released under the [CC0]\
     # Make sure we always go through these two checks
     if not anat_only and not subject_data['pet']:
         raise RuntimeError(
-            f'No PET images found for participant {subject_id}.'
-            f'All workflows require PET images.'
+            f'No PET images found for participant {subject_id}.All workflows require PET images.'
         )
 
     pet_runs = subject_data['pet']
@@ -288,9 +286,7 @@ It is released under the [CC0]\
 
     ds_report_summary = pe.Node(
         DerivativesDataSink(
-            base_directory=config.execution.petprep_dir,
-            desc='summary',
-            datatype='figures'
+            base_directory=config.execution.petprep_dir, desc='summary', datatype='figures'
         ),
         name='ds_report_summary',
         run_without_submitting=True,
@@ -298,9 +294,7 @@ It is released under the [CC0]\
 
     ds_report_about = pe.Node(
         DerivativesDataSink(
-            base_directory=config.execution.petprep_dir,
-            desc='about',
-            datatype='figures'
+            base_directory=config.execution.petprep_dir, desc='about', datatype='figures'
         ),
         name='ds_report_about',
         run_without_submitting=True,

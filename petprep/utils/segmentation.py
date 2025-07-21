@@ -56,9 +56,7 @@ def _read_stats_table(stats_file: str | Path) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=headers)
 
 
-def gtm_to_dsegtsv(
-    subjects_dir: str, subject_id: str, seg_file: str | None = None
-) -> str:
+def gtm_to_dsegtsv(subjects_dir: str, subject_id: str, seg_file: str | None = None) -> str:
     """Generate a TSV table describing GTM segmentation labels.
 
     Parameters
@@ -97,9 +95,7 @@ def gtm_to_dsegtsv(
     return str(out_file)
 
 
-def gtm_stats_to_stats(
-    subjects_dir: str, subject_id: str, seg_file: str | None = None
-) -> str:
+def gtm_stats_to_stats(subjects_dir: str, subject_id: str, seg_file: str | None = None) -> str:
     """Generate a TSV table of morphological statistics from ``gtmseg.stats``.
 
     Parameters
@@ -176,9 +172,7 @@ def ctab_to_dsegtsv(ctab_file: str) -> str:
     import pandas as pd
 
     ctab_file = Path(ctab_file)
-    df = pd.read_csv(
-        ctab_file, header=None, delim_whitespace=True, usecols=[0, 1], names=['index', 'name']
-    )
+    df = pd.read_csv(ctab_file, header=None, sep=r'\s+', usecols=[0, 1], names=['index', 'name'])
     out_file = ctab_file.with_suffix('.tsv')
     df.to_csv(out_file, sep='\t', index=False)
     return str(out_file)

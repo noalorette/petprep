@@ -43,7 +43,7 @@ from ... import config
 from ...config import DEFAULT_MEMORY_MIN_GB
 from ...interfaces.bids import BIDSURI
 from ...interfaces.workbench import MetricDilate, MetricMask, MetricResample
-from .outputs import prepare_timing_parameters
+from .outputs import build_psf_dict, prepare_timing_parameters
 
 
 def init_pet_surf_wf(
@@ -136,6 +136,9 @@ The PET time-series were resampled onto the following surfaces
                 'subject_id',
                 'subjects_dir',
                 'fsnative2t1w_xfm',
+                'fwhm_x',
+                'fwhm_y',
+                'fwhm_z',
             ]
         ),
         name='inputnode',
@@ -206,6 +209,31 @@ The PET time-series were resampled onto the following surfaces
     if pvc_method is not None:
         ds_pet_surfs.inputs.pvc = pvc_method
 
+    psf_meta = pe.Node(
+        niu.Function(
+            input_names=['fwhm_x', 'fwhm_y', 'fwhm_z'],
+            output_names=['meta_dict'],
+            function=build_psf_dict,
+        ),
+        name='psf_meta',
+        run_without_submitting=True,
+        mem_gb=DEFAULT_MEMORY_MIN_GB,
+    )
+
+    workflow.connect(
+        [
+            (
+                inputnode,
+                psf_meta,
+                [
+                    ('fwhm_x', 'fwhm_x'),
+                    ('fwhm_y', 'fwhm_y'),
+                    ('fwhm_z', 'fwhm_z'),
+                ],
+            )
+        ]
+    )
+
     workflow.connect([
         (inputnode, get_fsnative, [
             ('subject_id', 'subject_id'),
@@ -230,6 +258,7 @@ The PET time-series were resampled onto the following surfaces
         (surfs_sources, ds_pet_surfs, [('out', 'Sources')]),
         (itersource, ds_pet_surfs, [('target', 'space')]),
         (update_metadata, ds_pet_surfs, [('out_file', 'in_file')]),
+        (psf_meta, ds_pet_surfs, [('meta_dict', 'meta_dict')]),
     ])  # fmt:skip
 
     # Refine if medial vertices should be NaNs

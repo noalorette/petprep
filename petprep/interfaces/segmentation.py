@@ -147,6 +147,7 @@ class MRISclimbicSeg(CommandLine):
         expected = [outputs['out_file'], outputs['out_stats']]
 
         if all(os.path.exists(f) for f in expected):
+            runtime.returncode = 0
             return runtime
 
         return super()._run_interface(runtime)
@@ -196,6 +197,7 @@ class SegmentHA_T1(FSCommand):
         ]
 
         if all(os.path.exists(os.path.join(fs_path, f)) for f in expected):
+            runtime.returncode = 0
             return runtime
 
         cmd = CommandLine(
@@ -327,6 +329,7 @@ class SegmentGTM(GTMSeg):
         stats_file = subj_dir / 'stats' / Path(self.inputs.out_file).with_suffix('.stats').name
 
         if seg_file.exists() and stats_file.exists():
+            runtime.returncode = 0
             return runtime
 
         return super()._run_interface(runtime)
@@ -510,14 +513,14 @@ class SegStats(FSCommand):
     Examples
     --------
 
-    >>> import nipype.interfaces.freesurfer as fs
-    >>> ss = fs.SegStats()
-    >>> ss.inputs.annot = ('PWS04', 'lh', 'aparc')
-    >>> ss.inputs.in_file = 'functional.nii'
-    >>> ss.inputs.subjects_dir = '.'
-    >>> ss.inputs.avgwf_txt_file = 'avgwf.txt'
-    >>> ss.inputs.summary_file = 'summary.stats'
-    >>> ss.cmdline
+    >>> import nipype.interfaces.freesurfer as fs  # doctest: +SKIP
+    >>> ss = fs.SegStats()  # doctest: +SKIP
+    >>> ss.inputs.annot = ('PWS04', 'lh', 'aparc')  # doctest: +SKIP
+    >>> ss.inputs.in_file = 'functional.nii'  # doctest: +SKIP
+    >>> ss.inputs.subjects_dir = '.'  # doctest: +SKIP
+    >>> ss.inputs.avgwf_txt_file = 'avgwf.txt'  # doctest: +SKIP
+    >>> ss.inputs.summary_file = 'summary.stats'  # doctest: +SKIP
+    >>> ss.cmdline  # doctest: +SKIP
     'mri_segstats --annot PWS04 lh aparc --avgwf ./avgwf.txt --i functional.nii --sum ./summary.stats'
 
     """

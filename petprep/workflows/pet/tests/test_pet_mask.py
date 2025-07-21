@@ -19,19 +19,17 @@ def bids_root(tmp_path_factory):
 
 
 def test_pet_mask_flow(bids_root: Path, tmp_path: Path):
-    pet_series = [
-        str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')
-    ]
+    pet_series = [str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')]
     img = nb.Nifti1Image(np.zeros((2, 2, 2, 10)), np.eye(4))
 
     for path in pet_series:
         img.to_filename(path)
+        Path(path).with_suffix('').with_suffix('.json').write_text(
+            '{"FrameTimesStart": [0], "FrameDuration": [1]}'
+        )
 
     with mock_config(bids_dir=bids_root):
-        wf = init_pet_wf(
-            pet_series=pet_series,
-            precomputed={}
-        )
+        wf = init_pet_wf(pet_series=pet_series, precomputed={})
 
     assert wf is not None, 'Workflow was not initialized.'
 

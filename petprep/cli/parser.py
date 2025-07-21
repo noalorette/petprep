@@ -41,8 +41,7 @@ def _build_parser(**kwargs):
 
     from .version import check_latest, is_flagged
 
-    deprecations = {
-    }
+    deprecations = {}
 
     class DeprecatedAction(Action):
         def __call__(self, parser, namespace, values, option_string=None):
@@ -729,9 +728,7 @@ def parse_args(args=None, namespace=None):
 
     pvc_vals = (opts.pvc_tool, opts.pvc_method, opts.pvc_psf)
     if any(val is not None for val in pvc_vals) and not all(val is not None for val in pvc_vals):
-        parser.error(
-            'Options --pvc-tool, --pvc-method and --pvc-psf must be used together.'
-        )
+        parser.error('Options --pvc-tool, --pvc-method and --pvc-psf must be used together.')
 
     if opts.ref_mask_index is not None and opts.ref_mask_name is None:
         parser.error('Option --ref-mask-index requires --ref-mask-name.')

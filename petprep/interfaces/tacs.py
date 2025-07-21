@@ -54,6 +54,10 @@ class ExtractTACs(SimpleInterface):
 
         unique_labels = np.unique(segmentation_data)
         n_tp = pet_data.shape[-1]
+        if len(frame_times) != n_tp:
+            raise ValueError(
+                'Number of PET frames does not match FrameTimesStart/FrameDuration length'
+            )
 
         curves = {}
 
@@ -88,9 +92,7 @@ class ExtractTACs(SimpleInterface):
 
 class _ExtractRefTACInputSpec(BaseInterfaceInputSpec):
     in_file = File(exists=True, mandatory=True, desc='PET file in anatomical space')
-    mask_file = File(
-        exists=True, mandatory=True, desc='Reference mask in anatomical space'
-    )
+    mask_file = File(exists=True, mandatory=True, desc='Reference mask in anatomical space')
     ref_mask_name = traits.Str(mandatory=True, desc='Name of reference region')
     metadata = File(exists=True, mandatory=True, desc='PET JSON metadata file')
 
@@ -121,6 +123,12 @@ class ExtractRefTAC(SimpleInterface):
 
         if len(frame_times) != len(frame_durations):
             raise ValueError('FrameTimesStart and FrameDuration must have equal length')
+
+        n_tp = pet_data.shape[-1]
+        if len(frame_times) != n_tp:
+            raise ValueError(
+                'Number of PET frames does not match FrameTimesStart/FrameDuration length'
+            )
 
         timeseries = pet_data[mask, :].mean(axis=0)
         frame_times_end = np.add(frame_times, frame_durations).tolist()

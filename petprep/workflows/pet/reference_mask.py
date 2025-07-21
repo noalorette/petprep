@@ -35,7 +35,7 @@ def init_pet_refmask_wf(
     ref_mask_name: str,
     ref_mask_index: list[int] | None = None,
     config_path: str,
-    name: str = 'pet_refmask_wf'
+    name: str = 'pet_refmask_wf',
 ) -> pe.Workflow:
     import nipype.pipeline.engine as pe
     from nipype.interfaces.utility import IdentityInterface
@@ -54,9 +54,11 @@ def init_pet_refmask_wf(
         # Override config-based lookup and force manual indices
         extract_mask.inputs.override_indices = ref_mask_index
 
-    workflow.connect([
-        (inputnode, extract_mask, [('seg_file', 'seg_file')]),
-        (extract_mask, outputnode, [('refmask_file', 'refmask_file')])
-    ])
+    workflow.connect(
+        [
+            (inputnode, extract_mask, [('seg_file', 'seg_file')]),
+            (extract_mask, outputnode, [('refmask_file', 'refmask_file')]),
+        ]
+    )
 
     return workflow

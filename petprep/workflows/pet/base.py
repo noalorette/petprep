@@ -35,6 +35,7 @@ from pathlib import Path
 from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
+from niworkflows.interfaces.utility import DictMerge
 from niworkflows.utils.connections import listify
 
 from ... import config
@@ -46,6 +47,7 @@ from .apply import init_pet_volumetric_resample_wf
 from .confounds import init_carpetplot_wf, init_pet_confs_wf
 from .fit import init_pet_fit_wf, init_pet_native_wf
 from .outputs import (
+    build_psf_dict,
     init_ds_pet_native_wf,
     init_ds_volumes_wf,
     prepare_timing_parameters,
@@ -326,11 +328,7 @@ configured with cubic B-spline interpolation.
     pvc_tool = getattr(config.workflow, 'pvc_tool', None)
     pvc_method = getattr(config.workflow, 'pvc_method', None)
     pvc_psf = getattr(config.workflow, 'pvc_psf', None)
-    run_pvc = (
-        pvc_tool is not None
-        and pvc_method is not None
-        and pvc_psf is not None
-    )
+    run_pvc = pvc_tool is not None and pvc_method is not None and pvc_psf is not None
 
     if run_pvc:
         try:
@@ -345,9 +343,7 @@ configured with cubic B-spline interpolation.
             if len(psf_vals) == 1:
                 psf_vals = psf_vals * 3
             if len(psf_vals) != 3:
-                raise ValueError(
-                    'PETPVC requires one or three PSF values (FWHM x/y/z).'
-                )
+                raise ValueError('PETPVC requires one or three PSF values (FWHM x/y/z).')
             pvc_kwargs = {
                 'fwhm_x': psf_vals[0],
                 'fwhm_y': psf_vals[1],
@@ -374,6 +370,20 @@ configured with cubic B-spline interpolation.
             name='petref_t1w',
         )
 
+        psf_meta = pe.Node(
+            niu.Function(
+                input_names=['fwhm_x', 'fwhm_y', 'fwhm_z'],
+                output_names=['meta_dict'],
+                function=build_psf_dict,
+            ),
+            name='pvc_psf_meta',
+            run_without_submitting=True,
+        )
+
+        merge_cifti_meta = pe.Node(
+            DictMerge(), name='merge_cifti_meta', run_without_submitting=True
+        )
+
         workflow.connect([
             (pet_fit_wf, petref_t1w, [
                 ('outputnode.petref', 'input_image'),
@@ -390,6 +400,11 @@ configured with cubic B-spline interpolation.
                 ('outputnode.segmentation', 'inputnode.segmentation'),
             ]),
             (petref_t1w, pet_pvc_wf, [('output_image', 'inputnode.petref')]),
+            (pet_pvc_wf, psf_meta, [
+                ('outputnode.fwhm_x', 'fwhm_x'),
+                ('outputnode.fwhm_y', 'fwhm_y'),
+                ('outputnode.fwhm_z', 'fwhm_z'),
+            ]),
         ])  # fmt:skip
 
         pet_t1w_src = pet_pvc_wf
@@ -434,6 +449,36 @@ configured with cubic B-spline interpolation.
                 [('outputnode.resampling_reference', 'inputnode.ref_file')],
             ),
         ])  # fmt:skip
+
+        if run_pvc:
+            workflow.connect(
+                [
+                    (
+                        pet_pvc_wf,
+                        ds_pet_t1_wf,
+                        [
+                            ('outputnode.fwhm_x', 'inputnode.fwhm_x'),
+                            ('outputnode.fwhm_y', 'inputnode.fwhm_y'),
+                            ('outputnode.fwhm_z', 'inputnode.fwhm_z'),
+                        ],
+                    ),
+                    (
+                        pet_pvc_wf,
+                        ds_pet_t1_wf.get_node('psf_meta'),
+                        [
+                            ('outputnode.fwhm_x', 'fwhm_x'),
+                            ('outputnode.fwhm_y', 'fwhm_y'),
+                            ('outputnode.fwhm_z', 'fwhm_z'),
+                        ],
+                    ),
+                ]
+            )
+            workflow.connect(
+                ds_pet_t1_wf.get_node('psf_meta'),
+                'meta_dict',
+                ds_pet_t1_wf.get_node('ds_pet'),
+                'meta_dict',
+            )
 
     if spaces.cached.get_spaces(nonstandard=False, dim=(3,)):
         # Missing:
@@ -483,6 +528,21 @@ configured with cubic B-spline interpolation.
             ]),
         ])  # fmt:skip
 
+        if run_pvc:
+            workflow.connect(
+                [
+                    (
+                        pet_pvc_wf,
+                        ds_pet_std_wf,
+                        [
+                            ('outputnode.fwhm_x', 'inputnode.fwhm_x'),
+                            ('outputnode.fwhm_y', 'inputnode.fwhm_y'),
+                            ('outputnode.fwhm_z', 'inputnode.fwhm_z'),
+                        ],
+                    ),
+                ]
+            )
+
         if not run_pvc:
             workflow.connect([
                 (pet_fit_wf, pet_std_wf, [
@@ -517,6 +577,21 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ]),
             (pet_t1w_src, pet_surf_wf, [(pet_t1w_field, 'inputnode.pet_t1w')]),
         ])  # fmt:skip
+
+        if run_pvc:
+            workflow.connect(
+                [
+                    (
+                        pet_pvc_wf,
+                        pet_surf_wf,
+                        [
+                            ('outputnode.fwhm_x', 'inputnode.fwhm_x'),
+                            ('outputnode.fwhm_y', 'inputnode.fwhm_y'),
+                            ('outputnode.fwhm_z', 'inputnode.fwhm_z'),
+                        ],
+                    ),
+                ]
+            )
 
         # sources are pet_file, motion_xfm, petref2anat_xfm, fsnative2t1w_xfm
         merge_surface_sources = pe.Node(

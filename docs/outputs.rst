@@ -726,7 +726,7 @@ the following invocation::
      doi:`10.1016/j.neuroimage.2016.08.009 <https://doi.org/10.1016/j.neuroimage.2016.08.009>`_
 
   .. [Provins2022] Provins C et al., Quality control and nuisance regression of fMRI, looking out
-     where signal should not be found. Proc. Intl. Soc. Mag. Reson. Med. 31, London (UK). 2022
+     where signal should not be found. Proc. Intl. Soc. Mag. Resonance. Med. 31, London (UK). 2022
      doi:`10.31219/osf.io/hz52v <https://doi.org/10.31219/osf.io/hz52v>`_.
 
   .. [Satterthwaite2013] Satterthwaite TD, Elliott MA, Gerraty RT, Ruparel K, Loughead J, Calkins ME,

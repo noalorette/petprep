@@ -190,6 +190,11 @@ Available ``petpvc`` methods are ``GTM``, ``LABBE``, ``RL``, ``VC``, ``RBV``,
 ``STC``, ``MTC``, ``LABBE+MTC``, ``MTC+VC``, ``MTC+RL``, ``LABBE+MTC+VC``,
 ``LABBE+MTC+RL``, ``IY``, ``IY+VC``, ``IY+RL``, ``MG``, ``MG+VC`` and ``MG+RL``.
 ``petsurfer`` provides ``GTM``, ``MG``, ``RBV`` and ``AGTM``.
+``AGTM`` runs in two steps: first the frames are motion corrected and averaged
+to generate a reference image. Then a geometric transfer matrix is optimised
+using that reference together with the point spread function. As a
+consequence, mean motion correction of the input frames and a reliable PSF
+estimate are prerequisites for ``AGTM`` to succeed.
 Use ``--pvc-psf`` to specify the point spread function FWHM, either as a single
 value or three values. When PVC is enabled, the corrected image automatically
 feeds into the remainder of the workflow, and standard-space outputs are derived
@@ -202,6 +207,12 @@ method with a 5 mm PSF::
 
     $ petprep /data/bids_root /out participant \
         --pvc-tool petpvc --pvc-method GTM --pvc-psf 5
+
+To run ``AGTM`` with ``petsurfer`` instead::
+
+    $ petprep /data/bids_root /out participant \
+        --pvc-tool petsurfer --pvc-method AGTM --pvc-psf 5
+
 
 .. _cli_refmask:
 
