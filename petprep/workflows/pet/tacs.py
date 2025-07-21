@@ -16,6 +16,7 @@ def resample_pet_to_segmentation(pet_file, segmentation_file):
 
     resampled_pet = resample_to_img(pet_file, segmentation_file, interpolation='continuous')
     out_file = os.path.abspath('pet_resampled.nii.gz')
+
     resampled_pet.to_filename(out_file)
     return out_file
 
