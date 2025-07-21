@@ -7,7 +7,7 @@ Outputs of *PETPrep*
 ---------------------
 *PETPrep* outputs conform to the :abbr:`BIDS (brain imaging data structure)`
 Derivatives specification (see `BIDS Derivatives`_, along with the
-upcoming `BEP 011`_ and `BEP 012`_).
+upcoming `BEP 011`_ and `BEP 023`_).
 *PETPrep* generates three broad classes of outcomes:
 
 1. **Visual QA (quality assessment) reports**:
