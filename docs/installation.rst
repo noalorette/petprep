@@ -92,7 +92,7 @@ the ``petprep`` package:
 - FreeSurfer_ (version 7.4.1)
 - `bids-validator <https://github.com/bids-standard/bids-validator>`_ (version 1.14.0)
 - `connectome-workbench <https://www.humanconnectome.org/software/connectome-workbench>`_ (version 1.5.0)
-- PETPVC_ (version 1.2.12)
+- PETPVC_ (version 1.2.10)
 
 Not running on a local machine? - Data transfer
 ===============================================
