@@ -731,7 +731,6 @@ freesurfer/diffusion
 freesurfer/docs/xml
 freesurfer/FreeSurferEnv.csh
 freesurfer/FreeSurferEnv.sh
-freesurfer/fsfast
 freesurfer/lib/bem/ic0.tri
 freesurfer/lib/bem/ic1.tri
 freesurfer/lib/bem/ic2.tri
@@ -836,5 +835,4 @@ freesurfer/subjects/sample-001.mgz
 freesurfer/subjects/sample-002.mgz
 freesurfer/subjects/V1_average
 freesurfer/tkmeditParcColorsCMA
-freesurfer/tktools
 freesurfer/trctrain
