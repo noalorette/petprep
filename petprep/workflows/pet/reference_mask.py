@@ -59,10 +59,14 @@ def init_pet_refmask_wf(
 
     workflow.connect(
         [
-            (inputnode, extract_mask, [
-                ('seg_file', 'seg_file'),
-                ('gm_probseg', 'gm_probseg'),
-            ]),
+            (
+                inputnode,
+                extract_mask,
+                [
+                    ('seg_file', 'seg_file'),
+                    ('gm_probseg', 'gm_probseg'),
+                ],
+            ),
             (extract_mask, outputnode, [('refmask_file', 'refmask_file')]),
         ]
     )
