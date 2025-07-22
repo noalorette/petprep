@@ -119,7 +119,11 @@ def test_extract_refregion_override_missing_config(tmp_path):
 
 
 def test_extract_refregion_gm_threshold(tmp_path):
-    seg = _create_seg(tmp_path)
+    data = np.zeros((5, 5, 5), dtype=np.uint8)
+    data[1, 1, 1] = 1
+    data[2, 2, 2] = 1
+    seg = tmp_path / 'seg.nii.gz'
+    nb.Nifti1Image(data, np.eye(4)).to_filename(seg)
     gm = np.zeros((5, 5, 5), dtype=np.float32)
     gm[1, 1, 1] = 0.4
     gm[2, 2, 2] = 0.8
