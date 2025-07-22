@@ -164,6 +164,7 @@ def init_pet_fit_wf(
                 't1w_preproc',
                 't1w_mask',
                 't1w_dseg',
+                't1w_tpms',
                 'subjects_dir',
                 'subject_id',
                 'fsnative2t1w_xfm',
