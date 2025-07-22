@@ -12,7 +12,9 @@
     {
     "refmask_indices": [10, 49], 
     "erode_by_voxels": 1,
-    "gm_prob_threshold": 0.4
+    "exclude_indices": [14, 24], 
+    "dilate_by_voxels": 3,
+    "gm_prob_threshold": 0.2
     }
   },
   "wm": {
