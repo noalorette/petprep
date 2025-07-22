@@ -56,6 +56,9 @@ COPY docker/files/freesurfer7.4.1-exclude.txt /usr/local/etc/freesurfer7.4.1-exc
 RUN curl -sSL https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu22_amd64-7.4.1.tar.gz \
      | tar zxv --no-same-owner -C /opt --exclude-from=/usr/local/etc/freesurfer7.4.1-exclude.txt
 
+# Install MATLAB Runtime (MCR) R2019b required by FreeSurfer modules
+RUN /opt/freesurfer/bin/fs_install_mcr R2019b
+
 # AFNI
 FROM downloader AS afni
 # Bump the date to current to update AFNI
