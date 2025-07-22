@@ -148,7 +148,9 @@ def init_func_fit_reports_wf(
         Reportlet showing the reference region mask
 
     """
-    from ...interfaces.reporting import BeforeAfterMaskRPT as SimpleBeforeAfter
+    from nireports.interfaces.reporting.base import (
+        SimpleBeforeAfterRPT as SimpleBeforeAfter,
+    )
 
     workflow = pe.Workflow(name=name)
 
@@ -239,17 +241,6 @@ def init_func_fit_reports_wf(
         mem_gb=1,
     )
 
-    t1w_mask_tfm = pe.Node(
-        ApplyTransforms(
-            dimension=3,
-            default_value=0,
-            invert_transform_flags=[True],
-            interpolation='MultiLabel',
-        ),
-        name='t1w_mask_tfm',
-        mem_gb=1,
-    )
-
     if ref_name:
         petref_refmask = pe.Node(
             ApplyTransforms(
@@ -278,11 +269,6 @@ def init_func_fit_reports_wf(
             ('petref2anat_xfm', 'transforms'),
         ]),
         (inputnode, t1w_wm, [('t1w_dseg', 'in_seg')]),
-        (inputnode, t1w_mask_tfm, [
-            ('t1w_mask', 'input_image'),
-            ('petref', 'reference_image'),
-            ('petref2anat_xfm', 'transforms'),
-        ]),
         (inputnode, petref_wm, [
             ('petref', 'reference_image'),
             ('petref2anat_xfm', 'transforms'),
@@ -354,7 +340,6 @@ def init_func_fit_reports_wf(
         (inputnode, pet_t1_report, [('petref', 'after')]),
         (t1w_petref, pet_t1_report, [('output_image', 'before')]),
         (petref_wm, pet_t1_report, [('output_image', 'wm_seg')]),
-        (t1w_mask_tfm, pet_t1_report, [('output_image', 'roi_mask')]),
         (inputnode, ds_pet_t1_report, [('source_file', 'source_file')]),
         (pet_t1_report, ds_pet_t1_report, [('out_report', 'in_file')]),
     ])
@@ -363,7 +348,6 @@ def init_func_fit_reports_wf(
             (inputnode, pet_t1_refmask_report, [('petref', 'after')]),
             (t1w_petref, pet_t1_refmask_report, [('output_image', 'before')]),
             (petref_refmask, pet_t1_refmask_report, [('output_image', 'wm_seg')]),
-            (t1w_mask_tfm, pet_t1_refmask_report, [('output_image', 'roi_mask')]),
             (inputnode, ds_pet_t1_refmask_report, [('source_file', 'source_file')]),
             (pet_t1_refmask_report, ds_pet_t1_refmask_report, [('out_report', 'in_file')]),
         ])
@@ -992,17 +976,17 @@ def init_refmask_report_wf(
     """
 
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-    from ...interfaces.reporting import ShowMaskRPTROI
+    from niworkflows.interfaces.reportlets.masks import SimpleShowMaskRPT
 
     workflow = Workflow(name=name)
 
     inputnode = pe.Node(
-        niu.IdentityInterface(fields=['source_file', 'petref', 'refmask', 'roi_mask']),
+        niu.IdentityInterface(fields=['source_file', 'petref', 'refmask']),
         name='inputnode',
     )
     outputnode = pe.Node(niu.IdentityInterface(fields=['refmask_report']), name='outputnode')
 
-    mask_report = pe.Node(ShowMaskRPTROI(), name="mask_report")
+    mask_report = pe.Node(SimpleShowMaskRPT(), name='mask_report')
     ds_mask_report = pe.Node(
         DerivativesDataSink(
             base_directory=output_dir,
@@ -1018,17 +1002,11 @@ def init_refmask_report_wf(
 
     workflow.connect(
         [
-            (
-                inputnode,
-                mask_report,
-                [('petref', 'background_file'), ('refmask', 'mask_file')],
-            ),
+            (inputnode, mask_report, [('petref', 'background_file'), ('refmask', 'mask_file')]),
             (inputnode, ds_mask_report, [('source_file', 'source_file')]),
             (mask_report, ds_mask_report, [('out_report', 'in_file')]),
             (mask_report, outputnode, [('out_report', 'refmask_report')]),
         ]
     )
-    if 'roi_mask' in mask_report.inputs.trait_names():
-        workflow.connect([(inputnode, mask_report, [('roi_mask', 'roi_mask')])])
 
     return workflow
