@@ -4,7 +4,11 @@ from scipy.ndimage import gaussian_filter
 from skimage.morphology import ball, binary_dilation, binary_erosion
 
 
-def generate_reference_region(seg_img: nib.Nifti1Image, config: dict) -> nib.Nifti1Image:
+def generate_reference_region(
+    seg_img: nib.Nifti1Image,
+    config: dict,
+    gm_probseg_img: nib.Nifti1Image | None = None,
+) -> nib.Nifti1Image:
     """Generate a reference region using a flexible config.
 
     Config keys:
@@ -14,6 +18,8 @@ def generate_reference_region(seg_img: nib.Nifti1Image, config: dict) -> nib.Nif
         - dilate_by_voxels (int, optional): Dilation radius for excluded regions.
         - smooth_fwhm_mm (float, optional): FWHM for smoothing the target region.
         - target_volume_ml (float, optional): Keep only the top N voxels by smoothed value.
+        - gm_prob_threshold (float, optional): Threshold the final mask using a
+          gray matter probability map. Requires ``gm_probseg_img``.
 
     Returns:
         nib.Nifti1Image: Final reference mask.
@@ -51,5 +57,13 @@ def generate_reference_region(seg_img: nib.Nifti1Image, config: dict) -> nib.Nif
         else:
             threshold = values[-target_voxels]
         mask = ((smoothed >= threshold) & (mask > 0)).astype(np.uint8)
+
+    # Step 5: Optional gray matter probability thresholding
+    if gm_probseg_img is not None and 'gm_prob_threshold' in config:
+        gm_prob = gm_probseg_img.get_fdata()
+        if gm_prob.shape != mask.shape:
+            raise ValueError('gm_probseg_img does not match segmentation shape')
+        mask = (mask > 0) & (gm_prob >= config['gm_prob_threshold'])
+        mask = mask.astype(np.uint8)
 
     return nib.Nifti1Image(mask, affine, header)

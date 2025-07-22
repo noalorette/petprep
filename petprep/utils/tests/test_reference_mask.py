@@ -62,3 +62,22 @@ def test_generate_reference_region_large_target_volume():
     out_img = generate_reference_region(img, config)
     mask = out_img.get_fdata()
     assert mask.sum() == seg.sum()
+
+
+def test_generate_reference_region_gm_threshold():
+    seg = np.zeros((5, 5, 5), dtype=np.uint8)
+    seg[2, 2, 2] = 1
+    seg[3, 3, 3] = 1
+    seg_img = nb.Nifti1Image(seg, np.eye(4))
+
+    gm = np.zeros((5, 5, 5), dtype=np.float32)
+    gm[2, 2, 2] = 0.4
+    gm[3, 3, 3] = 0.8
+    gm_img = nb.Nifti1Image(gm, np.eye(4))
+
+    config = {'refmask_indices': [1], 'gm_prob_threshold': 0.5}
+
+    out = generate_reference_region(seg_img, config, gm_probseg_img=gm_img)
+    data = out.get_fdata()
+    assert data.sum() == 1
+    assert data[3, 3, 3] == 1
