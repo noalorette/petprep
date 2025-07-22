@@ -526,6 +526,13 @@ def init_pet_fit_wf(
                     ],
                 ),
                 (
+                    func_fit_reports_wf,
+                    refmask_report_wf,
+                    [
+                        ('t1w_mask_tfm.output_image', 'inputnode.roi_mask'),
+                    ],
+                ),
+                (
                     refmask_report_wf,
                     func_fit_reports_wf,
                     [
