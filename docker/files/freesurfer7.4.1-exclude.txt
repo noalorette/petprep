@@ -120,7 +120,6 @@ freesurfer/bin/browse-minc-header.tcl
 freesurfer/bin/bugr
 freesurfer/bin/build_desikan_killiany_gcs.csh
 freesurfer/bin/cblumwmgyri
-freesurfer/bin/checkMCR.sh
 freesurfer/bin/check_recons.sh
 freesurfer/bin/check_siemens_dir
 freesurfer/bin/check_subject
