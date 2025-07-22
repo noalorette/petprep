@@ -18,6 +18,7 @@ positron emission tomography (PET) imaging.
 
 About
 -----
+.. image:: https://github.com/nipreps/petprep/docs/_static/petprep-21.0.0.svg
 
 *PETPrep* is a positron emission tomography (PET) data
 preprocessing pipeline that is designed to provide an easily accessible,
