@@ -116,3 +116,34 @@ def test_extract_refregion_override_missing_config(tmp_path):
     out = nb.load(res.outputs.refmask_file).get_fdata()
     assert out[2, 2, 2] == 1
     assert out.sum() == 1
+
+
+def test_extract_refregion_gm_threshold(tmp_path):
+    data = np.zeros((5, 5, 5), dtype=np.uint8)
+    data[1, 1, 1] = 1
+    data[2, 2, 2] = 1
+    seg = tmp_path / 'seg.nii.gz'
+    nb.Nifti1Image(data, np.eye(4)).to_filename(seg)
+    gm = np.zeros((5, 5, 5), dtype=np.float32)
+    gm[1, 1, 1] = 0.4
+    gm[2, 2, 2] = 0.8
+    gm_file = tmp_path / 'gm.nii.gz'
+    nb.Nifti1Image(gm, np.eye(4)).to_filename(gm_file)
+
+    cfg = _create_config(tmp_path, [1], {'gm_prob_threshold': 0.5})
+
+    node = pe.Node(
+        ExtractRefRegion(
+            seg_file=str(seg),
+            gm_probseg=str(gm_file),
+            config_file=str(cfg),
+            segmentation_type='testseg',
+            region_name='region',
+        ),
+        name='er5',
+        base_dir=str(tmp_path),
+    )
+    res = node.run()
+    out = nb.load(res.outputs.refmask_file).get_fdata()
+    assert out.sum() == 1
+    assert out[2, 2, 2] == 1

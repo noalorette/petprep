@@ -235,6 +235,10 @@ def test_refmask_report_connections(bids_root: Path, tmp_path: Path):
         'inputnode.source_files',
     ) in petref_edge['connect']
 
+    gm_node = wf.get_node('select_gm_probseg')
+    edge_prob = wf._graph.get_edge_data(gm_node, wf.get_node('pet_refmask_wf'))
+    assert ('out', 'inputnode.gm_probseg') in edge_prob['connect']
+
     assert any(name.startswith('pet_ref_tacs_wf') for name in wf.list_node_names())
     assert 'ds_ref_tacs' in wf.list_node_names()
     ds_tacs = wf.get_node('ds_ref_tacs')

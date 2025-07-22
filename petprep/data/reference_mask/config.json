@@ -5,7 +5,16 @@
     "refmask_indices": [47, 8], 
     "erode_by_voxels": 1,
     "exclude_indices": [7, 46, 172, 1007, 2007, 1009, 2009, 1011, 2011, 1013, 2013, 16], 
-    "dilate_by_voxels": 3
+    "dilate_by_voxels": 3,
+    "gm_prob_threshold": 0.8
+    },
+    "thalamus": 
+    {
+    "refmask_indices": [10, 49], 
+    "erode_by_voxels": 1,
+    "exclude_indices": [14, 24], 
+    "dilate_by_voxels": 3,
+    "gm_prob_threshold": 0.2
     }
   },
   "wm": {
@@ -16,7 +25,8 @@
       "exclude_indices": [10, 49, 12, 51, 13, 52, 11, 50, 4, 43, 31, 63],
       "dilate_by_voxels": 3, 
       "smooth_fwhm_mm": 10,
-      "target_volume_ml": 40
+      "target_volume_ml": 40,
+      "gm_prob_threshold": 0
     }
   }
 }

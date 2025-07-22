@@ -243,6 +243,7 @@ configured with cubic B-spline interpolation.
             ('t1w_preproc', 'inputnode.t1w_preproc'),
             ('t1w_mask', 'inputnode.t1w_mask'),
             ('t1w_dseg', 'inputnode.t1w_dseg'),
+            ('t1w_tpms', 'inputnode.t1w_tpms'),
             ('subjects_dir', 'inputnode.subjects_dir'),
             ('subject_id', 'inputnode.subject_id'),
             ('fsnative2t1w_xfm', 'inputnode.fsnative2t1w_xfm'),
