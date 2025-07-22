@@ -7,7 +7,6 @@ freesurfer/average/711-2B_as_mni_average_305_mask.4dfp.img.rec
 freesurfer/average/711-2C_as_mni_average_305.4dfp.hdr
 freesurfer/average/711-2C_as_mni_average_305.4dfp.img.rec
 freesurfer/average/711-2C_as_mni_average_305.4dfp.mat
-freesurfer/average/aseg+spmhead+vermis+pons.ixi.gca
 freesurfer/average/Buckner_JNeurophysiol11_MNI152
 freesurfer/average/Choi_JNeurophysiol12_MNI152
 freesurfer/average/colortable_desikan_killiany.txt
