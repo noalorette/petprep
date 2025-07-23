@@ -194,7 +194,6 @@ freesurfer/bin/fscalc.fsl
 freesurfer/bin/fsdcmdecompress
 freesurfer/bin/fsfget
 freesurfer/bin/fsfirst.fsl
-freesurfer/bin/fs_install_mcr
 freesurfer/bin/fsl.5.0.2.xyztrans.sch
 freesurfer/bin/fs_lib_check
 freesurfer/bin/fsl_label2voxel
