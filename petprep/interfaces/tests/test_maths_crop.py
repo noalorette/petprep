@@ -1,9 +1,10 @@
-import numpy as np
-import nibabel as nb
 from pathlib import Path
+
+import nibabel as nb
+import numpy as np
 from nipype.pipeline import engine as pe
 
-from petprep.interfaces.maths import Label2Mask, CropAroundMask
+from petprep.interfaces.maths import CropAroundMask, Label2Mask
 
 
 def _make_nifti(data, fname):
