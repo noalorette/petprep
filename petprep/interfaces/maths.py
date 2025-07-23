@@ -121,7 +121,9 @@ class CropAroundMask(SimpleInterface):
         start = coords.min(axis=1)
         end = coords.max(axis=1) + 1
 
-        data = np.asanyarray(in_img.dataobj)[start[0]:end[0], start[1]:end[1], start[2]:end[2]]
+        data = np.asanyarray(in_img.dataobj)[
+            start[0] : end[0], start[1] : end[1], start[2] : end[2]
+        ]
 
         affine = in_img.affine.copy()
         zooms = in_img.header.get_zooms()[:3]
