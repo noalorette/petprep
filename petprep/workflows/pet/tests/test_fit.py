@@ -366,3 +366,22 @@ def test_refmask_reports_omitted(bids_root: Path, tmp_path: Path):
         wf = init_pet_fit_wf(pet_series=pet_series, precomputed={}, omp_nthreads=1)
 
     assert 'func_fit_reports_wf.ds_report_refmask' not in wf.list_node_names()
+
+
+def test_crop_nodes_present(bids_root: Path, tmp_path: Path):
+    """Ensure crop nodes are included in the reporting workflow."""
+    pet_series = [str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')]
+    img = nb.Nifti1Image(np.zeros((2, 2, 2, 1)), np.eye(4))
+    for path in pet_series:
+        img.to_filename(path)
+
+    sidecar = Path(pet_series[0]).with_suffix('').with_suffix('.json')
+    sidecar.write_text('{"FrameTimesStart": [0], "FrameDuration": [1]}')
+
+    with mock_config(bids_dir=bids_root):
+        wf = init_pet_fit_wf(pet_series=pet_series, precomputed={}, omp_nthreads=1)
+
+    reports = wf.get_node('func_fit_reports_wf')
+    assert 'crop_petref' in reports.list_node_names()
+    assert 'crop_t1w_petref' in reports.list_node_names()
+    assert 'crop_petref_wm' in reports.list_node_names()

@@ -82,3 +82,55 @@ class Label2Mask(SimpleInterface):
 
         self._results['out_file'] = out_file
         return runtime
+
+
+class CropAroundMaskInputSpec(TraitedSpec):
+    """Input specification for :class:`CropAroundMask`."""
+
+    in_file = File(exists=True, mandatory=True, desc='Image to crop')
+    mask_file = File(exists=True, mandatory=True, desc='Mask defining the region of interest')
+    out_file = File(desc='Output cropped image')
+
+
+class CropAroundMaskOutputSpec(TraitedSpec):
+    """Output specification for :class:`CropAroundMask`."""
+
+    out_file = File(exists=True, desc='Output cropped image')
+
+
+class CropAroundMask(SimpleInterface):
+    """Crop an image to the bounding box of a mask."""
+
+    input_spec = CropAroundMaskInputSpec
+    output_spec = CropAroundMaskOutputSpec
+
+    def _run_interface(self, runtime):
+        import nibabel as nb
+        import numpy as np
+
+        in_img = nb.load(self.inputs.in_file)
+        mask_img = nb.load(self.inputs.mask_file)
+        mask_data = np.asanyarray(mask_img.dataobj) > 0
+
+        if not mask_data.any():
+            out_file = self.inputs.in_file
+            self._results['out_file'] = out_file
+            return runtime
+
+        coords = np.array(np.where(mask_data))
+        start = coords.min(axis=1)
+        end = coords.max(axis=1) + 1
+
+        data = np.asanyarray(in_img.dataobj)[start[0]:end[0], start[1]:end[1], start[2]:end[2]]
+
+        affine = in_img.affine.copy()
+        zooms = in_img.header.get_zooms()[:3]
+        affine[:3, 3] += start * zooms
+
+        out_file = self.inputs.out_file
+        if not out_file:
+            out_file = fname_presuffix(self.inputs.in_file, suffix='_crop', newpath=runtime.cwd)
+
+        in_img.__class__(data, affine, in_img.header).to_filename(out_file)
+        self._results['out_file'] = out_file
+        return runtime
