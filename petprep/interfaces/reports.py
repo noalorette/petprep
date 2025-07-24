@@ -272,7 +272,7 @@ class FunctionalSummary(SummaryInterface):
             duration = frame_durations
 
         if duration is not None:
-            duration = duration / 60.0 # Convert to minutes
+            duration = duration / 60.0  # Convert to minutes
             duration = f'{duration:.1f}'
         else:
             duration = 'n/a'
