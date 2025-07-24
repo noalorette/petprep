@@ -72,3 +72,25 @@ def test_subject_summary_handles_missing_task(tmp_path):
     segment = summary._generate_segment()
     assert 'Task: rest (1 run)' in segment
     assert 'Task: <none> (1 run)' in segment
+
+
+def test_functional_summary_with_metadata():
+    from ..reports import FunctionalSummary
+
+    summary = FunctionalSummary(
+        registration='mri_coreg',
+        registration_dof=6,
+        orientation='RAS',
+        metadata={
+            'TracerName': 'DASB',
+            'InjectedRadioactivity': 100,
+            'InjectedRadioactivityUnits': 'MBq',
+            'FrameTimesStart': [0, 1],
+            'FrameDuration': [1, 1],
+        },
+    )
+
+    segment = summary._generate_segment()
+    assert 'Radiotracer: DASB' in segment
+    assert 'Injected dose: 100 MBq' in segment
+    assert 'Number of frames: 2' in segment

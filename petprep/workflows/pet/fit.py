@@ -221,6 +221,7 @@ def init_pet_fit_wf(
             registration=('Precomputed' if petref2anat_xform else 'mri_coreg'),
             registration_dof=config.workflow.pet2anat_dof,
             orientation=orientation,
+            metadata=metadata,
         ),
         name='summary',
         mem_gb=config.DEFAULT_MEMORY_MIN_GB,

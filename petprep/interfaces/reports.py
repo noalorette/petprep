@@ -98,6 +98,13 @@ FUNCTIONAL_TEMPLATE = """\
 \t\t<ul class="elem-desc">
 \t\t\t<li>Original orientation: {ornt}</li>
 \t\t\t<li>Registration: {registration}</li>
+\t\t\t<li>Time zero: {time_zero}</li>
+\t\t\t<li>Radiotracer: {tracer_radionuclide}-{radiotracer}</li>
+\t\t\t<li>Injected dose: {dose} {dose_units}</li>
+\t\t\t<li>Scan duration: {duration} minutes</li>
+\t\t\t<li>Number of frames: {n_frames}</li>
+\t\t\t<li>Frame start times (seconds): {frame_start_times}</li>
+\t\t\t<li>Frame durations (seconds): {frame_durations}</li>
 \t\t</ul>
 \t\t</details>
 """
@@ -228,6 +235,7 @@ class FunctionalSummaryInputSpec(TraitedSpec):
         6, 9, 12, desc='Registration degrees of freedom', mandatory=True
     )
     orientation = traits.Str(mandatory=True, desc='Orientation of the voxel axes')
+    metadata = traits.Dict(desc='PET metadata dictionary')
 
 
 class FunctionalSummary(SummaryInterface):
@@ -241,9 +249,49 @@ class FunctionalSummary(SummaryInterface):
         else:
             reg = f'FreeSurfer <code>mri_coreg</code> - {dof} dof'
 
+        meta = self.inputs.metadata or {}
+        time_zero = meta.get('TimeZero', None)
+        radiotracer = meta.get('TracerName', 'n/a')
+        tracer_radionuclide = meta.get('TracerRadionuclide', 'n/a')
+        dose = meta.get('InjectedRadioactivity')
+        dose_units = meta.get('InjectedRadioactivityUnits', '')
+        frame_times = meta.get('FrameTimesStart')
+        frame_durations = meta.get('FrameDuration')
+        n_frames = None
+        duration = None
+        if isinstance(frame_times, list):
+            n_frames = len(frame_times)
+            if isinstance(frame_durations, list):
+                duration = frame_times[-1] + frame_durations[-1]
+            elif frame_durations is not None:
+                duration = frame_times[-1] + frame_durations
+        elif isinstance(frame_durations, list):
+            n_frames = len(frame_durations)
+            duration = sum(frame_durations)
+        elif frame_durations is not None:
+            duration = frame_durations
+
+        if duration is not None:
+            duration = duration / 60.0 # Convert to minutes
+            duration = f'{duration:.1f}'
+        else:
+            duration = 'n/a'
+
+        dose_str = f'{dose}' if dose is not None else 'n/a'
+
         return FUNCTIONAL_TEMPLATE.format(
             registration=reg,
             ornt=self.inputs.orientation,
+            # Use the metadata dictionary to fill in the details
+            time_zero=time_zero,
+            radiotracer=radiotracer,
+            tracer_radionuclide=tracer_radionuclide,
+            dose=dose_str,
+            dose_units=dose_units,
+            duration=duration,
+            n_frames=n_frames,
+            frame_start_times=frame_times,
+            frame_durations=frame_durations,
         )
 
 
