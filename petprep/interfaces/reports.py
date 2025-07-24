@@ -254,7 +254,7 @@ class FunctionalSummary(SummaryInterface):
         radiotracer = meta.get('TracerName')
         tracer_radionuclide = meta.get('TracerRadionuclide')
         if radiotracer and tracer_radionuclide:
-            tracer_desc = f'{tracer_radionuclide}-{radiotracer}'
+            tracer_desc = f'{tracer_radionuclide}{radiotracer}'
         else:
             tracer_desc = 'n/a'
         dose = meta.get('InjectedRadioactivity')
