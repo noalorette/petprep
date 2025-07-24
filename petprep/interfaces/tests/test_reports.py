@@ -83,6 +83,7 @@ def test_functional_summary_with_metadata():
         orientation='RAS',
         metadata={
             'TracerName': 'DASB',
+            'Radionuclide': 'C-11',
             'InjectedRadioactivity': 100,
             'InjectedRadioactivityUnits': 'MBq',
             'FrameTimesStart': [0, 1],
@@ -91,6 +92,6 @@ def test_functional_summary_with_metadata():
     )
 
     segment = summary._generate_segment()
-    assert 'Radiotracer: DASB' in segment
+    assert 'Radiotracer: C-11-DASB' in segment
     assert 'Injected dose: 100 MBq' in segment
     assert 'Number of frames: 2' in segment
