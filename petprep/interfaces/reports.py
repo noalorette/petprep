@@ -99,7 +99,7 @@ FUNCTIONAL_TEMPLATE = """\
 \t\t\t<li>Original orientation: {ornt}</li>
 \t\t\t<li>Registration: {registration}</li>
 \t\t\t<li>Time zero: {time_zero}</li>
-\t\t\t<li>Radiotracer: {tracer_radionuclide}-{radiotracer}</li>
+\t\t\t<li>Radiotracer: {radiotracer}</li>
 \t\t\t<li>Injected dose: {dose} {dose_units}</li>
 \t\t\t<li>Scan duration: {duration} minutes</li>
 \t\t\t<li>Number of frames: {n_frames}</li>
@@ -251,8 +251,12 @@ class FunctionalSummary(SummaryInterface):
 
         meta = self.inputs.metadata or {}
         time_zero = meta.get('TimeZero', None)
-        radiotracer = meta.get('TracerName', 'n/a')
-        tracer_radionuclide = meta.get('TracerRadionuclide', 'n/a')
+        radiotracer = meta.get('TracerName')
+        tracer_radionuclide = meta.get('TracerRadionuclide')
+        if radiotracer and tracer_radionuclide:
+            tracer_desc = f'{tracer_radionuclide}-{radiotracer}'
+        else:
+            tracer_desc = 'n/a'
         dose = meta.get('InjectedRadioactivity')
         dose_units = meta.get('InjectedRadioactivityUnits', '')
         frame_times = meta.get('FrameTimesStart')
@@ -284,8 +288,7 @@ class FunctionalSummary(SummaryInterface):
             ornt=self.inputs.orientation,
             # Use the metadata dictionary to fill in the details
             time_zero=time_zero,
-            radiotracer=radiotracer,
-            tracer_radionuclide=tracer_radionuclide,
+            radiotracer=tracer_desc,
             dose=dose_str,
             dose_units=dose_units,
             duration=duration,
