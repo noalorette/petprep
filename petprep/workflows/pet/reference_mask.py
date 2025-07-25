@@ -65,6 +65,21 @@ def init_pet_refmask_wf(
     )
     make_morph.inputs.mask_name = ref_mask_name
 
+    ds_morph_tsv = pe.Node(
+        DerivativesDataSink(
+            base_directory=config.execution.petprep_dir,
+            ref=ref_mask_name,
+            allowed_entities=('ref',),
+            suffix='morph',
+            extension='.tsv',
+            datatype='pet',
+            check_hdr=False,
+        ),
+        name='ds_morphtsv',
+        run_without_submitting=True,
+        mem_gb=config.DEFAULT_MEMORY_MIN_GB,
+    )
+
     if ref_mask_index is not None:
         # Override config-based lookup and force manual indices
         extract_mask.inputs.override_indices = ref_mask_index
@@ -79,7 +94,21 @@ def init_pet_refmask_wf(
                     ('gm_probseg', 'gm_probseg'),
                 ],
             ),
-            (extract_mask, make_morph, [('refmask_file', 'mask_file')]),
+            (
+                extract_mask,
+                make_morph,
+                [('refmask_file', 'mask_file')],
+            ),
+            (
+                make_morph,
+                ds_morph_tsv,
+                [('out_file', 'in_file')],
+            ),
+            (
+                inputnode,
+                ds_morph_tsv,
+                [('seg_file', 'source_file')],
+            ),
             (make_morph, outputnode, [('out_file', 'morph_tsv')]),
             (extract_mask, outputnode, [('refmask_file', 'refmask_file')]),
         ]
