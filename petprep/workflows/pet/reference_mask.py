@@ -25,9 +25,11 @@
 from __future__ import annotations
 
 import nipype.pipeline.engine as pe
+from nipype.interfaces import utility as niu
+from petprep.interfaces import DerivativesDataSink
 
-from nipype.interfaces.utility import Function
 from petprep.interfaces.reference_mask import ExtractRefRegion
+from petprep import config
 from petprep.utils.reference_mask import mask_to_stats
 
 
@@ -56,7 +58,7 @@ def init_pet_refmask_wf(
     extract_mask.inputs.config_file = config_path
 
     make_morph = pe.Node(
-        Function(
+        niu.Function(
             input_names=['mask_file', 'mask_name'],
             output_names=['out_file'],
             function=mask_to_stats,
