@@ -75,7 +75,7 @@ def init_pet_refmask_wf(
             allowed_entities=('ref',),
             suffix='morph',
             extension='.tsv',
-            datatype='pet',
+            datatype='anat',
             check_hdr=False,
         ),
         name='ds_morphtsv',
