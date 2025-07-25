@@ -26,7 +26,9 @@ from __future__ import annotations
 
 import nipype.pipeline.engine as pe
 
+from nipype.interfaces.utility import Function
 from petprep.interfaces.reference_mask import ExtractRefRegion
+from petprep.utils.reference_mask import mask_to_stats
 
 
 def init_pet_refmask_wf(
@@ -46,12 +48,22 @@ def init_pet_refmask_wf(
         IdentityInterface(fields=['seg_file', 'gm_probseg']),
         name='inputnode',
     )
-    outputnode = pe.Node(IdentityInterface(fields=['refmask_file']), name='outputnode')
+    outputnode = pe.Node(IdentityInterface(fields=['refmask_file', 'morph_tsv']), name='outputnode')
 
     extract_mask = pe.Node(ExtractRefRegion(), name='extract_refregion')
     extract_mask.inputs.segmentation_type = segmentation
     extract_mask.inputs.region_name = ref_mask_name
     extract_mask.inputs.config_file = config_path
+
+    make_morph = pe.Node(
+        Function(
+            input_names=['mask_file', 'mask_name'],
+            output_names=['out_file'],
+            function=mask_to_stats,
+        ),
+        name='make_morphtsv',
+    )
+    make_morph.inputs.mask_name = ref_mask_name
 
     if ref_mask_index is not None:
         # Override config-based lookup and force manual indices
@@ -67,6 +79,8 @@ def init_pet_refmask_wf(
                     ('gm_probseg', 'gm_probseg'),
                 ],
             ),
+            (extract_mask, make_morph, [('refmask_file', 'mask_file')]),
+            (make_morph, outputnode, [('out_file', 'morph_tsv')]),
             (extract_mask, outputnode, [('refmask_file', 'refmask_file')]),
         ]
     )

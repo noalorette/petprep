@@ -223,6 +223,11 @@ Use ``--ref-mask-name`` to select a predefined region and
 ``--ref-mask-index`` to override the label indices.
 The presets are defined in ``petprep/data/reference_mask/config.json``.
 
+When a reference mask is created, *PETPrep* also generates a TSV table
+``ref-<name>_morph.tsv`` saved under the ``anat/`` derivatives folder. This
+table mirrors the segmentation morph tables and contains three columns:
+``index``, ``name`` and ``volume-mm3``.
+
 Troubleshooting
 ---------------
 Logs and crashfiles are output into the
