@@ -71,6 +71,7 @@ def init_pet_refmask_wf(
         DerivativesDataSink(
             base_directory=config.execution.petprep_dir,
             ref=ref_mask_name,
+            desc='refmask',
             allowed_entities=('ref',),
             suffix='morph',
             extension='.tsv',
