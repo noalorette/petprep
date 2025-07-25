@@ -46,32 +46,22 @@ def prepare_timing_parameters(metadata: dict):
     --------
 
     >>> prepare_timing_parameters({'FrameTimesStart': [0, 2, 6], 'FrameDuration': [2, 4, 4]})
-    {'VolumeTiming': [0, 2, 6], 'AcquisitionDuration': [2, 4, 4], 'SliceTimingCorrected': False}
+    {'FrameTimesStart': [0, 2, 6], 'FrameDuration': [2, 4, 4]}
     """
-    timing_parameters = {
-        key: metadata[key]
-        for key in (
-            'VolumeTiming',
-            'AcquisitionDuration',
-            'FrameTimesStart',
-            'FrameDuration',
-        )
-        if key in metadata
-    }
+    timing_parameters = {}
 
-    frame_times = timing_parameters.pop('FrameTimesStart', None)
-    frame_duration = timing_parameters.pop('FrameDuration', None)
+    frame_times = metadata.get('FrameTimesStart') or metadata.get('VolumeTiming')
+    frame_duration = metadata.get('FrameDuration') or metadata.get('AcquisitionDuration')
 
-    if 'RepetitionTime' not in timing_parameters and 'VolumeTiming' not in timing_parameters:
-        if frame_times is not None:
-            timing_parameters['VolumeTiming'] = frame_times
-            if frame_duration is not None:
-                if isinstance(frame_duration, list) and len(set(frame_duration)) == 1:
-                    timing_parameters.setdefault('AcquisitionDuration', frame_duration[0])
-                else:
-                    timing_parameters.setdefault('AcquisitionDuration', frame_duration)
+    if frame_times is not None:
+        timing_parameters['FrameTimesStart'] = frame_times
 
-    timing_parameters['SliceTimingCorrected'] = False
+    if frame_duration is not None:
+        timing_parameters['FrameDuration'] = frame_duration
+
+    for key in ('InjectedRadioactivity', 'InjectedRadioactivityUnits'):
+        if key in metadata:
+            timing_parameters[key] = metadata[key]
 
     return timing_parameters
 
