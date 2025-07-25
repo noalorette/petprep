@@ -59,7 +59,7 @@ def prepare_timing_parameters(metadata: dict):
     if frame_duration is not None:
         timing_parameters['FrameDuration'] = frame_duration
 
-    for key in ('InjectedRadioactivity', 'InjectedRadioactivityUnits'):
+    for key in ('InjectedRadioactivity', 'InjectedRadioactivityUnits', 'Units'):
         if key in metadata:
             timing_parameters[key] = metadata[key]
 
