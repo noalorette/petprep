@@ -243,7 +243,8 @@ def test_refmask_report_connections(bids_root: Path, tmp_path: Path):
     assert 'ds_ref_tacs' in wf.list_node_names()
     ds_tacs = wf.get_node('ds_ref_tacs')
     assert ds_tacs.inputs.ref == 'cerebellum'
-    assert ds_tacs.inputs.desc == config.workflow.seg
+    assert ds_tacs.inputs.seg == config.workflow.seg
+    assert ds_tacs.inputs.desc == 'preproc'
     edge_tacs = wf._graph.get_edge_data(wf.get_node('pet_ref_tacs_wf'), ds_tacs)
     assert ('outputnode.timeseries', 'in_file') in edge_tacs['connect']
 
