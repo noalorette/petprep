@@ -206,8 +206,8 @@ def init_pet_fit_wf(
         config.loggers.workflow.debug('Reusing motion correction transforms: %s', hmc_xforms)
 
     timing_parameters = prepare_timing_parameters(metadata)
-    frame_durations = timing_parameters.get('AcquisitionDuration')
-    frame_start_times = timing_parameters.get('VolumeTiming')
+    frame_durations = timing_parameters.get('FrameDuration')
+    frame_start_times = timing_parameters.get('FrameTimesStart')
 
     if frame_durations is None or frame_start_times is None:
         raise ValueError(
