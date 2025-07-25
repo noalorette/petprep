@@ -700,7 +700,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         DerivativesDataSink(
             base_directory=petprep_dir,
             suffix='timeseries',
-            desc=config.workflow.seg,
+            seg=config.workflow.seg,
+            desc='preproc',
+            allowed_entities=('seg',),
             TaskName=all_metadata[0].get('TaskName'),
             **prepare_timing_parameters(all_metadata[0]),
         ),
@@ -732,9 +734,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             DerivativesDataSink(
                 base_directory=petprep_dir,
                 suffix='timeseries',
-                desc=config.workflow.seg,
+                seg=config.workflow.seg,
+                desc='preproc',
                 ref=config.workflow.ref_mask_name,
-                allowed_entities=('ref',),
+                allowed_entities=('seg', 'ref'),
                 TaskName=all_metadata[0].get('TaskName'),
                 **prepare_timing_parameters(all_metadata[0]),
             ),

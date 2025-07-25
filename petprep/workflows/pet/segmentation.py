@@ -167,7 +167,8 @@ def _build_nodes(
     nodes['ds_seg'] = pe.Node(
         DerivativesDataSink(
             base_directory=config.execution.petprep_dir,
-            desc=desc,
+            seg=seg,
+            allowed_entities=('seg',),
             suffix='dseg',
             extension='.nii.gz',
             compress=True,
@@ -217,7 +218,8 @@ def _build_nodes(
     nodes['ds_dseg_tsv'] = pe.Node(
         DerivativesDataSink(
             base_directory=config.execution.petprep_dir,
-            desc=desc,
+            seg=seg,
+            allowed_entities=('seg',),
             suffix='dseg',
             extension='.tsv',
             datatype='anat',
@@ -230,7 +232,8 @@ def _build_nodes(
     nodes['ds_morph_tsv'] = pe.Node(
         DerivativesDataSink(
             base_directory=config.execution.petprep_dir,
-            desc=desc,
+            seg=seg,
+            allowed_entities=('seg',),
             suffix='morph',
             extension='.tsv',
             datatype='anat',
