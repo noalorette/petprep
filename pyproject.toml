@@ -80,6 +80,8 @@ test = [
     "pytest-cov >= 2.11",
     "pytest-env",
     "pytest-xdist >= 2.5",
+    "datalad",
+    "datalad-osf",
 ]
 maint = [
     "fuzzywuzzy",
