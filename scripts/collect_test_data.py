@@ -2,6 +2,7 @@ from datalad import api
 from tempfile import TemporaryDirectory
 from pathlib import Path
 from os.path import join
+import pprint
 import shutil
 import subprocess
 import bids
@@ -75,6 +76,7 @@ For questions about this test dataset or PETPrep:
 *This is a test dataset compiled for software development purposes. Please refer to the original datasets for research use.*
 """
 
+
 # Create dataset_description.json content
 def create_dataset_description():
     """Create BIDS dataset_description.json content."""
@@ -83,12 +85,7 @@ def create_dataset_description():
         "BIDSVersion": "1.7.0",
         "DatasetType": "raw",
         "License": "CC0",
-        "Authors": [
-            "datalad",
-            "python", 
-            "make",
-            "openneuro"
-        ],
+        "Authors": ["datalad", "python", "make", "openneuro"],
         "HowToAcknowledge": "Please cite the original datasets and PETPrep software.",
         "Funding": [
             "This test data collection was created for PETPrep development and testing purposes"
@@ -98,72 +95,97 @@ def create_dataset_description():
         ],
         "ReferencesAndLinks": [
             "https://github.com/nipreps/petprep",
-            "https://openneuro.org"
+            "https://openneuro.org",
         ],
         "DatasetDOI": "10.18112/openneuro.ds000000.v1.0.0",
-        "HEDVersion": "8.0.0"
+        "HEDVersion": "8.0.0",
     }
+
 
 # Create README.md content
 def create_readme_content(pet_datasets, readme_template):
     """Create README content dynamically based on the datasets."""
-    
+
     # Generate dataset list dynamically
     dataset_list = ""
     for i, (dataset_id, meta) in enumerate(pet_datasets.items(), 1):
         dataset_list += f"{i}. **{dataset_id}**: {meta['description']}\n"
-    
+
     return readme_template.format(dataset_list=dataset_list)
 
 
 pet_datasets = {
     "ds005619": {
         "version": "1.1.0",
-        "description": "[18F]SF51, a Novel 18F-labeled PET Radioligand for Translocator Protein 18kDa (TSPO) in Brain, Works Well in Monkeys but Fails in Humans",
-        "subject_ids": ["sf02"]
+        "description": "[18F]SF51, a Novel 18F-labeled PET Radioligand for "
+        "Translocator Protein 18kDa (TSPO) in Brain, Works Well "
+        "in Monkeys but Fails in Humans",
+        "subject_ids": ["sf02"],
     },
     "ds004868": {
         "version": "1.0.4",
-        "description": "[11C]PS13 demonstrates pharmacologically selective and substantial binding to cyclooxygenase-1 (COX-1) in the human brain",
-        "subject_ids": ["PSBB01"]
+        "description": "[11C]PS13 demonstrates pharmacologically selective and "
+        "substantial binding to cyclooxygenase-1 (COX-1) in the "
+        "human brain",
+        "subject_ids": ["PSBB01"],
     },
     "ds004869": {
         "version": "1.1.1",
         "description": "https://openneuro.org/datasets/ds004869/versions/1.1.1",
-        "subject_ids": ["01"]
+        "subject_ids": ["01"],
     },
 }
 
 openneuro_template_string = "https://github.com/OpenNeuroDatasets/{DATASET_ID}.git"
 
 
-
-def download_test_data(working_directory=TemporaryDirectory(), output_directory=os.getcwd()):
+def download_test_data(
+    working_directory=TemporaryDirectory(),
+    output_directory=os.getcwd(),
+    pet_datasets_json=None,  # Default to None, not the dict
+):
+    # Use default datasets if no JSON file provided
+    if pet_datasets_json is None:
+        datasets_to_use = pet_datasets  # Use the default defined at module level
+    else:
+        # Load from JSON file
+        with open(pet_datasets_json, "r") as infile:
+            datasets_to_use = json.load(infile)
+    
     with working_directory as data_path:
         combined_participants_tsv = pd.DataFrame()
         combined_subjects = []
         combined_dataset_files = []
-        for dataset_id, meta in pet_datasets.items():
+        for dataset_id, meta in datasets_to_use.items():  # Use datasets_to_use instead of pet_datasets
             dataset_path = Path(data_path) / Path(dataset_id)
             if dataset_path.is_dir() and len(sys.argv) <= 1:
                 dataset_path.rmdir()
-            dataset = api.install(path=dataset_path, source=openneuro_template_string.format(DATASET_ID=dataset_id))
-            #api.unlock(str(dataset_path))
+            dataset = api.install(
+                path=dataset_path,
+                source=openneuro_template_string.format(DATASET_ID=dataset_id),
+            )
+            # api.unlock(str(dataset_path))
             dataset.unlock()
 
             # see how pybids handles this datalad nonsense
-            b = bids.layout.BIDSLayout(dataset_path, derivatives=False) # when petderivatives are a thing, we'll think about using pybids to get them
-            
+            b = bids.layout.BIDSLayout(
+                dataset_path, derivatives=False
+            )  # when petderivatives are a thing, we'll think about using pybids to get them
+
             # Access participants.tsv
-            participants_files = b.get(suffix="participants", extension=".tsv", return_type="file")
+            participants_files = b.get(
+                suffix="participants", extension=".tsv", return_type="file"
+            )
             if participants_files:
                 participants_file = participants_files[0]
-                
+
                 # Read participants.tsv as pandas DataFrame
                 participants_df = pd.read_csv(participants_file, sep="\t")
-                
+
                 # Combine with overall participants DataFrame
-                combined_participants_tsv = pd.concat([combined_participants_tsv, participants_df], ignore_index=True)
+                combined_participants_tsv = pd.concat(
+                    [combined_participants_tsv, participants_df], ignore_index=True
+                )
             # if a subset of subjects are specified collect only those subjects in the install
             if meta.get("subject_ids", []) != []:
                 for id in meta["subject_ids"]:
@@ -182,16 +204,20 @@ def download_test_data(working_directory=TemporaryDirectory(), output_directory=
                         print(f)
                         # Get the file relative to the dataset path
                         result = dataset.get(dataset_path / f)
-                        print(result)
-                        if result[0].get("status") == "ok" or result[0].get("message") == "already present":
+                        if (
+                            result[0].get("status") == "ok"
+                            or result[0].get("message") == "already present"
+                        ):
                             # Then unlock it to make it writable
-                            api.unlock(path=str(dataset_path / f), dataset=str(dataset_path))
+                            api.unlock(
+                                path=str(dataset_path / f), dataset=str(dataset_path)
+                            )
                             source_file = dataset_path / f
                             relative_path = source_file.relative_to(dataset_path)
                             target_file = Path(output_directory) / relative_path
                             target_file.parent.mkdir(parents=True, exist_ok=True)
                             shutil.copy2(source_file, target_file)
-                        
+
             else:
                 combined_subjects += b.get(return_type="id", target="subject")
                 # Get all files first
@@ -200,31 +226,79 @@ def download_test_data(working_directory=TemporaryDirectory(), output_directory=
                 shutil.copytree(dataset_path, output_directory)
 
         combined_subjects = [f"sub-{s}" for s in combined_subjects]
-        
+
         # Filter participants DataFrame to keep only subjects in combined_subjects list
         combined_participants = combined_participants_tsv[
-            combined_participants_tsv['participant_id'].isin(combined_subjects)
+            combined_participants_tsv["participant_id"].isin(combined_subjects)
         ]
-        
+
         print(combined_participants)
 
         # Only write files if a specific download path was provided
         dataset_desc_path = Path(output_directory) / "dataset_description.json"
         readme_path = Path(output_directory) / "README.md"
-        
-        with open(dataset_desc_path, 'w') as f:
-            json.dump(create_dataset_description(), f, indent=4)
-        
-        with open(readme_path, 'w') as f:
-            f.write(create_readme_content(pet_datasets, readme_template))
-        combined_participants.to_csv(Path(output_directory) / "participants.tsv", sep="\t", index=False)
 
+        with open(dataset_desc_path, "w") as f:
+            json.dump(create_dataset_description(), f, indent=4)
+
+        with open(readme_path, "w") as f:
+            f.write(create_readme_content(pet_datasets, readme_template))
+        combined_participants.to_csv(
+            Path(output_directory) / "participants.tsv", sep="\t", index=False
+        )
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="PETPrepTestDataCollector", description="Collects PET datasets from OpenNeuro.org and combines them into a single BIDS dataset using datalad and pandas",)
-    parser.add_argument("--working-directory", "-w", type=str, default=TemporaryDirectory(), help="Working directory for downloading and combining datasets, defaults to a temporary directory.")
-    parser.add_argument("--output-directory", "-o", type=str, default=os.getcwd(), help=f"Output directory of combined dataset, defaults where this script is called from, presently {os.getcwd}")
+    parser = argparse.ArgumentParser(
+        prog="PETPrepTestDataCollector",
+        description="Collects PET datasets from OpenNeuro.org and combines them into a single BIDS dataset using datalad and pandas",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    parser.add_argument(
+        "--working-directory",
+        "-w",
+        type=str,
+        default=TemporaryDirectory(),
+        help="Working directory for downloading and combining datasets, defaults to a temporary directory.",
+    )
+    parser.add_argument(
+        "--output-directory",
+        "-o",
+        type=str,
+        default=os.getcwd(),
+        help=f"Output directory of combined dataset, defaults where this script is called from, presently {os.getcwd()}",
+    )
+    parser.add_argument(
+        "--datasets-json",
+        "-j",
+        type=str,
+        default=None,
+        help="""Use a custom json of datasets along 
+a subset of subjects can also be specified.
+The default is structured like the following:
+
+{
+    "ds005619": {
+        "version": "1.1.0",
+        "description": "[description]",
+        "subject_ids": ["sf02"]
+        },
+    "ds004868": {
+        "version": "1.0.4",
+        "description": "[description]", 
+        "subject_ids": ["PSBB01"]
+        },
+    "ds004869": {
+        "version": "1.1.1",
+        "description": "[description]",
+        "subject_ids": ["01"]
+        }
+},""",
+    )
     args = parser.parse_args()
 
-    download_test_data(working_directory=args.working_directory, output_directory=args.output_directory)
+    download_test_data(
+        working_directory=args.working_directory, 
+        output_directory=args.output_directory,
+        pet_datasets_json=args.datasets_json  # This will be None if not provided
+    )
