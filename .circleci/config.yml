@@ -65,6 +65,13 @@ _check_skip_job: &check_skip_job
     fi
     echo "No skip"
 
+_setup_petprep_docker: &setup_petprep_docker
+  name: Install PETPrep's docker wrapper
+  command: |
+    pyenv local 3
+    pip install --upgrade pip
+    pip install --upgrade /tmp/src/petprep/wrapper/
+
 _check_outputs: &check_outputs
   name: Check outputs of petprep run
   command: |
@@ -256,6 +263,36 @@ jobs:
               -e TEST_READONLY_FILESYSTEM=1 -v $HOME:/home/readonly:ro \
               --entrypoint="pytest" nipreps/petprep:latest \
               --pyargs petprep -svx --doctest-modules
+
+      - run:
+          name: Build petprep-docker wheel
+          command: |
+            pyenv local 3
+            pip install --upgrade pip build
+            python -m build wrapper/
+      - run:
+          name: Install and test petprep-docker (Python 3)
+          command: |
+            echo -n "Python version: "
+            python --version
+            pip install --upgrade wrapper/
+            pip install wrapper/dist/*.whl
+            which petprep-docker
+            petprep-docker -i nipreps/petprep:latest --help
+            petprep-docker -i nipreps/petprep:latest --version
+      - run:
+          name: Install and test petprep-docker (Python 2)
+          command: |
+            pyenv local 2.7
+            echo -n "Python version: "
+            python --version
+            pip install --upgrade "pip<21"
+            pip install wrapper/dist/*.whl
+            which petprep-docker
+            petprep-docker -i nipreps/petprep:latest --help
+            petprep-docker -i nipreps/petprep:latest --version
+      - store_artifacts:
+          path: /tmp/data/reports
 
   deploy_docker_patches:
     <<: *machine_defaults
