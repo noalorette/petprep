@@ -5,7 +5,6 @@ import petprep_docker.__main__ as ppd
 
 
 def test_docker_get_parser():
-
     parser = ppd.get_parser()
     assert parser is not None
 
