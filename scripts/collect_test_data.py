@@ -1,21 +1,31 @@
-from datalad import api
-from tempfile import TemporaryDirectory
-from pathlib import Path
-from os.path import join
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "datalad",
+# ]
+# ///
+
+import argparse
+import json
+import os
 import shutil
-import subprocess
+import sys
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import Union
+
 import bids
 import pandas as pd
-import sys
-import json
-import argparse
-import os
+from datalad import api
 
 readme_template = """# PETPrep Test Data Collection
 
 ## Overview
 
-This dataset contains a curated collection of PET imaging data from multiple OpenNeuro datasets, compiled for testing and development of the PETPrep software pipeline. The data has been selected to provide a diverse range of PET imaging scenarios for comprehensive software testing.
+This dataset contains a curated collection of PET imaging data from multiple
+OpenNeuro datasets,compiled for testing and development of the PETPrep software pipeline.
+The data has been selected to provide a diverse range of PET imaging scenarios for comprehensive
+software testing.
 
 ## Dataset Information
 
@@ -72,7 +82,8 @@ For questions about this test dataset or PETPrep:
 
 ---
 
-*This is a test dataset compiled for software development purposes. Please refer to the original datasets for research use.*
+*This is a test dataset compiled for software development purposes. Please refer to the original
+ datasets for research use.*
 """
 
 
@@ -90,7 +101,8 @@ def create_dataset_description():
             'This test data collection was created for PETPrep development and testing purposes'
         ],
         'EthicsApprovals': [
-            'This is a test dataset compiled from publicly available BIDS datasets for software testing purposes'
+            'This is a test dataset compiled from publicly available BIDS datasets for software',
+            'testing purposes'
         ],
         'ReferencesAndLinks': [
             'https://github.com/nipreps/petprep',
@@ -139,8 +151,8 @@ openneuro_template_string = 'https://github.com/OpenNeuroDatasets/{DATASET_ID}.g
 
 
 def download_test_data(
-    working_directory=TemporaryDirectory(),
-    output_directory=os.getcwd(),
+    working_directory: Union(TemporaryDirectory, None)=None,
+    output_directory: Union(Path, str)='',
     pet_datasets_json=None,  # Default to None, not the dict
 ):
     # Use default datasets if no JSON file provided
@@ -148,13 +160,18 @@ def download_test_data(
         datasets_to_use = pet_datasets  # Use the default defined at module level
     else:
         # Load from JSON file
-        with open(pet_datasets_json, 'r') as infile:
+        with open(pet_datasets_json) as infile:
             datasets_to_use = json.load(infile)
+
+    if not working_directory:
+        working_directory = TemporaryDirectory()
+
+    if not output_directory:
+        output_directory = os.getcwd()
 
     with working_directory as data_path:
         combined_participants_tsv = pd.DataFrame()
         combined_subjects = []
-        combined_dataset_files = []
         for (
             dataset_id,
             meta,
@@ -188,13 +205,14 @@ def download_test_data(
                 )
             # if a subset of subjects are specified collect only those subjects in the install
             if meta.get('subject_ids', []) != []:
-                for id in meta['subject_ids']:
-                    combined_subjects.append(id)
+                for _id in meta['subject_ids']:
+                    combined_subjects.append(_id)
                     # Get the entire subject directory content including git-annex files
-                    subject_dir = dataset_path / f'sub-{id}'
+                    subject_dir = dataset_path / f'sub-{_id}'
                     if subject_dir.exists():
-                        # First, get all content in the subject directory (this retrieves git-annex files)
-                        result = dataset.get(str(subject_dir))
+                        # First, get all content in the subject directory
+                        # (this retrieves git-annex files)
+                        dataset.get(str(subject_dir))
 
                         # Then collect all files after they've been retrieved
                         all_files = []
@@ -245,7 +263,8 @@ def download_test_data(
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog='PETPrepTestDataCollector',
-        description='Collects PET datasets from OpenNeuro.org and combines them into a single BIDS dataset using datalad and pandas',
+        description='Collects PET datasets from OpenNeuro.org and'
+        'combines them into a single BIDS dataset using datalad and pandas',
         formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument(
@@ -253,21 +272,23 @@ if __name__ == '__main__':
         '-w',
         type=str,
         default=TemporaryDirectory(),
-        help='Working directory for downloading and combining datasets, defaults to a temporary directory.',
+        help='Working directory for downloading and combining datasets,'
+        'defaults to a temporary directory.',
     )
     parser.add_argument(
         '--output-directory',
         '-o',
         type=str,
         default=os.getcwd(),
-        help=f'Output directory of combined dataset, defaults where this script is called from, presently {os.getcwd()}',
+        help='Output directory of combined dataset,'
+        'defaults where this script is called from, presently {os.getcwd()}',
     )
     parser.add_argument(
         '--datasets-json',
         '-j',
         type=str,
         default=None,
-        help="""Use a custom json of datasets along 
+        help="""Use a custom json of datasets along
 a subset of subjects can also be specified.
 The default is structured like the following:
 
@@ -279,7 +300,7 @@ The default is structured like the following:
         },
     "ds004868": {
         "version": "1.0.4",
-        "description": "[description]", 
+        "description": "[description]",
         "subject_ids": ["PSBB01"]
         },
     "ds004869": {
