@@ -8,8 +8,8 @@ available and are used as the input.
 Certain processing steps will run only when the required metadata is
 available in the input dataset.
 
-A (very) high-level view of the simplest pipeline (for a single-band dataset with only
-one task, single-run, with no slice-timing information nor fieldmap acquisitions)
+A (very) high-level view of the simplest pipeline (for a single dataset with only
+a single tracer and single baseline)
 is presented below:
 
 .. workflow::
@@ -393,27 +393,6 @@ The smoothing kernel width and onset of motion estimation can be
 customized via the :option:`--hmc-fwhm` and :option:`--hmc-start-time`
 command line options.  By default a 10 mm FWHM Gaussian is applied and
 estimation begins at 120 s.
-
-Susceptibility Distortion Correction (SDC)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-One of the major problems that affects :abbr:`EPI (echo planar imaging)` data
-is the spatial distortion caused by the inhomogeneity of the field inside
-the scanner.
-
-.. figure:: _static/unwarping.svg
-
-    Applying susceptibility-derived distortion correction, based on
-    fieldmap estimation.
-
-Please note that all routines for susceptibility-derived distortion correction
-have been excised off of *PETPrep* for utilization on other projects
-(e.g., `dMRIPrep <https://www.nipreps.org/dmriprep>`__).
-For more detailed documentation on
-:abbr:`SDC (susceptibility-derived distortion correction)`
-routines, check on the `SDCFlows component <https://www.nipreps.org/sdcflows>`__.
-
-Theory, methods and references are found within the
-`SDCFlows documentation <https://www.nipreps.org/sdcflows/master/api/sdcflows.workflows.fit.fieldmap.html>`__.
 
 Pre-processed PET in native space
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
