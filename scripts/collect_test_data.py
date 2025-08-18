@@ -80,24 +80,24 @@ For questions about this test dataset or PETPrep:
 def create_dataset_description():
     """Create BIDS dataset_description.json content."""
     return {
-        "Name": "PETPrep Test Data Collection",
-        "BIDSVersion": "1.7.0",
-        "DatasetType": "raw",
-        "License": "CC0",
-        "Authors": ["datalad", "python", "make", "openneuro"],
-        "HowToAcknowledge": "Please cite the original datasets and PETPrep software.",
-        "Funding": [
-            "This test data collection was created for PETPrep development and testing purposes"
+        'Name': 'PETPrep Test Data Collection',
+        'BIDSVersion': '1.7.0',
+        'DatasetType': 'raw',
+        'License': 'CC0',
+        'Authors': ['datalad', 'python', 'make', 'openneuro'],
+        'HowToAcknowledge': 'Please cite the original datasets and PETPrep software.',
+        'Funding': [
+            'This test data collection was created for PETPrep development and testing purposes'
         ],
-        "EthicsApprovals": [
-            "This is a test dataset compiled from publicly available BIDS datasets for software testing purposes"
+        'EthicsApprovals': [
+            'This is a test dataset compiled from publicly available BIDS datasets for software testing purposes'
         ],
-        "ReferencesAndLinks": [
-            "https://github.com/nipreps/petprep",
-            "https://openneuro.org",
+        'ReferencesAndLinks': [
+            'https://github.com/nipreps/petprep',
+            'https://openneuro.org',
         ],
-        "DatasetDOI": "10.18112/openneuro.ds000000.v1.0.0",
-        "HEDVersion": "8.0.0",
+        'DatasetDOI': '10.18112/openneuro.ds000000.v1.0.0',
+        'HEDVersion': '8.0.0',
     }
 
 
@@ -106,36 +106,36 @@ def create_readme_content(pet_datasets, readme_template):
     """Create README content dynamically based on the datasets."""
 
     # Generate dataset list dynamically
-    dataset_list = ""
+    dataset_list = ''
     for i, (dataset_id, meta) in enumerate(pet_datasets.items(), 1):
-        dataset_list += f"{i}. **{dataset_id}**: {meta['description']}\n"
+        dataset_list += f'{i}. **{dataset_id}**: {meta["description"]}\n'
 
     return readme_template.format(dataset_list=dataset_list)
 
 
 pet_datasets = {
-    "ds005619": {
-        "version": "1.1.0",
-        "description": "[18F]SF51, a Novel 18F-labeled PET Radioligand for "
-        "Translocator Protein 18kDa (TSPO) in Brain, Works Well "
-        "in Monkeys but Fails in Humans",
-        "subject_ids": ["sf02"],
+    'ds005619': {
+        'version': '1.1.0',
+        'description': '[18F]SF51, a Novel 18F-labeled PET Radioligand for '
+        'Translocator Protein 18kDa (TSPO) in Brain, Works Well '
+        'in Monkeys but Fails in Humans',
+        'subject_ids': ['sf02'],
     },
-    "ds004868": {
-        "version": "1.0.4",
-        "description": "[11C]PS13 demonstrates pharmacologically selective and "
-        "substantial binding to cyclooxygenase-1 (COX-1) in the "
-        "human brain",
-        "subject_ids": ["PSBB01"],
+    'ds004868': {
+        'version': '1.0.4',
+        'description': '[11C]PS13 demonstrates pharmacologically selective and '
+        'substantial binding to cyclooxygenase-1 (COX-1) in the '
+        'human brain',
+        'subject_ids': ['PSBB01'],
     },
-    "ds004869": {
-        "version": "1.1.1",
-        "description": "https://openneuro.org/datasets/ds004869/versions/1.1.1",
-        "subject_ids": ["01"],
+    'ds004869': {
+        'version': '1.1.1',
+        'description': 'https://openneuro.org/datasets/ds004869/versions/1.1.1',
+        'subject_ids': ['01'],
     },
 }
 
-openneuro_template_string = "https://github.com/OpenNeuroDatasets/{DATASET_ID}.git"
+openneuro_template_string = 'https://github.com/OpenNeuroDatasets/{DATASET_ID}.git'
 
 
 def download_test_data(
@@ -148,14 +148,17 @@ def download_test_data(
         datasets_to_use = pet_datasets  # Use the default defined at module level
     else:
         # Load from JSON file
-        with open(pet_datasets_json, "r") as infile:
+        with open(pet_datasets_json, 'r') as infile:
             datasets_to_use = json.load(infile)
-    
+
     with working_directory as data_path:
         combined_participants_tsv = pd.DataFrame()
         combined_subjects = []
         combined_dataset_files = []
-        for dataset_id, meta in datasets_to_use.items():  # Use datasets_to_use instead of pet_datasets
+        for (
+            dataset_id,
+            meta,
+        ) in datasets_to_use.items():  # Use datasets_to_use instead of pet_datasets
             dataset_path = Path(data_path) / Path(dataset_id)
             if dataset_path.is_dir() and len(sys.argv) <= 1:
                 dataset_path.rmdir()
@@ -172,43 +175,39 @@ def download_test_data(
             )  # when petderivatives are a thing, we'll think about using pybids to get them
 
             # Access participants.tsv
-            participants_files = b.get(
-                suffix="participants", extension=".tsv", return_type="file"
-            )
+            participants_files = b.get(suffix='participants', extension='.tsv', return_type='file')
             if participants_files:
                 participants_file = participants_files[0]
 
                 # Read participants.tsv as pandas DataFrame
-                participants_df = pd.read_csv(participants_file, sep="\t")
+                participants_df = pd.read_csv(participants_file, sep='\t')
 
                 # Combine with overall participants DataFrame
                 combined_participants_tsv = pd.concat(
                     [combined_participants_tsv, participants_df], ignore_index=True
                 )
             # if a subset of subjects are specified collect only those subjects in the install
-            if meta.get("subject_ids", []) != []:
-                for id in meta["subject_ids"]:
+            if meta.get('subject_ids', []) != []:
+                for id in meta['subject_ids']:
                     combined_subjects.append(id)
                     # Get the entire subject directory content including git-annex files
-                    subject_dir = dataset_path / f"sub-{id}"
+                    subject_dir = dataset_path / f'sub-{id}'
                     if subject_dir.exists():
                         # First, get all content in the subject directory (this retrieves git-annex files)
                         result = dataset.get(str(subject_dir))
-                        
+
                         # Then collect all files after they've been retrieved
                         all_files = []
-                        for file_path in subject_dir.rglob("*"):
+                        for file_path in subject_dir.rglob('*'):
                             if file_path.is_file():
                                 relative_path = file_path.relative_to(dataset_path)
                                 all_files.append(str(relative_path))
-                        
+
                         # Copy all files to output directory
                         for f in all_files:
                             print(f)
                             # Unlock the file to make it writable
-                            api.unlock(
-                                path=str(dataset_path / f), dataset=str(dataset_path)
-                           )
+                            api.unlock(path=str(dataset_path / f), dataset=str(dataset_path))
                             source_file = dataset_path / f
                             relative_path = source_file.relative_to(dataset_path)
                             target_file = Path(output_directory) / relative_path
@@ -216,56 +215,56 @@ def download_test_data(
                             shutil.copy2(source_file, target_file)
 
             else:
-                combined_subjects += b.get(return_type="id", target="subject")
+                combined_subjects += b.get(return_type='id', target='subject')
                 # Get all files first
                 dataset.get(dataset_path)
                 api.unlock(path=str(dataset_path), dataset=dataset)
                 shutil.copytree(dataset_path, output_directory)
 
-        combined_subjects = [f"sub-{s}" for s in combined_subjects]
+        combined_subjects = [f'sub-{s}' for s in combined_subjects]
 
         # Filter participants DataFrame to keep only subjects in combined_subjects list
         combined_participants = combined_participants_tsv[
-            combined_participants_tsv["participant_id"].isin(combined_subjects)
+            combined_participants_tsv['participant_id'].isin(combined_subjects)
         ]
 
         # Only write files if a specific download path was provided
-        dataset_desc_path = Path(output_directory) / "dataset_description.json"
-        readme_path = Path(output_directory) / "README.md"
+        dataset_desc_path = Path(output_directory) / 'dataset_description.json'
+        readme_path = Path(output_directory) / 'README.md'
 
-        with open(dataset_desc_path, "w") as f:
+        with open(dataset_desc_path, 'w') as f:
             json.dump(create_dataset_description(), f, indent=4)
 
-        with open(readme_path, "w") as f:
+        with open(readme_path, 'w') as f:
             f.write(create_readme_content(pet_datasets, readme_template))
         combined_participants.to_csv(
-            Path(output_directory) / "participants.tsv", sep="\t", index=False
+            Path(output_directory) / 'participants.tsv', sep='\t', index=False
         )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        prog="PETPrepTestDataCollector",
-        description="Collects PET datasets from OpenNeuro.org and combines them into a single BIDS dataset using datalad and pandas",
+        prog='PETPrepTestDataCollector',
+        description='Collects PET datasets from OpenNeuro.org and combines them into a single BIDS dataset using datalad and pandas',
         formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument(
-        "--working-directory",
-        "-w",
+        '--working-directory',
+        '-w',
         type=str,
         default=TemporaryDirectory(),
-        help="Working directory for downloading and combining datasets, defaults to a temporary directory.",
+        help='Working directory for downloading and combining datasets, defaults to a temporary directory.',
     )
     parser.add_argument(
-        "--output-directory",
-        "-o",
+        '--output-directory',
+        '-o',
         type=str,
         default=os.getcwd(),
-        help=f"Output directory of combined dataset, defaults where this script is called from, presently {os.getcwd()}",
+        help=f'Output directory of combined dataset, defaults where this script is called from, presently {os.getcwd()}',
     )
     parser.add_argument(
-        "--datasets-json",
-        "-j",
+        '--datasets-json',
+        '-j',
         type=str,
         default=None,
         help="""Use a custom json of datasets along 
@@ -293,7 +292,7 @@ The default is structured like the following:
     args = parser.parse_args()
 
     download_test_data(
-        working_directory=args.working_directory, 
+        working_directory=args.working_directory,
         output_directory=args.output_directory,
-        pet_datasets_json=args.datasets_json  # This will be None if not provided
+        pet_datasets_json=args.datasets_json,  # This will be None if not provided
     )
