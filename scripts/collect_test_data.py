@@ -2,6 +2,8 @@
 # requires-python = ">=3.11"
 # dependencies = [
 #     "datalad",
+#     "pandas",
+#     "pybids",
 # ]
 # ///
 
@@ -12,7 +14,6 @@ import shutil
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Union
 
 import bids
 import pandas as pd
@@ -151,8 +152,8 @@ openneuro_template_string = 'https://github.com/OpenNeuroDatasets/{DATASET_ID}.g
 
 
 def download_test_data(
-    working_directory: Union(TemporaryDirectory, None)=None,
-    output_directory: Union(Path, str)='',
+    working_directory: TemporaryDirectory | None = None,
+    output_directory: Path | str = '',
     pet_datasets_json=None,  # Default to None, not the dict
 ):
     # Use default datasets if no JSON file provided
