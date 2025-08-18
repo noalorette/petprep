@@ -19,6 +19,7 @@ import bids
 import pandas as pd
 from datalad import api
 
+# fmt: skip
 readme_template = """# PETPrep Test Data Collection
 
 ## Overview
@@ -91,6 +92,7 @@ For questions about this test dataset or PETPrep:
 # Create dataset_description.json content
 def create_dataset_description():
     """Create BIDS dataset_description.json content."""
+    # fmt: skip
     return {
         'Name': 'PETPrep Test Data Collection',
         'BIDSVersion': '1.7.0',
@@ -103,7 +105,7 @@ def create_dataset_description():
         ],
         'EthicsApprovals': [
             'This is a test dataset compiled from publicly available BIDS datasets for software',
-            'testing purposes'
+            'testing purposes',
         ],
         'ReferencesAndLinks': [
             'https://github.com/nipreps/petprep',
