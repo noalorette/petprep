@@ -176,6 +176,27 @@ This feature has several intended use-cases:
 See also the ``--level`` flag, which can be used to control which derivatives are
 generated.
 
+Head motion correction
+----------------------
+*PETPrep* can correct for head motion in the PET data.
+The head motion is estimated using a frame-based robust registration approach to an unbiased mean 
+volume implemented in FreeSurfer's mri_robust_register (Reuter et al., 2010), combined with 
+preprocessing steps using tools from FSL (Jenkinson et al., 2012). Specifically, for the estimation 
+of head motion, each frame is initially smoothed with a Gaussian filter (full-width half-maximum [FWHM] of 10 mm, --hmc-fwhm 10), 
+followed by thresholding at 20% of the intensity range to reduce noise and improve registration 
+accuracy (removing stripe artefacts from filtered back projection reconstructions). 
+Per default, the motion is estimated selectively of frames acquired after 120 seconds post-injection of the tracer (--hmc-start-time 120),
+as frames before this often contain low count statistics. Frames preceding 120 seconds were corrected 
+using identical transformations as derived for the first frame after 120 seconds. The robust 
+registration (mri_robust_register) algorithm utilized settings optimized for PET data: intensity 
+scaling was enabled, automated sensitivity detection was activated, and the Frobenius norm threshold 
+for convergence was set at 0.0001, ensuring precise and consistent alignment across frames.
+
+To edit the motion correction parameters and run the workflow, use
+
+    $ petprep /data/bids_root /out participant --hmc-fwhm 8 --hmc-start-time 60
+
+
 Segmentation
 ----------------
 *PETPrep* can segment the brain into different brain regions and extract time activity curves from these regions.
