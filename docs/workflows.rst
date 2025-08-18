@@ -414,14 +414,13 @@ A new *preproc* :abbr:`PET (positron emission tomography)` series is generated
 from the original data in the original space.
 All volumes in the :abbr:`PET (positron emission tomography)` series are
 resampled in their native space by concatenating the mappings found in previous
-correction workflows (:abbr:`HMC (head-motion correction)` and
-:abbr:`SDC (susceptibility-derived distortion correction)` if executed)
+correction workflows (:abbr:`HMC (head-motion correction)`)
 for a one-shot interpolation process.
 Interpolation uses a Lanczos kernel.
 
 .. _pet_reg:
 
-EPI to T1w registration
+PET to T1w registration
 ~~~~~~~~~~~~~~~~~~~~~~~
 :py:func:`~petprep.workflows.pet.registration.init_bbreg_wf`
 
