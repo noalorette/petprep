@@ -14,6 +14,7 @@ from nipype.interfaces.base import (
 
 class ExtractRefRegionInputSpec(BaseInterfaceInputSpec):
     seg_file = File(exists=True, mandatory=True, desc='Segmentation NIfTI file')
+    gm_probseg = File(exists=True, desc='Gray matter probability map for thresholding')
     config_file = File(exists=True, mandatory=True, desc='Path to the config.json file')
     segmentation_type = traits.Str(mandatory=True, desc="Type of segmentation (e.g. 'gtm', 'wm')")
     region_name = traits.Str(
@@ -32,6 +33,9 @@ class ExtractRefRegion(SimpleInterface):
 
     def _run_interface(self, runtime):
         seg_img = nib.load(self.inputs.seg_file)
+        gm_prob_img = None
+        if isdefined(self.inputs.gm_probseg):
+            gm_prob_img = nib.load(self.inputs.gm_probseg)
 
         if isdefined(self.inputs.override_indices):
             cfg = {'refmask_indices': list(self.inputs.override_indices)}
@@ -50,7 +54,11 @@ class ExtractRefRegion(SimpleInterface):
 
         from petprep.utils.reference_mask import generate_reference_region
 
-        refmask_img = generate_reference_region(seg_img=seg_img, config=cfg)
+        refmask_img = generate_reference_region(
+            seg_img=seg_img,
+            config=cfg,
+            gm_probseg_img=gm_prob_img,
+        )
 
         out_file = os.path.abspath('refmask.nii.gz')
         nib.save(refmask_img, out_file)

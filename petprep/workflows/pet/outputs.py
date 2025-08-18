@@ -33,6 +33,7 @@ from petprep import config
 from petprep.config import DEFAULT_MEMORY_MIN_GB
 from petprep.interfaces import DerivativesDataSink
 from petprep.interfaces.bids import BIDSURI
+from petprep.interfaces.maths import CropAroundMask
 
 
 def prepare_timing_parameters(metadata: dict):
@@ -45,32 +46,22 @@ def prepare_timing_parameters(metadata: dict):
     --------
 
     >>> prepare_timing_parameters({'FrameTimesStart': [0, 2, 6], 'FrameDuration': [2, 4, 4]})
-    {'VolumeTiming': [0, 2, 6], 'AcquisitionDuration': [2, 4, 4], 'SliceTimingCorrected': False}
+    {'FrameTimesStart': [0, 2, 6], 'FrameDuration': [2, 4, 4]}
     """
-    timing_parameters = {
-        key: metadata[key]
-        for key in (
-            'VolumeTiming',
-            'AcquisitionDuration',
-            'FrameTimesStart',
-            'FrameDuration',
-        )
-        if key in metadata
-    }
+    timing_parameters = {}
 
-    frame_times = timing_parameters.pop('FrameTimesStart', None)
-    frame_duration = timing_parameters.pop('FrameDuration', None)
+    frame_times = metadata.get('FrameTimesStart') or metadata.get('VolumeTiming')
+    frame_duration = metadata.get('FrameDuration') or metadata.get('AcquisitionDuration')
 
-    if 'RepetitionTime' not in timing_parameters and 'VolumeTiming' not in timing_parameters:
-        if frame_times is not None:
-            timing_parameters['VolumeTiming'] = frame_times
-            if frame_duration is not None:
-                if isinstance(frame_duration, list) and len(set(frame_duration)) == 1:
-                    timing_parameters.setdefault('AcquisitionDuration', frame_duration[0])
-                else:
-                    timing_parameters.setdefault('AcquisitionDuration', frame_duration)
+    if frame_times is not None:
+        timing_parameters['FrameTimesStart'] = frame_times
 
-    timing_parameters['SliceTimingCorrected'] = False
+    if frame_duration is not None:
+        timing_parameters['FrameDuration'] = frame_duration
+
+    for key in ('InjectedRadioactivity', 'InjectedRadioactivityUnits', 'Units'):
+        if key in metadata:
+            timing_parameters[key] = metadata[key]
 
     return timing_parameters
 
@@ -241,6 +232,10 @@ def init_func_fit_reports_wf(
         mem_gb=1,
     )
 
+    crop_petref = pe.Node(CropAroundMask(), name='crop_petref', mem_gb=0.1)
+    crop_t1w_petref = pe.Node(CropAroundMask(), name='crop_t1w_petref', mem_gb=0.1)
+    crop_petref_wm = pe.Node(CropAroundMask(), name='crop_petref_wm', mem_gb=0.1)
+
     if ref_name:
         petref_refmask = pe.Node(
             ApplyTransforms(
@@ -252,6 +247,7 @@ def init_func_fit_reports_wf(
             name='petref_refmask',
             mem_gb=1,
         )
+        crop_petref_refmask = pe.Node(CropAroundMask(), name='crop_petref_refmask', mem_gb=0.1)
 
     # fmt:off
     workflow.connect([
@@ -274,6 +270,11 @@ def init_func_fit_reports_wf(
             ('petref2anat_xfm', 'transforms'),
         ]),
         (t1w_wm, petref_wm, [('out', 'input_image')]),
+        (inputnode, crop_petref, [('petref', 'in_file'), ('pet_mask', 'mask_file')]),
+        (t1w_petref, crop_t1w_petref, [('output_image', 'in_file')]),
+        (inputnode, crop_t1w_petref, [('pet_mask', 'mask_file')]),
+        (petref_wm, crop_petref_wm, [('output_image', 'in_file')]),
+        (inputnode, crop_petref_wm, [('pet_mask', 'mask_file')]),
     ])
     if ref_name:
         workflow.connect([
@@ -286,6 +287,8 @@ def init_func_fit_reports_wf(
                 ('petref', 'reference_image'),
                 ('petref2anat_xfm', 'transforms'),
             ]),
+            (petref_refmask, crop_petref_refmask, [('output_image', 'in_file')]),
+            (inputnode, crop_petref_refmask, [('pet_mask', 'mask_file')]),
         ])
     # fmt:on
 
@@ -337,17 +340,17 @@ def init_func_fit_reports_wf(
 
     # fmt:off
     workflow.connect([
-        (inputnode, pet_t1_report, [('petref', 'after')]),
-        (t1w_petref, pet_t1_report, [('output_image', 'before')]),
-        (petref_wm, pet_t1_report, [('output_image', 'wm_seg')]),
+        (crop_petref, pet_t1_report, [('out_file', 'after')]),
+        (crop_t1w_petref, pet_t1_report, [('out_file', 'before')]),
+        (crop_petref_wm, pet_t1_report, [('out_file', 'wm_seg')]),
         (inputnode, ds_pet_t1_report, [('source_file', 'source_file')]),
         (pet_t1_report, ds_pet_t1_report, [('out_report', 'in_file')]),
     ])
     if ref_name:
         workflow.connect([
-            (inputnode, pet_t1_refmask_report, [('petref', 'after')]),
-            (t1w_petref, pet_t1_refmask_report, [('output_image', 'before')]),
-            (petref_refmask, pet_t1_refmask_report, [('output_image', 'wm_seg')]),
+            (crop_petref, pet_t1_refmask_report, [('out_file', 'after')]),
+            (crop_t1w_petref, pet_t1_refmask_report, [('out_file', 'before')]),
+            (crop_petref_refmask, pet_t1_refmask_report, [('out_file', 'wm_seg')]),
             (inputnode, ds_pet_t1_refmask_report, [('source_file', 'source_file')]),
             (pet_t1_refmask_report, ds_pet_t1_refmask_report, [('out_report', 'in_file')]),
         ])

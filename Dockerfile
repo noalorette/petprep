@@ -1,4 +1,4 @@
-# fMRIPrep Docker Container Image distribution
+# PETPrep Docker Container Image distribution
 #
 # MIT License
 #
@@ -50,11 +50,11 @@ RUN apt-get update && \
                     unzip && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# FreeSurfer 7.3.2
+# FreeSurfer 7.4.1
 FROM downloader AS freesurfer
-COPY docker/files/freesurfer7.3.2-exclude.txt /usr/local/etc/freesurfer7.3.2-exclude.txt
-RUN curl -sSL https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.3.2/freesurfer-linux-ubuntu22_amd64-7.3.2.tar.gz \
-     | tar zxv --no-same-owner -C /opt --exclude-from=/usr/local/etc/freesurfer7.3.2-exclude.txt
+COPY docker/files/freesurfer7.4.1-exclude.txt /usr/local/etc/freesurfer7.4.1-exclude.txt
+RUN curl -sSL https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu22_amd64-7.4.1.tar.gz \
+     | tar zxv --no-same-owner -C /opt --exclude-from=/usr/local/etc/freesurfer7.4.1-exclude.txt
 
 # AFNI
 FROM downloader AS afni
@@ -76,6 +76,16 @@ RUN mkdir -p /opt/afni-latest \
         -name "3dUnifize" -or \
         -name "3dAutomask" -or \
         -name "3dvolreg" \) -delete
+
+# PETPVC
+FROM downloader AS petpvc
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates curl libinsighttoolkit5.2 && \
+    rm -rf /var/lib/apt/lists/* && \
+    curl -fsSL https://github.com/UCL/PETPVC/releases/download/v1.2.10/PETPVC-1.2.10-Linux.tar.gz \
+      | tar -xz -C /usr/local --strip-components=1 \
+          PETPVC-1.2.10/bin PETPVC-1.2.10/parc && \
+    rm -rf /tmp/* /var/tmp/*
 
 # Micromamba
 FROM downloader AS micromamba
@@ -100,7 +110,7 @@ RUN micromamba create -y -f /tmp/env.yml && \
 
 # UV_USE_IO_URING for apparent race-condition (https://github.com/nodejs/node/issues/48444)
 # Check if this is still necessary when updating the base image.
-ENV PATH="/opt/conda/envs/fmriprep/bin:$PATH" \
+ENV PATH="/opt/conda/envs/petprep/bin:$PATH" \
     UV_USE_IO_URING=0
 RUN npm install -g svgo@^3.2.0 bids-validator@1.14.10 && \
     rm -r ~/.npm
@@ -108,7 +118,7 @@ RUN npm install -g svgo@^3.2.0 bids-validator@1.14.10 && \
 #
 # Main stage
 #
-FROM ${BASE_IMAGE} AS fmriprep
+FROM ${BASE_IMAGE} AS petprep
 
 # Configure apt
 ENV DEBIAN_FRONTEND="noninteractive" \
@@ -139,14 +149,14 @@ RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            ed \
            gsl-bin \
+           libinsighttoolkit5.2 \
            libglib2.0-0 \
            libglu1-mesa-dev \
            libglw1-mesa \
            libgomp1 \
            libjpeg62 \
-           libpng12-0 \
+           libpng16-16 \
            libxm4 \
-           libxp6 \
            netpbm \
            tcsh \
            xfonts-base \
@@ -165,6 +175,7 @@ RUN apt-get update -qq \
 # Install files from stages
 COPY --from=freesurfer /opt/freesurfer /opt/freesurfer
 COPY --from=afni /opt/afni-latest /opt/afni-latest
+COPY --from=petpvc /usr/local /usr/local
 
 # Simulate SetUpFreeSurfer.sh
 ENV OS="Linux" \
@@ -189,20 +200,20 @@ ENV PATH="/opt/afni-latest:$PATH" \
     AFNI_PLUGINPATH="/opt/afni-latest"
 
 # Create a shared $HOME directory
-RUN useradd -m -s /bin/bash -G users fmriprep
-WORKDIR /home/fmriprep
-ENV HOME="/home/fmriprep" \
+RUN useradd -m -s /bin/bash -G users petprep
+WORKDIR /home/petprep
+ENV HOME="/home/petprep" \
     LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
 
 COPY --from=micromamba /bin/micromamba /bin/micromamba
-COPY --from=micromamba /opt/conda/envs/fmriprep /opt/conda/envs/fmriprep
+COPY --from=micromamba /opt/conda/envs/petprep /opt/conda/envs/petprep
 
 ENV MAMBA_ROOT_PREFIX="/opt/conda"
 RUN micromamba shell init -s bash && \
-    echo "micromamba activate fmriprep" >> $HOME/.bashrc
-ENV PATH="/opt/conda/envs/fmriprep/bin:$PATH" \
-    CPATH="/opt/conda/envs/fmriprep/include:$CPATH" \
-    LD_LIBRARY_PATH="/opt/conda/envs/fmriprep/lib:$LD_LIBRARY_PATH"
+    echo "micromamba activate petprep" >> $HOME/.bashrc
+ENV PATH="/opt/conda/envs/petprep/bin:$PATH" \
+    CPATH="/opt/conda/envs/petprep/include:$CPATH" \
+    LD_LIBRARY_PATH="/opt/conda/envs/petprep/lib:$LD_LIBRARY_PATH"
 
 # Precaching atlases
 COPY scripts/fetch_templates.py fetch_templates.py
@@ -215,7 +226,7 @@ RUN python fetch_templates.py && \
 ENV LANG="C.UTF-8" \
     LC_ALL="C.UTF-8" \
     PYTHONNOUSERSITE=1 \
-    FSLDIR="/opt/conda/envs/fmriprep" \
+    FSLDIR="/opt/conda/envs/petprep" \
     FSLOUTPUTTYPE="NIFTI_GZ" \
     FSLMULTIFILEQUIT="TRUE" \
     FSLLOCKDIR="" \
@@ -232,7 +243,7 @@ ENV MKL_NUM_THREADS=1 \
 RUN curl -L -H "Accept: application/octet-stream" https://api.github.com/repos/ecr05/MSM_HOCR/releases/assets/16253707 -o /usr/local/bin/msm \
     && chmod +x /usr/local/bin/msm
 
-# Installing FMRIPREP
+# Installing PETPREP
 COPY --from=src /src/dist/*.whl .
 RUN pip install --no-cache-dir $( ls *.whl )[container,test]
 
@@ -245,16 +256,16 @@ ENV IS_DOCKER_8395080871=1
 
 RUN ldconfig
 WORKDIR /tmp
-ENTRYPOINT ["/opt/conda/envs/fmriprep/bin/fmriprep"]
+ENTRYPOINT ["/opt/conda/envs/petprep/bin/petprep"]
 
 ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION
 LABEL org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.name="fMRIPrep" \
-      org.label-schema.description="fMRIPrep - robust fMRI preprocessing tool" \
-      org.label-schema.url="https://fmriprep.org" \
+      org.label-schema.name="PETPrep" \
+      org.label-schema.description="PETPrep - robust PET preprocessing tool" \
+      org.label-schema.url="https://petprep.readthedocs.io" \
       org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.vcs-url="https://github.com/nipreps/fmriprep" \
+      org.label-schema.vcs-url="https://github.com/PETPrep/petprep" \
       org.label-schema.version=$VERSION \
       org.label-schema.schema-version="1.0"

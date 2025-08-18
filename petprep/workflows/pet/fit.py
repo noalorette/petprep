@@ -164,6 +164,7 @@ def init_pet_fit_wf(
                 't1w_preproc',
                 't1w_mask',
                 't1w_dseg',
+                't1w_tpms',
                 'subjects_dir',
                 'subject_id',
                 'fsnative2t1w_xfm',
@@ -205,8 +206,8 @@ def init_pet_fit_wf(
         config.loggers.workflow.debug('Reusing motion correction transforms: %s', hmc_xforms)
 
     timing_parameters = prepare_timing_parameters(metadata)
-    frame_durations = timing_parameters.get('AcquisitionDuration')
-    frame_start_times = timing_parameters.get('VolumeTiming')
+    frame_durations = timing_parameters.get('FrameDuration')
+    frame_start_times = timing_parameters.get('FrameTimesStart')
 
     if frame_durations is None or frame_start_times is None:
         raise ValueError(
@@ -220,6 +221,7 @@ def init_pet_fit_wf(
             registration=('Precomputed' if petref2anat_xform else 'mri_coreg'),
             registration_dof=config.workflow.pet2anat_dof,
             orientation=orientation,
+            metadata=metadata,
         ),
         name='summary',
         mem_gb=config.DEFAULT_MEMORY_MIN_GB,
@@ -448,6 +450,8 @@ def init_pet_fit_wf(
             name='refmask_report_wf',
         )
 
+        gm_select = pe.Node(niu.Select(index=0), name='select_gm_probseg')
+
         pet_ref_tacs_wf = init_pet_ref_tacs_wf(name='pet_ref_tacs_wf')
         pet_ref_tacs_wf.inputs.inputnode.metadata = str(
             Path(pet_file).with_suffix('').with_suffix('.json')
@@ -458,9 +462,10 @@ def init_pet_fit_wf(
             DerivativesDataSink(
                 base_directory=config.execution.petprep_dir,
                 suffix='timeseries',
-                desc=config.workflow.seg,
+                seg=config.workflow.seg,
+                desc='preproc',
                 ref=config.workflow.ref_mask_name,
-                allowed_entities=('ref',),
+                allowed_entities=('seg', 'ref'),
                 TaskName=metadata.get('TaskName'),
                 **timing_parameters,
             ),
@@ -470,6 +475,8 @@ def init_pet_fit_wf(
         )
         ds_ref_tacs.inputs.source_file = pet_file
 
+        workflow.connect([(inputnode, gm_select, [('t1w_tpms', 'inlist')])])
+
         workflow.connect(
             [
                 (
@@ -478,6 +485,11 @@ def init_pet_fit_wf(
                     [
                         ('outputnode.segmentation', 'inputnode.seg_file'),
                     ],
+                ),
+                (
+                    gm_select,
+                    refmask_wf,
+                    [('out', 'inputnode.gm_probseg')],
                 ),
                 (
                     refmask_wf,

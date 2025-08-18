@@ -309,7 +309,10 @@ from an anatomical segmentation. The resulting table has ``FrameTimesStart`` and
 
   sub-<subject_label>/
     pet/
-      sub-<subject_label>_[specifiers]_desc-preproc_timeseries.tsv
+      sub-<subject_label>_[specifiers]_seg-<seg>_desc-preproc_timeseries.tsv
+
+The ``desc-preproc`` entity indicates that the curves were derived from the
+preprocessed PET series.
 
 If partial volume correction is applied, the filenames also include the
 ``_pvc-<method>`` entity, indicating the algorithm used.
@@ -320,10 +323,12 @@ table containing the mean uptake within that region::
 
   sub-<subject_label>/
     pet/
-      sub-<subject_label>_[specifiers]_desc-<seg>_ref-<ref>_timeseries.tsv
+      sub-<subject_label>_[specifiers]_seg-<seg>_ref-<ref>_desc-preproc_timeseries.tsv
 
 The ``ref`` entity captures the reference region identifier provided via the
 :ref:`CLI options <cli_refmask>` ``--ref-mask-name`` and ``--ref-mask-index``.
+As with the primary TACs, ``desc-preproc`` reflects use of the preprocessed PET
+series.
 When partial volume correction is performed, the ``_pvc-<method>`` entity is
 also included.
 

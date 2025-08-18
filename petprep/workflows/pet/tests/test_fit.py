@@ -235,11 +235,16 @@ def test_refmask_report_connections(bids_root: Path, tmp_path: Path):
         'inputnode.source_files',
     ) in petref_edge['connect']
 
+    gm_node = wf.get_node('select_gm_probseg')
+    edge_prob = wf._graph.get_edge_data(gm_node, wf.get_node('pet_refmask_wf'))
+    assert ('out', 'inputnode.gm_probseg') in edge_prob['connect']
+
     assert any(name.startswith('pet_ref_tacs_wf') for name in wf.list_node_names())
     assert 'ds_ref_tacs' in wf.list_node_names()
     ds_tacs = wf.get_node('ds_ref_tacs')
     assert ds_tacs.inputs.ref == 'cerebellum'
-    assert ds_tacs.inputs.desc == config.workflow.seg
+    assert ds_tacs.inputs.seg == config.workflow.seg
+    assert ds_tacs.inputs.desc == 'preproc'
     edge_tacs = wf._graph.get_edge_data(wf.get_node('pet_ref_tacs_wf'), ds_tacs)
     assert ('outputnode.timeseries', 'in_file') in edge_tacs['connect']
 
@@ -362,3 +367,22 @@ def test_refmask_reports_omitted(bids_root: Path, tmp_path: Path):
         wf = init_pet_fit_wf(pet_series=pet_series, precomputed={}, omp_nthreads=1)
 
     assert 'func_fit_reports_wf.ds_report_refmask' not in wf.list_node_names()
+
+
+def test_crop_nodes_present(bids_root: Path, tmp_path: Path):
+    """Ensure crop nodes are included in the reporting workflow."""
+    pet_series = [str(bids_root / 'sub-01' / 'pet' / 'sub-01_task-rest_run-1_pet.nii.gz')]
+    img = nb.Nifti1Image(np.zeros((2, 2, 2, 1)), np.eye(4))
+    for path in pet_series:
+        img.to_filename(path)
+
+    sidecar = Path(pet_series[0]).with_suffix('').with_suffix('.json')
+    sidecar.write_text('{"FrameTimesStart": [0], "FrameDuration": [1]}')
+
+    with mock_config(bids_dir=bids_root):
+        wf = init_pet_fit_wf(pet_series=pet_series, precomputed={}, omp_nthreads=1)
+
+    reports = wf.get_node('func_fit_reports_wf')
+    assert 'crop_petref' in reports.list_node_names()
+    assert 'crop_t1w_petref' in reports.list_node_names()
+    assert 'crop_petref_wm' in reports.list_node_names()
