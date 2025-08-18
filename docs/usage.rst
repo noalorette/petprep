@@ -269,7 +269,7 @@ All bugs, concerns and enhancement requests for this software can be submitted h
 https://github.com/nipreps/petprep/issues.
 
 If you have a problem or would like to ask a question about how to use *PETPrep*,
-please submit a question to `NeuroStars.org <https://neurostars.org/tag/petprep>`_ with an ``petprep`` tag.
+please submit a question to `NeuroStars.org <https://neurostars.org/tag/petprep>`_ with a ``petprep`` tag.
 NeuroStars.org is a platform similar to StackOverflow but dedicated to neuroinformatics.
 
 Previous questions about *PETPrep* are available here:
