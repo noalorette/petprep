@@ -900,7 +900,7 @@ def init_pet_preproc_report_wf(
             :graph2use: orig
             :simple_form: yes
 
-            from fmriprep.workflows.pet.resampling import init_pet_preproc_report_wf
+            from petprep.workflows.pet.resampling import init_pet_preproc_report_wf
             wf = init_pet_preproc_report_wf(mem_gb=1, reportlets_dir='.')
 
     Parameters

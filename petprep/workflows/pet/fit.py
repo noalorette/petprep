@@ -68,9 +68,9 @@ def init_pet_fit_wf(
             :graph2use: orig
             :simple_form: yes
 
-            from fmriprep.workflows.tests import mock_config
-            from fmriprep import config
-            from fmriprep.workflows.pet.fit import init_pet_fit_wf
+            from petprep.workflows.tests import mock_config
+            from petprep import config
+            from petprep.workflows.pet.fit import init_pet_fit_wf
             with mock_config():
                 pet_file = config.execution.bids_dir / "sub-01" / "func" \
                     / "sub-01_task-mixedgamblestask_run-01_pet.nii.gz"
@@ -119,11 +119,11 @@ def init_pet_fit_wf(
     See Also
     --------
 
-    * :py:func:`~fmriprep.workflows.pet.hmc.init_pet_hmc_wf`
-    * :py:func:`~fmriprep.workflows.pet.registration.init_pet_reg_wf`
-    * :py:func:`~fmriprep.workflows.pet.outputs.init_ds_petref_wf`
-    * :py:func:`~fmriprep.workflows.pet.outputs.init_ds_hmc_wf`
-    * :py:func:`~fmriprep.workflows.pet.outputs.init_ds_registration_wf`
+    * :py:func:`~petprep.workflows.pet.hmc.init_pet_hmc_wf`
+    * :py:func:`~petprep.workflows.pet.registration.init_pet_reg_wf`
+    * :py:func:`~petprep.workflows.pet.outputs.init_ds_petref_wf`
+    * :py:func:`~petprep.workflows.pet.outputs.init_ds_hmc_wf`
+    * :py:func:`~petprep.workflows.pet.outputs.init_ds_registration_wf`
 
     """
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
@@ -588,9 +588,9 @@ def init_pet_native_wf(
             :graph2use: orig
             :simple_form: yes
 
-            from fmriprep.workflows.tests import mock_config
-            from fmriprep import config
-            from fmriprep.workflows.pet.fit import init_pet_native_wf
+            from petprep.workflows.tests import mock_config
+            from petprep import config
+            from petprep.workflows.pet.fit import init_pet_native_wf
             with mock_config():
                 pet_file = config.execution.bids_dir / "sub-01" / "func" \
                     / "sub-01_task-mixedgamblestask_run-01_pet.nii.gz"
