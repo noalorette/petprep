@@ -1,23 +1,18 @@
-import importlib
 import subprocess
 import sys
-from pathlib import Path
 
-# Add wrapper package to path
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'wrapper' / 'src'))
+import petprep_docker.__main__ as ppd
 
 
 def test_docker_get_parser():
-    module = importlib.import_module('petprep_docker.__main__')
-    parser = module.get_parser()
+    parser = ppd.get_parser()
     assert parser is not None
 
 
 def test_docker_main_help(monkeypatch, capsys):
-    module = importlib.import_module('petprep_docker.__main__')
-    monkeypatch.setattr(module, 'check_docker', lambda: 1)
-    monkeypatch.setattr(module, 'check_image', lambda img: True)
-    monkeypatch.setattr(module, 'check_memory', lambda img: 16000)
+    monkeypatch.setattr(ppd, 'check_docker', lambda: 1)
+    monkeypatch.setattr(ppd, 'check_image', lambda img: True)
+    monkeypatch.setattr(ppd, 'check_memory', lambda img: 16000)
 
     captured = {}
 
@@ -31,24 +26,23 @@ def test_docker_main_help(monkeypatch, capsys):
         captured['cmd'] = cmd
         return b'usage: petprep bids_dir output_dir {participant}\n\noptional arguments:'
 
-    monkeypatch.setattr(module.subprocess, 'run', fake_run)
-    monkeypatch.setattr(module.subprocess, 'check_output', fake_check_output)
-    monkeypatch.setattr(module, 'merge_help', lambda a, b: 'merged')
+    monkeypatch.setattr(ppd.subprocess, 'run', fake_run)
+    monkeypatch.setattr(ppd.subprocess, 'check_output', fake_check_output)
+    monkeypatch.setattr(ppd, 'merge_help', lambda a, b: 'merged')
 
     sys.argv = ['petprep-docker', '--help']
-    ret = module.main()
+    ret = ppd.main()
     assert ret == 0
     assert captured['cmd'][:3] == ['docker', 'run', '--rm']
     assert '-h' in captured['cmd']
     assert '-i' in captured['cmd']
-    assert module.__name__
+    assert ppd.__name__
 
 
 def test_docker_main_version(monkeypatch):
-    module = importlib.import_module('petprep_docker.__main__')
-    monkeypatch.setattr(module, 'check_docker', lambda: 1)
-    monkeypatch.setattr(module, 'check_image', lambda img: True)
-    monkeypatch.setattr(module, 'check_memory', lambda img: 16000)
+    monkeypatch.setattr(ppd, 'check_docker', lambda: 1)
+    monkeypatch.setattr(ppd, 'check_image', lambda img: True)
+    monkeypatch.setattr(ppd, 'check_memory', lambda img: 16000)
 
     calls = []
 
@@ -58,10 +52,10 @@ def test_docker_main_version(monkeypatch):
             return subprocess.CompletedProcess(cmd, 0, stdout=b'20.10')
         return subprocess.CompletedProcess(cmd, 0)
 
-    monkeypatch.setattr(module.subprocess, 'run', fake_run)
+    monkeypatch.setattr(ppd.subprocess, 'run', fake_run)
 
     sys.argv = ['petprep-docker', '--version']
-    ret = module.main()
+    ret = ppd.main()
     assert ret == 0
     cmd = calls[-1]
     assert cmd[:3] == ['docker', 'run', '--rm']
@@ -69,10 +63,9 @@ def test_docker_main_version(monkeypatch):
 
 
 def test_docker_command_options(monkeypatch, tmp_path):
-    module = importlib.import_module('petprep_docker.__main__')
-    monkeypatch.setattr(module, 'check_docker', lambda: 1)
-    monkeypatch.setattr(module, 'check_image', lambda img: True)
-    monkeypatch.setattr(module, 'check_memory', lambda img: 16000)
+    monkeypatch.setattr(ppd, 'check_docker', lambda: 1)
+    monkeypatch.setattr(ppd, 'check_image', lambda img: True)
+    monkeypatch.setattr(ppd, 'check_memory', lambda img: 16000)
 
     bids_dir = tmp_path / 'bids'
     out_dir = tmp_path / 'out'
@@ -89,7 +82,7 @@ def test_docker_command_options(monkeypatch, tmp_path):
             return subprocess.CompletedProcess(cmd, 0, stdout=b'20.10')
         return subprocess.CompletedProcess(cmd, 0)
 
-    monkeypatch.setattr(module.subprocess, 'run', fake_run)
+    monkeypatch.setattr(ppd.subprocess, 'run', fake_run)
 
     sys.argv = [
         'petprep-docker',
@@ -101,7 +94,7 @@ def test_docker_command_options(monkeypatch, tmp_path):
         '--output-spaces',
         'MNI152Lin',
     ]
-    ret = module.main()
+    ret = ppd.main()
     assert ret == 0
     cmd = calls[-1]
     joined = ' '.join(cmd)

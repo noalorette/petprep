@@ -118,35 +118,22 @@ def test_ReportSeparation(
 def test_pet_report(tmp_path, monkeypatch):
     fake_uuid = 'fake_uuid'
 
-    pet_source = data_dir / 'work/reportlets/petprep'
+    pet_source = data_dir / 'work' / 'reportlets' / 'petprep' / 'sub-01'
     sub_dir = tmp_path / 'sub-01' / 'figures'
     sub_dir.mkdir(parents=True)
 
-    shutil.copy2(
-        pet_source / 'sub-01/sub-01_desc-about_T1w.html', sub_dir / 'sub-01_desc-about_T1w.html'
-    )
-    shutil.copy2(
-        pet_source / 'sub-01/sub-01_desc-summary_pet.html',
-        sub_dir / 'sub-01_desc-summary_pet.html',
-    )
-    shutil.copy2(
-        pet_source / 'sub-01/sub-01_desc-validation_pet.html',
-        sub_dir / 'sub-01_desc-validation_pet.html',
-    )
-    shutil.copy2(
-        pet_source / 'sub-01/sub-01_desc-carpetplot_pet.svg',
-        sub_dir / 'sub-01_desc-carpetplot_pet.svg',
-    )
-    shutil.copy2(
-        pet_source / 'sub-01/sub-01_desc-confoundcorr_pet.svg',
-        sub_dir / 'sub-01_desc-confoundcorr_pet.svg',
-    )
-    shutil.copy2(
-        pet_source / 'sub-01/sub-01_desc-coreg_pet.svg', sub_dir / 'sub-01_desc-coreg_pet.svg'
-    )
+    for fl in [
+        'sub-01_desc-about_T1w.html',
+        'sub-01_desc-summary_pet.html',
+        'sub-01_desc-validation_pet.html',
+        'sub-01_desc-carpetplot_pet.svg',
+        'sub-01_desc-confoundcorr_pet.svg',
+        'sub-01_desc-coreg_pet.svg',
+    ]:
+        shutil.copy2(pet_source / fl, sub_dir / fl)
 
-    config.execution.aggr_ses_reports = 4
-    config.execution.layout = BIDSLayout(data_dir / 'ds000005')
+    monkeypatch.setattr(config.execution, 'aggr_ses_reports', 4)
+    monkeypatch.setattr(config.execution, 'layout', BIDSLayout(data_dir / 'ds000005'))
     monkeypatch.setattr(config.execution, 'bids_filters', {'pet': {'session': ['baseline']}})
 
     failed_reports = generate_reports(['01'], tmp_path, fake_uuid)
