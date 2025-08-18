@@ -14,6 +14,11 @@
       "name": "Esteban, Oscar",
       "orcid": "0000-0001-8435-6191"
     },
+    { 
+      "affiliation": "Neurobiology Research Unit, Rigshospitalet, Copenhagen and Department of Computer Science, University of Copenhagen",
+      "name": "Schiavone, Alice",
+      "orcid": "0009-0006-4844-2088"
+    },
     {
       "affiliation": "Department of Psychology, Stanford University",
       "name": "Markiewicz, Christopher J.",
@@ -23,7 +28,7 @@
       "affiliation": "Department of Psychology, Stanford University",
       "name": "Poldrack, Russell A.",
       "orcid": "0000-0001-6755-0259"
-    },
+    }
   ],
   "keywords": [
     "neuroimaging",

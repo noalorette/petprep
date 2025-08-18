@@ -42,7 +42,10 @@ def init_pet_refmask_wf(
 
     workflow = pe.Workflow(name=name)
 
-    inputnode = pe.Node(IdentityInterface(fields=['seg_file']), name='inputnode')
+    inputnode = pe.Node(
+        IdentityInterface(fields=['seg_file', 'gm_probseg']),
+        name='inputnode',
+    )
     outputnode = pe.Node(IdentityInterface(fields=['refmask_file']), name='outputnode')
 
     extract_mask = pe.Node(ExtractRefRegion(), name='extract_refregion')
@@ -56,7 +59,14 @@ def init_pet_refmask_wf(
 
     workflow.connect(
         [
-            (inputnode, extract_mask, [('seg_file', 'seg_file')]),
+            (
+                inputnode,
+                extract_mask,
+                [
+                    ('seg_file', 'seg_file'),
+                    ('gm_probseg', 'gm_probseg'),
+                ],
+            ),
             (extract_mask, outputnode, [('refmask_file', 'refmask_file')]),
         ]
     )

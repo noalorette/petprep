@@ -321,9 +321,9 @@ subgraph:
     from petprep import config
     from petprep.workflows.pet.fit import init_pet_fit_wf
     with mock_config():
-        bold_file = config.execution.bids_dir / 'sub-01' / 'func' \
-            / 'sub-01_task-mixedgamblestask_run-01_bold.nii.gz'
-        wf = init_pet_fit_wf(bold_series=[str(bold_file)], fieldmap_id="fmap")
+        pet_file = config.execution.bids_dir / 'sub-01' / 'pet' \
+            / 'sub-01_task-mixedgamblestask_pet.nii.gz'
+        wf = init_pet_fit_wf(pet_series=[str(pet_file)])
 
 Preprocessing of :abbr:`PET (positron emission tomography)` files is
 split into multiple sub-workflows described below.
@@ -573,8 +573,8 @@ These workflows rely on pretrained segmentation models distributed with
 ``petprep.data.segmentation``. The first time a particular model is requested it
 will be automatically downloaded to the *PETPrep* cache directory, so ensure
 sufficient disk space is available. Each segmentation produces a labeled NIfTI
-image ``desc-<seg>_dseg.nii.gz`` and a TSV table of region volumes
-``desc-<seg>_morph.tsv`` saved under the ``anat/`` derivatives folder.
+image ``seg-<seg>_dseg.nii.gz`` and a TSV table of region volumes
+``seg-<seg>_morph.tsv`` saved under the ``anat/`` derivatives folder.
 
 For example, the raphe segmentation can be enabled with::
 
