@@ -239,6 +239,8 @@ Use ``--ref-mask-name`` to select a predefined region and
 The available masks are and do not require ``--ref-mask-index`` to be specified:
 - ``cerebellum``: Cerebellar gray matter (requires the ``--seg gtm`` option).
 - ``semiovale``: White matter in the centrum semiovale (requires the ``--seg wm`` option).
+- ``neocortex``: Neocortical gray matter (requires the ``--seg gtm`` option).
+- ``thalamus``: Thalamic gray matter (requires the ``--seg gtm`` option).
 
 The presets are defined in ``petprep/data/reference_mask/config.json``.
 
