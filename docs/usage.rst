@@ -176,6 +176,22 @@ This feature has several intended use-cases:
 See also the ``--level`` flag, which can be used to control which derivatives are
 generated.
 
+Segmentation
+----------------
+*PETPrep* can segment the brain into different brain regions and extract time activity curves from these regions.
+The ``--seg`` flag selects the segmentation method to use.
+Available options are ``gtm`` (default) whole-brain segmentation from freesurfer, ``brainstem``, ``wm`` (white matter), ``thalamicNuclei``, ``hippocampusAmygdala``, ``raphe``, and ``limbic``.
+
+The ``gtm`` segmentation is a whole-brain segmentation that includes the
+cerebral cortex, subcortical structures, and cerebellum.
+
+To run the segmentation with the default ``gtm`` method, use: ::
+
+    $ petprep /data/bids_root /out participant --seg gtm
+
+To run the segmentation with the ``brainstem`` method, use: ::
+    $ petprep /data/bids_root /out participant --seg brainstem
+
 Partial volume correction
 -------------------------
 *PETPrep* can optionally correct PET images for partial volume effects.
