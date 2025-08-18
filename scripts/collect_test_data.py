@@ -2,7 +2,6 @@ from datalad import api
 from tempfile import TemporaryDirectory
 from pathlib import Path
 from os.path import join
-import pprint
 import shutil
 import subprocess
 import bids
@@ -190,28 +189,26 @@ def download_test_data(
             if meta.get("subject_ids", []) != []:
                 for id in meta["subject_ids"]:
                     combined_subjects.append(id)
-                    # Instead of using pybids, get all files in the subject directory
-                    all_files = []
+                    # Get the entire subject directory content including git-annex files
                     subject_dir = dataset_path / f"sub-{id}"
                     if subject_dir.exists():
-                        # Get all files in the subject directory recursively
+                        # First, get all content in the subject directory (this retrieves git-annex files)
+                        result = dataset.get(str(subject_dir))
+                        
+                        # Then collect all files after they've been retrieved
                         all_files = []
                         for file_path in subject_dir.rglob("*"):
                             if file_path.is_file():
                                 relative_path = file_path.relative_to(dataset_path)
                                 all_files.append(str(relative_path))
-                    for f in all_files:
-                        print(f)
-                        # Get the file relative to the dataset path
-                        result = dataset.get(dataset_path / f)
-                        if (
-                            result[0].get("status") == "ok"
-                            or result[0].get("message") == "already present"
-                        ):
-                            # Then unlock it to make it writable
+                        
+                        # Copy all files to output directory
+                        for f in all_files:
+                            print(f)
+                            # Unlock the file to make it writable
                             api.unlock(
                                 path=str(dataset_path / f), dataset=str(dataset_path)
-                            )
+                           )
                             source_file = dataset_path / f
                             relative_path = source_file.relative_to(dataset_path)
                             target_file = Path(output_directory) / relative_path
@@ -231,8 +228,6 @@ def download_test_data(
         combined_participants = combined_participants_tsv[
             combined_participants_tsv["participant_id"].isin(combined_subjects)
         ]
-
-        print(combined_participants)
 
         # Only write files if a specific download path was provided
         dataset_desc_path = Path(output_directory) / "dataset_description.json"
