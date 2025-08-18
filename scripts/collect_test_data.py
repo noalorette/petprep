@@ -285,6 +285,7 @@ if __name__ == '__main__':
         default=os.getcwd(),
         help='Output directory of combined dataset,'
         'defaults where this script is called from, presently {os.getcwd()}',
+        required=True,
     )
     parser.add_argument(
         '--datasets-json',
