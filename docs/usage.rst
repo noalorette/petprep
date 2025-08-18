@@ -192,10 +192,9 @@ registration (mri_robust_register) algorithm utilized settings optimized for PET
 scaling was enabled, automated sensitivity detection was activated, and the Frobenius norm threshold 
 for convergence was set at 0.0001, ensuring precise and consistent alignment across frames.
 
-To edit the motion correction parameters and run the workflow, use
+To edit the motion correction parameters and run the workflow, use: ::
 
     $ petprep /data/bids_root /out participant --hmc-fwhm 8 --hmc-start-time 60
-
 
 Segmentation
 ----------------
@@ -208,10 +207,7 @@ cerebral cortex, subcortical structures, and cerebellum.
 
 To run the segmentation with the default ``gtm`` method, use: ::
 
-    $ petprep /data/bids_root /out participant --seg gtm
-
-To run the segmentation with the ``brainstem`` method, use: ::
-    $ petprep /data/bids_root /out participant --seg brainstem
+    $ petprep /data/bids_root /out participant --seg gtm 
 
 Partial volume correction
 -------------------------
