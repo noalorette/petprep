@@ -19,7 +19,7 @@ env:
 
 jobs:
   build-container:
-    runs-on: ubuntu-latest
+    runs-on: docker
     permissions:
       contents: read
       packages: write
