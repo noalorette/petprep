@@ -20,6 +20,7 @@
 #
 #     https://www.nipreps.org/community/licensing/
 #
+import os
 from pathlib import Path
 
 import nibabel as nb
@@ -198,12 +199,17 @@ def init_pet_fit_wf(
     )
     hmc_buffer = pe.Node(niu.IdentityInterface(fields=['hmc_xforms']), name='hmc_buffer')
 
+    if pet_tlen <= 1:
+        # 3D PET
+        petref = pet_file
+        hmc_xforms = Path(os.getenv('FSLDIR')) / 'etc' / 'flirtsch' / 'ident.mat'
+        config.loggers.workflow.debug('3D PET file - motion correction not needed')
     if petref:
         petref_buffer.inputs.petref = petref
-        config.loggers.workflow.debug('Reusing motion correction reference: %s', petref)
+        config.loggers.workflow.debug('(Re)using motion correction reference: %s', petref)
     if hmc_xforms:
         hmc_buffer.inputs.hmc_xforms = hmc_xforms
-        config.loggers.workflow.debug('Reusing motion correction transforms: %s', hmc_xforms)
+        config.loggers.workflow.debug('(Re)using motion correction transforms: %s', hmc_xforms)
 
     timing_parameters = prepare_timing_parameters(metadata)
     frame_durations = timing_parameters.get('FrameDuration')
