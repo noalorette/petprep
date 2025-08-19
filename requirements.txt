@@ -420,10 +420,6 @@ seaborn==0.13.2
     # via
     #   nireports
     #   niworkflows
-secretstorage==3.3.3
-    # via keyring
-sentry-sdk==2.22.0
-    # via petprep (pyproject.toml)
 shellingham==1.5.4
     # via typer
 simplejson==3.20.1
