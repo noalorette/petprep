@@ -8,6 +8,11 @@ Before every release, unlisted contributors will be invited again to add their n
 
 | **Lastname** | **Name** | **Handle** | **ORCID** | **Affiliation** |
 | --- | --- | --- | --- | --- |
+| Bae | Jonghyun | @baej3 | 0000-0002-3987-6603 | National Institute on Aging |
+| Bilgel | Murat | @bilgelm | 0000-0001-5042-7422 | National Institute on Aging |
+| Ceballos | Eric | @eric2302 | 0000-0002-5643-1243 | Montreal Neurological Institute |
+| Dörfel | Ruben | @RDoerfel | 0000-0002-5920-5102 | Karolinska Institutet, and Neurobiology Research Unit |
+| Hamati | Rami | @ramroomh | 0000-0001-7213-9253 | Institute of Mental Health Research |
 | Esteban | Oscar | @oesteban | 0000-0001-8435-6191 | School of Engineering, HES-SO University of Applied Sciences and Arts Western Switzerland, Sion, Switzerland |
 | Goncalves | Mathias | @mgxd | 0000-0002-7252-7771 | Department of Psychology, Stanford University, CA, USA |
 | Legarreta Gorroño | Jon Haitz | @jhlegarreta | 0000-0002-9661-1396 | Brigham and Women's Hospital, Mass General Brigham, Harvard Medical School, MA, USA |
