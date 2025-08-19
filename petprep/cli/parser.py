@@ -750,9 +750,9 @@ def parse_args(args=None, namespace=None):
     if not config.execution.notrack:
         import importlib.util
 
-        if importlib.util.find_spec('sentry_sdk') is None:
+        if importlib.util.find_spec('migas') is None:
             config.execution.notrack = True
-            config.loggers.cli.warning('Telemetry disabled because sentry_sdk is not installed.')
+            config.loggers.cli.warning('Telemetry disabled because migas is not installed.')
         else:
             config.loggers.cli.info(
                 'Telemetry system to collect crashes and errors is enabled '
