@@ -58,8 +58,8 @@ def test_ReportSeparation(
 ):
     fake_uuid = 'fake_uuid'
 
-    sub_dir = tmp_path / 'sub-001'
-    shutil.copytree(data_dir / 'work/reportlets/petprep/sub-001', sub_dir)
+    sub_dir = tmp_path / 'sub-01'
+    shutil.copytree(data_dir / 'work/reportlets/petprep/sub-01', sub_dir)
 
     # Test report generation with and without crash file
     if error:
