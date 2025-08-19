@@ -118,7 +118,7 @@ def test_ReportSeparation(
 def test_pet_report(tmp_path, monkeypatch):
     fake_uuid = 'fake_uuid'
 
-    pet_source = data_dir / 'work' / 'reportlets' / 'petprep' / 'sub-01'
+    pet_source = data_dir / 'work' / 'reportlets' / 'petprep' / 'sub-01' / 'pet'
     sub_dir = tmp_path / 'sub-01' / 'figures'
     sub_dir.mkdir(parents=True)
 
