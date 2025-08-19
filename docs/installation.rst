@@ -32,13 +32,13 @@ Therefore, once specified the container options and the image to be run
 the command line is the same as for the *bare-metal* installation but dropping
 the ``petprep`` executable name.
 
-Containerized execution (Docker and Singularity)
+Containerized execution (Docker and Apptainer)
 ================================================
 *PETPrep* is a *NiPreps* application, and therefore follows some overarching principles
 of containerized execution drawn from the BIDS-Apps protocols.
 For detailed information of containerized execution of *NiPreps*, please visit the corresponding
 `Docker <https://www.nipreps.org/apps/docker/>`__
-or `Singularity <https://www.nipreps.org/apps/singularity/>`__ subsections.
+or `Apptainer / Singularity <https://www.nipreps.org/apps/singularity/>`__ subsections.
 The *NiPreps* portal also contains
 `extended details of execution with the Docker wrapper <https://www.nipreps.org/apps/docker/#running-a-niprep-with-a-lightweight-wrapper>`__.
 
@@ -52,6 +52,25 @@ Then run the ``petprep-docker`` command-line as if you were running
 ``petprep`` on a *bare-metal* installation::
 
   $ petprep-docker <input_bids_path> <derivatives_path> <analysis_level> <named_options>
+
+Alternatively, you can install using a pre-built image using::
+
+  $ docker pull ghcr.io/nipreps/petprep:main
+
+or::
+
+  $ apptainer build petprep.sif docker ://ghcr.io/nipreps/petprep:main
+
+Then run petprep via apptainer as follows::
+
+  $ apptainer run \
+   --bind /path_to_data:/data:ro \
+   --bind /path_to_output:/out \
+   --bind /path_to_freesurfer/license.txt:/license \
+   /path_to_sif/petprep.sif /data /out participant or group \
+   --participant-label sub-ID \
+   --fs-license-file /license \
+   --work-dir /out/work
 
 
 Manually Prepared Environment (Python 3.10+)
@@ -95,6 +114,7 @@ the ``petprep`` package:
 - PETPVC_ (version 1.2.10)
 - `bids-validator <https://github.com/bids-standard/bids-validator>`_ (version 1.14.0)
 - `connectome-workbench <https://www.humanconnectome.org/software/connectome-workbench>`_ (version 1.5.0)
+- PETPVC_ (version 1.2.10)
 
 Not running on a local machine? - Data transfer
 ===============================================

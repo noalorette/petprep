@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "petprep"
-description = "A robust and easy-to-use pipeline for preprocessing of PET data"
+description = "A robust and easy-to-use pipeline for preprocessing of diverse PET data"
 readme = "long_description.rst"
 authors = [{name = "The NiPreps Developers", email = "nipreps@gmail.com"}]
 classifiers = [
@@ -27,7 +27,7 @@ dependencies = [
     "nireports >= 24.1.0",
     "nitime >= 0.9",
     "nitransforms >= 24.1.1",
-    "niworkflows @ git+https://github.com/nipreps/niworkflows.git@dev_petprep",
+    "niworkflows >= 1.14.0",
     "numpy >= 1.24",
     "packaging >= 24",
     "pandas >= 1.2",
