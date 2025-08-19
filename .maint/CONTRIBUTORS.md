@@ -21,3 +21,4 @@ Before every release, unlisted contributors will be invited again to add their n
 | Markiewicz | Christopher J. | @effigies | 0000-0002-6533-164X | Department of Psychology, Stanford University, CA, USA |
 | Murat | Bilgel | @bilgelm | 0000-0001-5042-7422 | National Institute on Aging |
 | Schiavone | Alice | @aliswh | 0009-0006-4844-2088 | Neurobiology Research Unit, Rigshospitalet, Copenhagen and Department of Computer Science, University of Copenhagen |
+| Roumimper | Noa Lorette | @noalorette | 0009-0006-1539-6644 | Neurobiology Research Unit, Rigshospitalet, Copenhagen |
