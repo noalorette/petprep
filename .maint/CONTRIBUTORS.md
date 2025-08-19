@@ -19,5 +19,4 @@ Before every release, unlisted contributors will be invited again to add their n
 | Jonghyun | Bae | | 0000-0002-3987-6603 | National Institute on Aging |
 | Legarreta Gorroño | Jon Haitz | @jhlegarreta | 0000-0002-9661-1396 | Brigham and Women's Hospital, Mass General Brigham, Harvard Medical School, MA, USA |
 | Markiewicz | Christopher J. | @effigies | 0000-0002-6533-164X | Department of Psychology, Stanford University, CA, USA |
-| Murat | Bilgel | @bilgelm | 0000-0001-5042-7422 | National Institute on Aging |
 | Schiavone | Alice | @aliswh | 0009-0006-4844-2088 | Neurobiology Research Unit, Rigshospitalet, Copenhagen and Department of Computer Science, University of Copenhagen |
