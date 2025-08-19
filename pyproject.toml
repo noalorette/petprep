@@ -27,7 +27,7 @@ dependencies = [
     "nireports >= 24.1.0",
     "nitime >= 0.9",
     "nitransforms >= 24.1.1",
-    "niworkflows @ git+https://github.com/nipreps/niworkflows.git@dev_petprep",
+    "niworkflows >= 1.14.0",
     "numpy >= 1.24",
     "packaging >= 24",
     "pandas >= 1.2",
@@ -112,7 +112,8 @@ exclude = [
 
 [tool.hatch.version]
 source = "vcs"
-raw-options = { version_scheme = "nipreps-calver" }
+## Uncomment to enable calver
+# raw-options = { version_scheme = "nipreps-calver" }
 
 [tool.hatch.build.hooks.vcs]
 version-file = "petprep/_version.py"

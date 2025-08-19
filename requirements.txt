@@ -235,7 +235,7 @@ nitransforms==24.1.1
     # via
     #   petprep (pyproject.toml)
     #   niworkflows
-niworkflows @ git+https://github.com/nipreps/niworkflows.git@7651f27e5f4a9cf32b3f904741b97f0cfa5ed98b
+niworkflows==1.14.0
     # via
     #   petprep (pyproject.toml)
     #   smriprep
@@ -420,6 +420,10 @@ seaborn==0.13.2
     # via
     #   nireports
     #   niworkflows
+secretstorage==3.3.3
+    # via keyring
+sentry-sdk==2.22.0
+    # via petprep (pyproject.toml)
 shellingham==1.5.4
     # via typer
 simplejson==3.20.1
