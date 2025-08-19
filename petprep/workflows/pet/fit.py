@@ -25,6 +25,7 @@ from pathlib import Path
 import nibabel as nb
 from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
+from nitransforms.linear import Affine
 from niworkflows.interfaces.header import ValidateImage
 from niworkflows.utils.connections import listify
 
@@ -198,12 +199,18 @@ def init_pet_fit_wf(
     )
     hmc_buffer = pe.Node(niu.IdentityInterface(fields=['hmc_xforms']), name='hmc_buffer')
 
+    if pet_tlen <= 1:  # 3D PET
+        petref = pet_file
+        idmat_fname = config.execution.work_dir / 'idmat.tfm'
+        Affine().to_filename(idmat_fname, fmt='itk')
+        hmc_xforms = idmat_fname
+        config.loggers.workflow.debug('3D PET file - motion correction not needed')
     if petref:
         petref_buffer.inputs.petref = petref
-        config.loggers.workflow.debug('Reusing motion correction reference: %s', petref)
+        config.loggers.workflow.debug('(Re)using motion correction reference: %s', petref)
     if hmc_xforms:
         hmc_buffer.inputs.hmc_xforms = hmc_xforms
-        config.loggers.workflow.debug('Reusing motion correction transforms: %s', hmc_xforms)
+        config.loggers.workflow.debug('(Re)using motion correction transforms: %s', hmc_xforms)
 
     timing_parameters = prepare_timing_parameters(metadata)
     frame_durations = timing_parameters.get('FrameDuration')

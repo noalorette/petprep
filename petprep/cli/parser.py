@@ -361,20 +361,6 @@ https://petprep.readthedocs.io/en/%s/spaces.html"""
         help='Deprecated - use `--force no-bbr` instead.',
     )
     g_conf.add_argument(
-        '--hmc-fwhm',
-        action='store',
-        default=10,
-        type=float,
-        help='FWHM for Gaussian smoothing applied during head-motion estimation.',
-    )
-    g_conf.add_argument(
-        '--hmc-start-time',
-        action='store',
-        default=120,
-        type=float,
-        help='Time (in seconds) after which head-motion estimation is performed.',
-    )
-    g_conf.add_argument(
         '--random-seed',
         dest='_random_seed',
         action='store',
@@ -534,6 +520,22 @@ https://petprep.readthedocs.io/en/%s/spaces.html"""
         dest='fs_no_resume',
         help='EXPERT: Import pre-computed FreeSurfer reconstruction without resuming. '
         'The user is responsible for ensuring that all necessary files are present.',
+    )
+
+    g_hmc = parser.add_argument_group('Options for head motion correction')
+    g_hmc.add_argument(
+        '--hmc-fwhm',
+        action='store',
+        default=10,
+        type=float,
+        help='FWHM for Gaussian smoothing applied during head-motion estimation.',
+    )
+    g_hmc.add_argument(
+        '--hmc-start-time',
+        action='store',
+        default=120,
+        type=float,
+        help='Time (in seconds) after which head-motion estimation is performed.',
     )
 
     g_seg = parser.add_argument_group('Segmentation options')
