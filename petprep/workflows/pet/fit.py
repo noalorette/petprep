@@ -20,12 +20,12 @@
 #
 #     https://www.nipreps.org/community/licensing/
 #
-import os
 from pathlib import Path
 
 import nibabel as nb
 from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
+from nitransforms.linear import Affine
 from niworkflows.interfaces.header import ValidateImage
 from niworkflows.utils.connections import listify
 
@@ -199,10 +199,11 @@ def init_pet_fit_wf(
     )
     hmc_buffer = pe.Node(niu.IdentityInterface(fields=['hmc_xforms']), name='hmc_buffer')
 
-    if pet_tlen <= 1:
-        # 3D PET
+    if pet_tlen <= 1:  # 3D PET
         petref = pet_file
-        hmc_xforms = Path(os.getenv('FSLDIR')) / 'etc' / 'flirtsch' / 'ident.mat'
+        idmat_fname = config.execution.work_dir / 'idmat.tfm'
+        Affine().to_filename(idmat_fname, fmt='itk')
+        hmc_xforms = idmat_fname
         config.loggers.workflow.debug('3D PET file - motion correction not needed')
     if petref:
         petref_buffer.inputs.petref = petref
