@@ -4,6 +4,10 @@
 (`www.nipreps.org <https://www.nipreps.org>`__) for the preprocessing of
 positron emission tomography (PET) imaging.
 
+.. image:: https://img.shields.io/pypi/v/petprep.svg
+  :target: https://pypi.python.org/pypi/petprep/
+  :alt: Latest Version
+
 .. image:: https://github.com/nipreps/petprep/actions/workflows/tests.yml/badge.svg
   :target: https://github.com/nipreps/petprep/actions/workflows/tests.yml
   :alt: Stable tests
