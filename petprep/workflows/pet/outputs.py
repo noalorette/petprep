@@ -997,6 +997,7 @@ def init_refmask_report_wf(
             ref=ref_name,
             datatype='figures',
             allowed_entities=('ref',),
+            suffix='pet',
         ),
         name='ds_report_refmask',
         run_without_submitting=True,
