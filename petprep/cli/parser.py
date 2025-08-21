@@ -496,19 +496,20 @@ https://petprep.readthedocs.io/en/%s/spaces.html"""
         ' at https://surfer.nmr.mgh.harvard.edu/registration.html',
     )
     g_fs.add_argument(
+        '--no-submm-recon',
+        action='store_false',
+        dest='hires',
+        help='Disable sub-millimeter (hires) reconstruction',
+    )
+    fs_mutex = g_fs.add_mutually_exclusive_group()
+    fs_mutex.add_argument(
         '--fs-subjects-dir',
         metavar='PATH',
         type=Path,
         help='Path to existing FreeSurfer subjects directory to reuse. '
         '(default: OUTPUT_DIR/freesurfer)',
     )
-    g_fs.add_argument(
-        '--no-submm-recon',
-        action='store_false',
-        dest='hires',
-        help='Disable sub-millimeter (hires) reconstruction',
-    )
-    g_fs.add_argument(
+    fs_mutex.add_argument(
         '--fs-no-reconall',
         action='store_false',
         dest='run_reconall',
