@@ -119,10 +119,6 @@ def init_pet_fit_wf(
     petref2anat_xfm
         Affine transform mapping from PET reference space to the anatomical
         space.
-    segmentation
-        Segmentation file in T1w space
-    dseg_tsv
-        TSV with segmentation statistics
 
     See Also
     --------
@@ -191,8 +187,6 @@ def init_pet_fit_wf(
                 'pet_mask',
                 'motion_xfm',
                 'petref2anat_xfm',
-                'segmentation',
-                'dseg_tsv',
                 'refmask',
             ],
         ),
@@ -201,11 +195,6 @@ def init_pet_fit_wf(
 
     # If all derivatives exist, inputnode could go unconnected, so add explicitly
     workflow.add_nodes([inputnode])
-    workflow.connect(
-        [
-            (inputnode, outputnode, [('segmentation', 'segmentation'), ('dseg_tsv', 'dseg_tsv')]),
-        ]
-    )
 
     petref_buffer = pe.Node(
         niu.IdentityInterface(fields=['petref', 'pet_file']),

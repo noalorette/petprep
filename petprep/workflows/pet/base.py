@@ -399,9 +399,7 @@ configured with cubic B-spline interpolation.
                 ('t1w_tpms', 'inputnode.t1w_tpms'),
                 ('subjects_dir', 'inputnode.subjects_dir'),
                 ('subject_id', 'inputnode.subject_id'),
-            ]),
-            (pet_fit_wf, pet_pvc_wf, [
-                ('outputnode.segmentation', 'inputnode.segmentation'),
+                ('segmentation', 'inputnode.segmentation'),
             ]),
             (petref_t1w, pet_pvc_wf, [('output_image', 'inputnode.petref')]),
             (pet_pvc_wf, psf_meta, [
@@ -719,9 +717,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     workflow.connect([
         (pet_t1w_src, pet_tacs_wf, [(pet_t1w_field, 'inputnode.pet_anat')]),
-        (pet_fit_wf, pet_tacs_wf, [
-            ('outputnode.segmentation', 'inputnode.segmentation'),
-            ('outputnode.dseg_tsv', 'inputnode.dseg_tsv'),
+        (inputnode, pet_tacs_wf, [
+            ('segmentation', 'inputnode.segmentation'),
+            ('dseg_tsv', 'inputnode.dseg_tsv'),
         ]),
         (pet_tacs_wf, ds_pet_tacs, [('outputnode.timeseries', 'in_file')]),
     ])  # fmt:skip
