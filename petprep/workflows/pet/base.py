@@ -115,6 +115,10 @@ def init_pet_wf(
         Registration spheres from fsnative to fsLR space, collated left, then right
     anat_ribbon
         Binary cortical ribbon mask in T1w space
+    segmentation
+        Segmentation file in T1w space
+    dseg_tsv
+        TSV with segmentation statistics
     anat2std_xfm
         Transform from anatomical space to standard space
     std_t1w
@@ -206,6 +210,8 @@ configured with cubic B-spline interpolation.
                 'midthickness_fsLR',
                 'cortex_mask',
                 'anat_ribbon',
+                'segmentation',
+                'dseg_tsv',
                 # Volumetric templates
                 'anat2std_xfm',
                 'std_t1w',
@@ -242,6 +248,8 @@ configured with cubic B-spline interpolation.
             ('subjects_dir', 'inputnode.subjects_dir'),
             ('subject_id', 'inputnode.subject_id'),
             ('fsnative2t1w_xfm', 'inputnode.fsnative2t1w_xfm'),
+            ('segmentation', 'inputnode.segmentation'),
+            ('dseg_tsv', 'inputnode.dseg_tsv'),
         ]),
     ])  # fmt:skip
 

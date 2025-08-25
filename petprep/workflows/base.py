@@ -164,6 +164,7 @@ def init_single_subject_wf(subject_id: str):
     )
 
     from petprep.workflows.pet.base import init_pet_wf
+    from petprep.workflows.pet.segmentation import init_segmentation_wf
 
     workflow = Workflow(name=f'sub_{subject_id}_wf')
     workflow.__desc__ = f"""
@@ -526,6 +527,24 @@ It is released under the [CC0]\
     if config.workflow.anat_only:
         return clean_datasinks(workflow)
 
+    segmentation_wf = init_segmentation_wf(
+        seg=config.workflow.seg,
+        name=f'pet_{config.workflow.seg}_seg_wf',
+    )
+    workflow.connect(
+        [
+            (
+                anat_fit_wf,
+                segmentation_wf,
+                [
+                    ('outputnode.t1w_preproc', 'inputnode.t1w_preproc'),
+                    ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
+                    ('outputnode.subject_id', 'inputnode.subject_id'),
+                ],
+            ),
+        ]
+    )
+
     # Append the PET section to the existing anatomical excerpt
     # That way we do not need to filter down the number of PET datasets
     pet_pre_desc = f"""
@@ -599,6 +618,10 @@ segmented with the ``{config.workflow.seg}`` segmentation workflow from FreeSurf
                     f'outputnode.sphere_reg_{"msm" if msm_sulc else "fsLR"}',
                     'inputnode.sphere_reg_fsLR',
                 ),
+            ]),
+            (segmentation_wf, pet_wf, [
+                ('outputnode.segmentation', 'inputnode.segmentation'),
+                ('outputnode.dseg_tsv', 'inputnode.dseg_tsv'),
             ]),
         ])  # fmt:skip
 
