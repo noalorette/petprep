@@ -102,9 +102,7 @@ def multisession_bids_root(tmp_path_factory):
     bids_dir = base / 'bids'
     bids_dir.mkdir(parents=True, exist_ok=True)
     img = nb.Nifti1Image(np.zeros((10, 10, 10, 10)), np.eye(4))
-    (bids_dir / 'dataset_description.json').write_text(
-        '{"Name": "Test", "BIDSVersion": "1.8.0"}'
-    )
+    (bids_dir / 'dataset_description.json').write_text('{"Name": "Test", "BIDSVersion": "1.8.0"}')
     for ses in ['01', '02']:
         anat_dir = bids_dir / 'sub-01' / f'ses-{ses}' / 'anat'
         pet_dir = bids_dir / 'sub-01' / f'ses-{ses}' / 'pet'
