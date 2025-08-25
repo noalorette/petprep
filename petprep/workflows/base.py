@@ -524,9 +524,6 @@ It is released under the [CC0]\
                 ]),
             ])  # fmt:skip
 
-    if config.workflow.anat_only:
-        return clean_datasinks(workflow)
-
     segmentation_wf = init_segmentation_wf(
         seg=config.workflow.seg,
         name=f'pet_{config.workflow.seg}_seg_wf',
@@ -544,6 +541,9 @@ It is released under the [CC0]\
             ),
         ]
     )
+
+    if config.workflow.anat_only:
+        return clean_datasinks(workflow)
 
     # Append the PET section to the existing anatomical excerpt
     # That way we do not need to filter down the number of PET datasets
