@@ -4,8 +4,6 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-from pathlib import Path
-
 import nibabel as nb
 import numpy as np
 import pytest
