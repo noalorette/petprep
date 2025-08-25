@@ -555,7 +555,7 @@ def init_pet_fit_wf(
             ]
         )
     else:
-        config.loggers.workflow.info('PET Stage 5: Reference mask generation skipped')
+        config.loggers.workflow.info('PET Stage 4: Reference mask generation skipped')
 
     return workflow
 
