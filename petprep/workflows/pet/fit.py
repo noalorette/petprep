@@ -51,7 +51,6 @@ from .outputs import (
 from .ref_tacs import init_pet_ref_tacs_wf
 from .reference_mask import init_pet_refmask_wf
 from .registration import init_pet_reg_wf
-from .segmentation import init_segmentation_wf
 
 
 def init_pet_fit_wf(
@@ -103,6 +102,10 @@ def init_pet_fit_wf(
         FreeSurfer subject ID
     fsnative2t1w_xfm
         LTA-style affine matrix translating from FreeSurfer-conformed subject space to T1w
+    segmentation
+        Segmentation file in T1w space
+    dseg_tsv
+        TSV with segmentation statistics
 
     Outputs
     -------
@@ -169,6 +172,8 @@ def init_pet_fit_wf(
                 'subjects_dir',
                 'subject_id',
                 'fsnative2t1w_xfm',
+                'segmentation',
+                'dseg_tsv',
             ],
         ),
         name='inputnode',
@@ -182,8 +187,6 @@ def init_pet_fit_wf(
                 'pet_mask',
                 'motion_xfm',
                 'petref2anat_xfm',
-                'segmentation',
-                'dseg_tsv',
                 'refmask',
             ],
         ),
@@ -397,41 +400,10 @@ def init_pet_fit_wf(
     ds_petmask_wf.inputs.inputnode.source_files = [pet_file]
     workflow.connect([(merge_mask, ds_petmask_wf, [('out', 'inputnode.petmask')])])
 
-    # Stage 4: Segmentation
-    config.loggers.workflow.info(
-        'PET Stage 4: Adding segmentation workflow using the segmentation: %s', config.workflow.seg
-    )
-    segmentation_wf = init_segmentation_wf(
-        seg=config.workflow.seg,
-        name=f'pet_{config.workflow.seg}_seg_wf',
-    )
-
-    workflow.connect(
-        [
-            (
-                inputnode,
-                segmentation_wf,
-                [
-                    ('t1w_preproc', 'inputnode.t1w_preproc'),
-                    ('subject_id', 'inputnode.subject_id'),
-                    ('subjects_dir', 'inputnode.subjects_dir'),
-                ],
-            ),
-            (
-                segmentation_wf,
-                outputnode,
-                [
-                    ('outputnode.segmentation', 'segmentation'),
-                    ('outputnode.dseg_tsv', 'dseg_tsv'),
-                ],
-            ),
-        ]
-    )
-
-    # Stage 5: Reference mask generation
+    # Stage 4: Reference mask generation
     if config.workflow.ref_mask_name:
         config.loggers.workflow.info(
-            'PET Stage 5: Generating %s reference mask',
+            'PET Stage 4: Generating %s reference mask',
             config.workflow.ref_mask_name,
         )
 
@@ -487,10 +459,10 @@ def init_pet_fit_wf(
         workflow.connect(
             [
                 (
-                    segmentation_wf,
+                    inputnode,
                     refmask_wf,
                     [
-                        ('outputnode.segmentation', 'inputnode.seg_file'),
+                        ('segmentation', 'inputnode.seg_file'),
                     ],
                 ),
                 (
@@ -572,7 +544,7 @@ def init_pet_fit_wf(
             ]
         )
     else:
-        config.loggers.workflow.info('PET Stage 5: Reference mask generation skipped')
+        config.loggers.workflow.info('PET Stage 4: Reference mask generation skipped')
 
     return workflow
 
