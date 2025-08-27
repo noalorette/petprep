@@ -400,7 +400,7 @@ def init_pet_fit_wf(
     ds_petmask_wf.inputs.inputnode.source_files = [pet_file]
     workflow.connect([(merge_mask, ds_petmask_wf, [('out', 'inputnode.petmask')])])
 
-    pvc_method = getattr(config.workflow, "pvc_method", None)
+    pvc_method = getattr(config.workflow, 'pvc_method', None)
 
     # Stage 4: Reference mask generation
     if config.workflow.ref_mask_name:
