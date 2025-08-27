@@ -400,6 +400,8 @@ def init_pet_fit_wf(
     ds_petmask_wf.inputs.inputnode.source_files = [pet_file]
     workflow.connect([(merge_mask, ds_petmask_wf, [('out', 'inputnode.petmask')])])
 
+    pvc_method = getattr(config.workflow, 'pvc_method', None)
+
     # Stage 4: Reference mask generation
     if config.workflow.ref_mask_name:
         config.loggers.workflow.info(
@@ -437,22 +439,23 @@ def init_pet_fit_wf(
         )
         pet_ref_tacs_wf.inputs.inputnode.ref_mask_name = config.workflow.ref_mask_name
 
-        ds_ref_tacs = pe.Node(
-            DerivativesDataSink(
-                base_directory=config.execution.petprep_dir,
-                suffix='tacs',
-                seg=config.workflow.seg,
-                desc='preproc',
-                ref=config.workflow.ref_mask_name,
-                allowed_entities=('seg', 'ref'),
-                TaskName=metadata.get('TaskName'),
-                **timing_parameters,
-            ),
-            name='ds_ref_tacs',
-            run_without_submitting=True,
-            mem_gb=config.DEFAULT_MEMORY_MIN_GB,
-        )
-        ds_ref_tacs.inputs.source_file = pet_file
+        if pvc_method is None:
+            ds_ref_tacs = pe.Node(
+                DerivativesDataSink(
+                    base_directory=config.execution.petprep_dir,
+                    suffix='tacs',
+                    seg=config.workflow.seg,
+                    desc='preproc',
+                    ref=config.workflow.ref_mask_name,
+                    allowed_entities=('seg', 'ref'),
+                    TaskName=metadata.get('TaskName'),
+                    **timing_parameters,
+                ),
+                name='ds_ref_tacs',
+                run_without_submitting=True,
+                mem_gb=config.DEFAULT_MEMORY_MIN_GB,
+            )
+            ds_ref_tacs.inputs.source_file = pet_file
 
         workflow.connect([(inputnode, gm_select, [('t1w_tpms', 'inlist')])])
 
@@ -534,15 +537,20 @@ def init_pet_fit_wf(
                         ('outputnode.refmask_file', 'inputnode.mask_file'),
                     ],
                 ),
-                (
-                    pet_ref_tacs_wf,
-                    ds_ref_tacs,
-                    [
-                        ('outputnode.timeseries', 'in_file'),
-                    ],
-                ),
             ]
         )
+        if pvc_method is None:
+            workflow.connect(
+                [
+                    (
+                        pet_ref_tacs_wf,
+                        ds_ref_tacs,
+                        [
+                            ('outputnode.timeseries', 'in_file'),
+                        ],
+                    ),
+                ]
+            )
     else:
         config.loggers.workflow.info('PET Stage 4: Reference mask generation skipped')
 
