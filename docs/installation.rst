@@ -53,13 +53,19 @@ Then run the ``petprep-docker`` command-line as if you were running
 
   $ petprep-docker <input_bids_path> <derivatives_path> <analysis_level> <named_options>
 
-Alternatively, you can install using a pre-built image using::
+Alternatively, you can install using a pre-built image using eiter::
 
   $ docker pull ghcr.io/nipreps/petprep:main
 
-or::
+or if on linux/amd64::
+ 
+  $ docker pull ghcr.io/nipreps/petprep:main@sha256:edcfe72eb7eda7a479a768588318259ee6963e03fcb0f04d98fd1a27f6de3bee
 
-  $ apptainer build petprep.sif docker ://ghcr.io/nipreps/petprep:main
+or using apptainer::
+
+  $ apptainer build petprep.sif docker://ghcr.io/nipreps/petprep:main
+
+(Find latest on: https://github.com/nipreps/petprep/pkgs/container/petprep)
 
 Then run petprep via apptainer as follows::
 
