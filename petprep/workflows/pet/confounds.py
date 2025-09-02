@@ -243,7 +243,11 @@ the edge of the brain, as proposed by [@patriat_improved_2017].
 
     # DVARS
     dvars = pe.Node(
-        nac.ComputeDVARS(save_nstd=True, save_std=True, remove_zerovariance=True),
+        niu.Function(
+            function=_compute_dvars,
+            input_names=['pet', 'mask'],
+            output_names=['out_nstd', 'out_std'],
+        ),
         name='dvars',
         mem_gb=mem_gb,
     )
@@ -351,8 +355,8 @@ the edge of the brain, as proposed by [@patriat_improved_2017].
 
     workflow.connect([
         # connect inputnode to each non-anatomical confound node
-        (inputnode, dvars, [('pet', 'in_file'),
-                            ('pet_mask', 'in_mask')]),
+        (inputnode, dvars, [('pet', 'pet'),
+                            ('pet_mask', 'mask')]),
         (inputnode, motion_params, [('motion_xfm', 'xfm_file'),
                                     ('petref', 'petref_file')]),
         (inputnode, rmsd, [('motion_xfm', 'xfm_file'),
@@ -557,6 +561,29 @@ def init_carpetplot_wf(
         (conf_plot, outputnode, [('out_file', 'out_carpetplot')]),
     ])  # fmt:skip
     return workflow
+
+
+def _compute_dvars(pet, mask):
+    """Compute DVARS only when the timeseries has at least three frames."""
+    import numpy as np
+    import nibabel as nb
+    from pathlib import Path
+    from nipype.algorithms import confounds as nac
+
+    nvols = nb.load(pet).shape[-1]
+    if nvols < 3:
+        data = np.zeros((nvols,), dtype=float)
+        out_nstd = Path('dvars.nstd.tsv').absolute()
+        out_std = Path('dvars.std.tsv').absolute()
+        np.savetxt(out_nstd, data)
+        np.savetxt(out_std, data)
+        return str(out_nstd), str(out_std)
+
+    dvars = nac.ComputeDVARS(save_nstd=True, save_std=True, remove_zerovariance=True)
+    dvars.inputs.in_file = pet
+    dvars.inputs.in_mask = mask
+    res = dvars.run()
+    return res.outputs.out_nstd, res.outputs.out_std
 
 
 def _binary_union(mask1, mask2):
