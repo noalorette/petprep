@@ -756,7 +756,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (pet_ref_tacs_wf, ds_ref_tacs, [('outputnode.timeseries', 'in_file')]),
         ])  # fmt:skip
 
-    if nvols > 1:  # run these only if 4-D PET
+    if nvols > 2:  # run these only if PET has at least 3 frames
         pet_confounds_wf = init_pet_confs_wf(
             mem_gb=mem_gb['largemem'],
             metadata=all_metadata[0],
@@ -831,6 +831,11 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     ('outputnode.crown_mask', 'inputnode.crown_mask'),
                 ]),
             ])  # fmt:skip
+
+    else:
+        config.loggers.workflow.warning(
+            'PET confounds will be skipped - series has only %d frame(s)', nvols
+        )
 
     # Fill-in datasinks of reportlets seen so far
     for node in workflow.list_node_names():
