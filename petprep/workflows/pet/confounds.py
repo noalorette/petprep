@@ -568,7 +568,6 @@ def _compute_dvars(pet, mask):
 
     import nibabel as nb
     import numpy as np
-
     from nipype.algorithms import confounds as nac
 
     nvols = nb.load(pet).shape[-1]
