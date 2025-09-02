@@ -28,7 +28,6 @@ Calculate PET confounds
 
 """
 
-from nipype.algorithms import confounds as nac
 from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
 from templateflow.api import get as get_template
@@ -565,9 +564,11 @@ def init_carpetplot_wf(
 
 def _compute_dvars(pet, mask):
     """Compute DVARS only when the timeseries has at least three frames."""
-    import numpy as np
-    import nibabel as nb
     from pathlib import Path
+
+    import nibabel as nb
+    import numpy as np
+
     from nipype.algorithms import confounds as nac
 
     nvols = nb.load(pet).shape[-1]
