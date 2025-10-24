@@ -8,7 +8,8 @@ We’ll cover:
 1. Installing PETPrep
 2. Downloading data from OpenNeuro
 3. Running PETPrep commands
-4. Inspecting outputs and reports
+4. Inspecting html quality control reportd
+5. Understanding PETPrep output files
 
 ---
 
@@ -225,6 +226,155 @@ By ranking correlations with global signal in graph 2, you can see whether motio
 - **Reference mask check**  
   ![Reference mask](_static/tutorial_images/sub-PSTRT01_ses-baseline_ref-cerebellum_desc-refmask_pet.svg)  
   Reference region mask overlaid on the PET reference and anatomical. Note that this image is not static when opened in a browser.
+
+---
+
+## 5. Understanding PETPrep output files
+
+### Main Output Folder
+
+![PETprep output overview](_static/tutorial_images/petprep_out.png)
+
+The root level of your `derivatives/petprep/` directory includes:
+
+* **Subject folders** – Each participant has a folder (e.g., `sub-PSBB01/`) containing one or more session folders (`ses-baseline/`, `ses-blocked/`).
+* **HTML reports** – Files like `sub-PSBB01.html`, which provide visual QC summaries per subject.
+* **`figures/` folder** – Stores static QC figures and summaries.
+* **`log/` folder** – Contains runtime logs and configuration information, including the `petprep.toml` file.
+
+### PET Subfolder
+
+![PETprep PET outputs](_static/tutorial_images/petprep_out_pet.png)
+
+The PET subfolder (`sub-PSBB05/ses-baseline/pet/`) contains preprocessed PET data, confound files, reference masks, and transforms. From your screenshot, we can identify the following visible files:
+
+* **Preprocessed PET Images:**
+
+  * `*_space-T1w_desc-preproc_pet.nii.gz` and `.json` – Motion-corrected PET in subject T1w space.
+  * `*_space-MNI152NLin2009cAsym_desc-preproc_pet.nii.gz` and `.json` – Normalized PET in MNI template space.
+  * `*_space-T1w_pvc-GTM_desc-preproc_pet.nii.gz` – Partial Volume Corrected PET using GTM method.
+
+* **Reference and Masks:**
+
+  * `*_space-T1w_desc-brain_mask.nii.gz` and `.json` – Subject-specific brain mask.
+  * `*_space-MNI152NLin2009cAsym_desc-brain_mask.nii.gz` and `.json` – Brain mask in MNI space.
+  * `*_ref-cerebellum_desc-refmask_mask.nii.gz` and `.json` – Reference region mask used for SUVR calculations.
+
+* **Confound and Regional Data:**
+
+  * `*_desc-confounds_timeseries.tsv` and `.json` – Framewise motion, global signal, DVARS, and other regressors.
+  * `*_desc-preproc_seg-gtm_tacs.tsv` and `.json` – Regional TACs derived from GTM segmentation.
+
+* **Transforms:**
+
+  * `*_from-orig_to-petref_mode-image_xfm.json/.txt` – Mapping from raw PET to reference PET.
+  * `*_from-petref_to-T1w_mode-image_xfm.json/.txt` – Mapping from reference PET to subject anatomy.
+  * `*_from-T1w_to-MNI152NLin2009cAsym_mode-image_xfm.json/.txt` – Mapping from subject to template space.
+
+> Together, these files allow full traceability of preprocessing, motion correction, and spatial normalization steps.
+
+### ANAT Subfolder
+
+![PETprep ANAT outputs](_static/tutorial_images/petprep_out_anat.png)
+
+The `anat/` folder contains FreeSurfer- and ANTs-derived anatomical outputs that serve as structural references for PET preprocessing. From your screenshot, these files are visible:
+
+* **Anatomical Images and Masks:**
+
+  * `*_space-MNI152NLin2009cAsym_desc-preproc_T1w.nii.gz` and `.json` – Preprocessed T1-weighted image in MNI space.
+  * `*_desc-brain_mask.nii.gz` and `.json` – Brain extraction mask in native and template space.
+  * `*_desc-ribbon_mask.nii.gz` and `.json` – Cortical ribbon mask, identifying gray and white matter boundaries.
+
+* **Probabilistic Tissue Maps:**
+
+  * `*_label-WM_probseg.nii.gz`, `*_label-GM_probseg.nii.gz`, `*_label-CSF_probseg.nii.gz` – Tissue probability maps for white matter, gray matter, and CSF.
+
+* **Surface Files:**
+
+  * `*_hemi-L.surf.gii` and `*_hemi-R.surf.gii` – Left and right hemisphere surfaces.
+  * `*_hemi-L_pial.surf.gii`, `*_hemi-R_pial.surf.gii` – Cortical pial surfaces.
+  * `*_hemi-*_sphere.surf.gii`, `*_desc-reg_sphere.surf.gii` – Spherical registration surfaces.
+  * `*_hemi-*_thickness.shape.gii`, `*_hemi-*_sulc.shape.gii` – Cortical thickness and sulcal depth.
+
+* **Transforms:**
+
+  * `*_from-T1w_to-MNI152NLin2009cAsym_mode-image_xfm.*` – T1w-to-template registration transform.
+  * `*_from-fsnative_to-T1w_mode-image_xfm.*` – Mapping from FreeSurfer native to T1w space.
+
+> These anatomical derivatives form the foundation for PET registration, PVC, and segmentation-based analyses.
+
+### FIGURES Subfolder
+
+![PETprep figures](_static/tutorial_images/figures.png)
+
+This folder contains static QC and visualization outputs. Based on your screenshot, the visible files include:
+
+* `*_desc-summary_pet.html` – Summary of PET preprocessing.
+* `*_desc-validation_pet.html` – Validation report showing metadata integrity checks.
+* `*_desc-carpetplot_pet.svg` – Time-series visualization across voxels.
+* `*_desc-confoundcorr_pet.svg` – Correlation matrix of confounds.
+* `*_desc-coreg_pet.svg` / `*_desc-reconall_T1w.svg` – PET↔T1w alignment QC.
+* `*_ref-cerebellum_desc-refmask_pet.svg` – Reference mask visualization.
+* `*_space-MNI152NLin2009cAsym_desc-preproc_pet.svg` – PET image shown in MNI space.
+
+> The figures provide quick visual verification of registration accuracy, mask coverage, and confound patterns.
+
+### LOG Subfolder and Configuration File
+
+![PETprep log and configuration](_static/tutorial_images/petprep_out_log.png)
+
+Inside each subject’s `log/` folder, PETprep stores a record of the runtime environment and configuration in `petprep.toml`. This file ensures reproducibility of the entire workflow.
+
+Example values from your `petprep.toml`:
+
+```toml
+[environment]
+cpu_count = 72
+exec_env = "singularity"
+free_mem = 261.0
+nipype_version = "1.9.2"
+templateflow_version = "24.2.2"
+version = "0.0.1a1.dev108+g5cee6a7a2"
+```
+
+**Interpretation:** PETprep was executed in a Singularity container with 72 CPU cores and 261 GB of memory available. Nipype and TemplateFlow versions are logged for traceability.
+
+```toml
+[execution]
+bids_dir = "/data"
+output_dir = "/out"
+fs_license_file = "/license"
+participant_label = ["PSBB01", "PSBB02", ... , "PSTRT19"]
+output_spaces = "MNI152NLin2009cAsym:res-native T1w"
+```
+
+**Interpretation:** This section defines dataset paths, FreeSurfer license location, subject list, and target output spaces. The `run_uuid` uniquely identifies this PETprep run.
+
+```toml
+[workflow]
+run_reconall = true
+seg = "gtm"
+pvc_tool = "petpvc"
+pvc_method = "GTM"
+pvc_psf = [6.0]
+ref_mask_name = "cerebellum"
+```
+
+**Interpretation:** Indicates that FreeSurfer recon-all was run, GTM-based PVC was applied using the PETPVC tool with a 6 mm PSF, and the cerebellum was used as reference region.
+
+```toml
+[nipype]
+nprocs = 72
+omp_nthreads = 8
+plugin = "MultiProc"
+```
+
+**Interpretation:** PETprep used local multiprocessing with up to 72 processes and 8 threads per process. The workflow was executed in parallel for efficiency.
+
+> Reading the `petprep.toml` gives a clear snapshot of *how* the analysis was run — including system resources, input/output locations, and key methodological choices.
+
+
+  
 
 
 ---  
